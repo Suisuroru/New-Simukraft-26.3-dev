@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.UUID;
 
 
 public record CityCoreMapResponsePacket(BlockPos pos, UUID cityId, String cityName, double funds, int cityLevel, int memberCount, CityPermissionLevel permissionLevel, boolean canManageCity, int centerChunkX, int centerChunkZ, List<ChunkEntry> chunks) implements CustomPacketPayload {
-    public static final Type<CityCoreMapResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_map_response"));
+    public static final Type<CityCoreMapResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_map_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreMapResponsePacket> STREAM_CODEC = StreamCodec.of(CityCoreMapResponsePacket::encode, CityCoreMapResponsePacket::decode);
 
     @Override

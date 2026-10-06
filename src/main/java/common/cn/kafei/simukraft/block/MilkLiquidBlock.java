@@ -16,6 +16,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.redstone.Orientation;
+import org.jspecify.annotations.Nullable;
 
 
 public class MilkLiquidBlock extends LiquidBlock {
@@ -35,8 +37,8 @@ public class MilkLiquidBlock extends LiquidBlock {
     }
 
     @Override
-    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
-        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
+        super.neighborChanged(state, level, pos, block, orientation, movedByPiston);
         if (!level.isClientSide()) {
             reactWithNeighbors(state, level, pos);
         }
@@ -53,7 +55,7 @@ public class MilkLiquidBlock extends LiquidBlock {
                         pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                         8, 0.3, 0.3, 0.3, 0.05);
                 level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS,
-                        0.5f, 2.6f + (level.random.nextFloat() - level.random.nextFloat()) * 0.8f);
+                        0.5f, 2.6f + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.8f);
                 return;
             }
 

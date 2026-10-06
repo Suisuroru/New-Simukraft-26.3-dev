@@ -13,7 +13,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -24,7 +24,7 @@ import java.util.UUID;
 /** BankControlBoxOpenRequestPacket: 客户端请求打开银行控制箱。 */
 public record BankControlBoxOpenRequestPacket(BlockPos pos) implements CustomPacketPayload {
     public static final Type<BankControlBoxOpenRequestPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "bank_control_box_open_request"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "bank_control_box_open_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BankControlBoxOpenRequestPacket> STREAM_CODEC =
             StreamCodec.of(BankControlBoxOpenRequestPacket::encode, BankControlBoxOpenRequestPacket::decode);
 

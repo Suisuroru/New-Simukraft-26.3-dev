@@ -3,6 +3,7 @@ package common.cn.kafei.simukraft.commercial;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import net.minecraft.core.BlockPos;
 
@@ -59,7 +60,7 @@ public record CommercialDefinition(String id,
             id = id != null && !id.isBlank() ? id.trim() : "container";
             type = type != null && !type.isBlank() ? type.trim() : "structure_pos";
             positions = positions != null
-                    ? positions.stream().filter(pos -> pos != null).map(BlockPos::immutable).distinct().toList()
+                    ? positions.stream().filter(Objects::nonNull).map(BlockPos::immutable).distinct().toList()
                     : List.of();
         }
     }

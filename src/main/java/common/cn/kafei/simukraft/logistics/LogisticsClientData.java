@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.logistics;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -54,10 +55,10 @@ public record LogisticsClientData(UUID clientId,
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("ClientId", clientId);
+        NbtUuid.put(tag, "ClientId", clientId);
         tag.putLong("BoxPos", boxPos.asLong());
         if (cityId != null) {
-            tag.putUUID("CityId", cityId);
+            NbtUuid.put(tag, "CityId", cityId);
         }
         tag.putString("DimensionId", dimensionId);
         tag.putString("Name", name);
@@ -73,20 +74,20 @@ public record LogisticsClientData(UUID clientId,
 
     public static LogisticsClientData fromTag(CompoundTag tag) {
         List<LogisticsPortData> ports = new ArrayList<>();
-        ListTag portTags = tag.getList("Ports", CompoundTag.TAG_COMPOUND);
+        ListTag portTags = tag.getList("Ports").get();
         for (int i = 0; i < portTags.size(); i++) {
-            ports.add(LogisticsPortData.fromTag(portTags.getCompound(i)));
+            ports.add(LogisticsPortData.fromTag(portTags.getCompound(i).get()));
         }
         return new LogisticsClientData(
-                tag.hasUUID("ClientId") ? tag.getUUID("ClientId") : UUID.randomUUID(),
-                BlockPos.of(tag.getLong("BoxPos")),
-                tag.hasUUID("CityId") ? tag.getUUID("CityId") : null,
-                tag.getString("DimensionId"),
-                tag.getString("Name"),
-                tag.getBoolean("Automatic"),
-                tag.getString("SourceType"),
-                tag.getString("SourceId"),
+                tag.contains("ClientId") ? NbtUuid.readOrNull(tag, "ClientId") : UUID.randomUUID(),
+                BlockPos.of(tag.getLong("BoxPos").get()),
+                NbtUuid.readOrNull(tag, "CityId"),
+                tag.getString("DimensionId").get(),
+                tag.getString("Name").get(),
+                tag.getBoolean("Automatic").get(),
+                tag.getString("SourceType").get(),
+                tag.getString("SourceId").get(),
                 ports,
-                tag.getLong("UpdatedAt"));
+                tag.getLong("UpdatedAt").get());
     }
 }

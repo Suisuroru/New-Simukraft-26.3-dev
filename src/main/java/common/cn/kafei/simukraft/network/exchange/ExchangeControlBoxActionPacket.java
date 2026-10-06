@@ -12,7 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record ExchangeControlBoxActionPacket(BlockPos pos, boolean buy, String companyId, int shares)
         implements CustomPacketPayload {
     public static final Type<ExchangeControlBoxActionPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_action"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_action"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ExchangeControlBoxActionPacket> STREAM_CODEC =
             StreamCodec.of(ExchangeControlBoxActionPacket::encode, ExchangeControlBoxActionPacket::decode);
 

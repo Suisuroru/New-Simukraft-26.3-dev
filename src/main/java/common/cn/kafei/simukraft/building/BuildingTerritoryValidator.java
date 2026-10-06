@@ -60,7 +60,7 @@ public final class BuildingTerritoryValidator {
         if (pos == null || cityChunks == null || cityChunks.isEmpty()) {
             return false;
         }
-        return cityChunks.contains(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4));
+        return cityChunks.contains(ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4));
     }
 
     public static boolean boundsInChunks(int minX, int maxX, int minZ, int maxZ, Set<Long> cityChunks) {
@@ -70,7 +70,7 @@ public final class BuildingTerritoryValidator {
         int maxChunkZ = maxZ >> 4;
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                if (!cityChunks.contains(ChunkPos.asLong(chunkX, chunkZ))) {
+                if (!cityChunks.contains(ChunkPos.pack(chunkX, chunkZ))) {
                     return false;
                 }
             }

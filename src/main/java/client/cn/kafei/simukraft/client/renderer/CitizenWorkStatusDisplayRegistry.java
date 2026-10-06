@@ -1,14 +1,17 @@
 package client.cn.kafei.simukraft.client.renderer;
 
+import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.material.NpcWorkMaterialService;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.util.GsonHelper;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
@@ -153,7 +156,11 @@ public final class CitizenWorkStatusDisplayRegistry {
         }
         if (value.startsWith("{")) {
             try {
-                Component c = Component.Serializer.fromJson(value, net.minecraft.core.RegistryAccess.EMPTY);
+                // MC 26.x 移除了 Component.Serializer，改用 ComponentSerialization.CODEC 反序列化 JSON 文本组件。
+                Component c = ComponentSerialization.CODEC
+                        .parse(JsonOps.INSTANCE, GsonHelper.parse(value))
+                        .result()
+                        .orElse(null);
                 if (c != null) return c;
             } catch (Exception ignored) {}
         }
@@ -213,7 +220,7 @@ public final class CitizenWorkStatusDisplayRegistry {
             return Component.translatable("message.simukraft.material.unknown");
         }
         try {
-            ResourceLocation id = ResourceLocation.parse(itemId);
+            Identifier id = Identifier.parse(itemId);
             Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
             return item == Items.AIR ? Component.literal(itemId) : new ItemStack(item).getHoverName();
         } catch (Exception exception) {

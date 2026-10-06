@@ -24,6 +24,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -119,7 +121,7 @@ public final class CityPlacementRestrictionHandler {
     }
 
     @SubscribeEvent
-    public static void onBlockBroken(BlockEvent.BreakEvent event) {
+    public static void onBlockBroken(BreakBlockEvent event) {
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -129,6 +131,9 @@ public final class CityPlacementRestrictionHandler {
         // 权限拦截：控制箱方块需要官员及以上才可直接破坏
         if (isBuildingControlBox(block) && !isDemolishAllowed(serverLevel, pos, block, event.getPlayer())) {
             event.setCanceled(true);
+            // BreakBlockEvent 在客户端与服务端两侧都会触发，这里仅在服务端取消，
+            // 需显式通知客户端回滚方块，避免出现"假破坏"残留。
+            event.setNotifyClient(true);
             return;
         }
         ResidentialBedPoiService.handleBlockBroken(serverLevel, pos, brokenState);
@@ -150,7 +155,7 @@ public final class CityPlacementRestrictionHandler {
     }
 
     private static boolean isDemolishAllowed(ServerLevel level, BlockPos pos, Block block, Player player) {
-        if (player.isCreative() || player.hasPermissions(2)) {
+        if (player.isCreative() || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             return true;
         }
         UUID cityId = resolveBuildingCityId(level, pos, block);
@@ -213,7 +218,7 @@ public final class CityPlacementRestrictionHandler {
             sendDeniedMessage(player);
             return Optional.empty();
         }
-        UUID ownerCityId = CityChunkManager.get(serverLevel).getChunkOwner(new ChunkPos(targetPos).toLong());
+        UUID ownerCityId = CityChunkManager.get(serverLevel).getChunkOwner(ChunkPos.containing(targetPos).pack());
         if (playerCity.get().cityId().equals(ownerCityId)) {
             return playerCity;
         }

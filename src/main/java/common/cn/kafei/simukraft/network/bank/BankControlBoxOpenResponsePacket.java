@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
@@ -24,7 +24,7 @@ public record BankControlBoxOpenResponsePacket(BlockPos boxPos,
                                                double cityFunds,
                                                double playerCash) implements CustomPacketPayload {
     public static final Type<BankControlBoxOpenResponsePacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "bank_control_box_open_response"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "bank_control_box_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BankControlBoxOpenResponsePacket> STREAM_CODEC =
             StreamCodec.of(BankControlBoxOpenResponsePacket::encode, BankControlBoxOpenResponsePacket::decode);
 

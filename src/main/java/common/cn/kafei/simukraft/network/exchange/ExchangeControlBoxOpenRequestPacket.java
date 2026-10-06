@@ -16,7 +16,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -27,7 +27,7 @@ import java.util.UUID;
 /** ExchangeControlBoxOpenRequestPacket: 打开交易所。 */
 public record ExchangeControlBoxOpenRequestPacket(BlockPos pos, String selectedCompanyId) implements CustomPacketPayload {
     public static final Type<ExchangeControlBoxOpenRequestPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_open_request"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_open_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ExchangeControlBoxOpenRequestPacket> STREAM_CODEC =
             StreamCodec.of(ExchangeControlBoxOpenRequestPacket::encode, ExchangeControlBoxOpenRequestPacket::decode);
 
@@ -79,7 +79,7 @@ public record ExchangeControlBoxOpenRequestPacket(BlockPos pos, String selectedC
         String statusKey = building == null
                 ? "gui.simukraft.exchange.status.no_building"
                 : broker == null ? "gui.simukraft.exchange.status.no_broker"
-                : ExchangeMarketClock.isOpen(level.getDayTime())
+                : ExchangeMarketClock.isOpen(level.getDefaultClockTime())
                 ? "gui.simukraft.exchange.status.open"
                 : "gui.simukraft.exchange.status.closed";
         return new ExchangeControlBoxOpenResponsePacket(
@@ -94,7 +94,7 @@ public record ExchangeControlBoxOpenRequestPacket(BlockPos pos, String selectedC
                 cityId != null ? EconomyService.getCityBalance(level, cityId) : 0.0D,
                 CoinDenominations.countCash(player),
                 ExchangeMarketService.marketDay(level),
-                ExchangeMarketClock.isOpen(level.getDayTime()),
+                ExchangeMarketClock.isOpen(level.getDefaultClockTime()),
                 ExchangeMarketService.regime(level),
                 selectedCompanyId != null ? selectedCompanyId : "",
                 ExchangeMarketService.snapshot(level, cityId));

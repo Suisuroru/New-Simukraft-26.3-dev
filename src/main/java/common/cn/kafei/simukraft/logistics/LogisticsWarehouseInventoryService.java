@@ -4,6 +4,7 @@ import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.material.GenericContainerAccess;
 import common.cn.kafei.simukraft.material.GenericSlotAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -142,9 +143,7 @@ public final class LogisticsWarehouseInventoryService {
 
     /** itemId: 生成稳定排序和展示用物品 ID。 */
     public static String itemId(ItemStack stack) {
-        return stack == null || stack.isEmpty() ? "" : stack.getItemHolder().unwrapKey()
-                .map(key -> key.location().toString())
-                .orElse("");
+        return stack == null || stack.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
     }
 
     private static LogisticsWarehouseData warehouse(ServerLevel level, BlockPos boxPos) {

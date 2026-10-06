@@ -77,6 +77,6 @@ public record FarmlandPlot(BlockPos min, BlockPos max) {
         if (tag == null || !tag.contains("Min") || !tag.contains("Max")) {
             return null;
         }
-        return new FarmlandPlot(BlockPos.of(tag.getLong("Min")), BlockPos.of(tag.getLong("Max")));
+        return new FarmlandPlot(BlockPos.of(tag.getLong("Min").get()), BlockPos.of(tag.getLong("Max").get()));
     }
 }

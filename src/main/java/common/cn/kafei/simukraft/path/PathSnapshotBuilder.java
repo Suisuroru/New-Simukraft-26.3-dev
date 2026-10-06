@@ -73,13 +73,13 @@ final class PathSnapshotBuilder {
             Long2ObjectOpenHashMap<VoxelShape> shapes,
             Long2ObjectOpenHashMap<SectionDataCapture> sections,
             SnapshotBounds bounds,
-            net.minecraft.resources.ResourceLocation dimensionId,
+            net.minecraft.resources.Identifier dimensionId,
             long createdAt,
             boolean complete) {
         ChunkDataCapture(Long2ObjectOpenHashMap<BlockState> states,
                          Long2ObjectOpenHashMap<VoxelShape> shapes,
                          SnapshotBounds bounds,
-                         net.minecraft.resources.ResourceLocation dimensionId,
+                         net.minecraft.resources.Identifier dimensionId,
                          long createdAt,
                          boolean complete) {
             this(states, shapes, null, bounds, dimensionId, createdAt, complete);

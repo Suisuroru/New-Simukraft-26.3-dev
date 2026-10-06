@@ -15,7 +15,7 @@ import common.cn.kafei.simukraft.path.MovementIntent;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -71,10 +71,10 @@ public final class MedicalMealService {
             }
         }
         contexts.values().forEach(context -> clearStaleDoctorStatus(level, runtime, context));
-        if (!isMealTime(level.getDayTime())) {
+        if (!isMealTime(level.getDefaultClockTime())) {
             return;
         }
-        long currentDay = level.getDayTime() / 24_000L;
+        long currentDay = level.getDefaultClockTime() / 24_000L;
         for (HospitalContext context : contexts.values()) {
             if (runtime.active.containsKey(context.boxPos())
                     || currentDay == runtime.attemptedDays.getOrDefault(context.boxPos(), -1L)) {
@@ -266,7 +266,7 @@ public final class MedicalMealService {
     }
 
     private static ItemStack previewMeal(CommercialFoodMarketService.PurchasePlan plan) {
-        ResourceLocation itemId = plan != null ? ResourceLocation.tryParse(plan.itemId()) : null;
+        Identifier itemId = plan != null ? Identifier.tryParse(plan.itemId()) : null;
         Item item = itemId != null ? BuiltInRegistries.ITEM.getOptional(itemId).orElse(Items.AIR) : Items.AIR;
         return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item, Math.max(1, plan.resultCount()));
     }

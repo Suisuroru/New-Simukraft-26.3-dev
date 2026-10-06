@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.UUID;
  */
 
 public record CityCitizenManageResponsePacket(BlockPos pos, String cityName, boolean canManage, List<CitizenEntry> citizens) implements CustomPacketPayload {
-    public static final Type<CityCitizenManageResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_manage_response"));
+    public static final Type<CityCitizenManageResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_manage_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCitizenManageResponsePacket> STREAM_CODEC = StreamCodec.of(CityCitizenManageResponsePacket::encode, CityCitizenManageResponsePacket::decode);
 
     public CityCitizenManageResponsePacket {

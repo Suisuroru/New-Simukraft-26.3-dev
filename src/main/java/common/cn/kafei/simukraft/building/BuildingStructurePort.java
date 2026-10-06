@@ -5,7 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
@@ -27,7 +27,7 @@ public final class BuildingStructurePort {
     }
 
     /** structureId: 这座已建成建筑对应的结构 ID，文件名无法编码时返回 null。 */
-    public static ResourceLocation structureId(PlacedBuildingRecord record) {
+    public static Identifier structureId(PlacedBuildingRecord record) {
         if (record == null) {
             return null;
         }
@@ -45,7 +45,7 @@ public final class BuildingStructurePort {
         if (!(level instanceof ServerLevel serverLevel) || pos == null || predicate == null) {
             return null;
         }
-        Registry<Structure> registry = serverLevel.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> registry = serverLevel.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         for (PlacedBuildingRecord record : PlacedBuildingService.getBuildings(serverLevel)) {
             if (!nearBuilding(record, pos)) {
                 continue;
@@ -66,8 +66,8 @@ public final class BuildingStructurePort {
         if (!(level instanceof ServerLevel serverLevel) || pos == null || structure == null) {
             return null;
         }
-        Registry<Structure> registry = serverLevel.registryAccess().registryOrThrow(Registries.STRUCTURE);
-        ResourceLocation asked = registry.getKey(structure);
+        Registry<Structure> registry = serverLevel.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        Identifier asked = registry.getKey(structure);
         if (asked == null) {
             return null;
         }
@@ -80,18 +80,18 @@ public final class BuildingStructurePort {
     }
 
     private static StructureStart startFor(Registry<Structure> registry, PlacedBuildingRecord record, Predicate<Holder<Structure>> predicate) {
-        ResourceLocation id = structureId(record);
+        Identifier id = structureId(record);
         if (id == null || !ownsStructure(record, id)) {
             return null;
         }
-        Optional<Holder.Reference<Structure>> holder = registry.getHolder(ResourceKey.create(Registries.STRUCTURE, id));
-        if (holder.isEmpty() || !predicate.test(holder.get())) {
+        Optional<Structure> holder = registry.getOptional(ResourceKey.create(Registries.STRUCTURE, id));
+        if (holder.isEmpty()) {
             return null;
         }
-        return syntheticStart(holder.get().value(), record);
+        return syntheticStart(holder.get(), record);
     }
 
-    private static boolean ownsStructure(PlacedBuildingRecord record, ResourceLocation structureId) {
+    private static boolean ownsStructure(PlacedBuildingRecord record, Identifier structureId) {
         return BuildingStructureIds.matches(record.category(), record.buildingFileName(), record.structureFileName(), structureId);
     }
 
@@ -101,7 +101,8 @@ public final class BuildingStructurePort {
         if (box == null || anchor == null) {
             return null;
         }
-        return new StructureStart(structure, new ChunkPos(anchor), 0, new PiecesContainer(List.of(new PlacedBuildingPiece(box))));
+
+        return new StructureStart(structure, ChunkPos.containing(anchor), 0, new PiecesContainer(List.of(new PlacedBuildingPiece(box))));
     }
 
     /** 建筑占地再向外扩 1 格。贴着外墙、门口或屋顶时，玩家脚所在的格子仍算进入该建筑。 */

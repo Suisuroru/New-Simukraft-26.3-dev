@@ -152,20 +152,20 @@ public final class IndustrialBoxData {
     }
 
     public static IndustrialBoxData fromTag(CompoundTag tag) {
-        IndustrialBoxData data = new IndustrialBoxData(BlockPos.of(tag.getLong("BoxPos")));
-        data.buildingId = tag.getString("BuildingId");
-        data.definitionId = tag.getString("DefinitionId");
-        data.selectedRecipeId = tag.getString("SelectedRecipeId");
-        data.running = tag.getBoolean("Running");
-        data.spawnEntityDone = tag.getBoolean("SpawnEntityDone");
-        data.currentStep = Math.max(0, tag.getInt("CurrentStep"));
-        data.statusKey = tag.getString("StatusKey");
-        data.statusText = tag.getString("StatusText");
-        data.machineState = tag.getString("MachineState");
-        data.workState = tag.getString("WorkState");
-        data.updatedAt = tag.getLong("UpdatedAt");
-        data.stepElapsedTicks = Math.max(0, tag.getLong("StepElapsedTicks"));
-        data.workerWorkPos = tag.contains("WorkerWorkPos") ? tag.getLong("WorkerWorkPos") : Long.MIN_VALUE;
+        IndustrialBoxData data = new IndustrialBoxData(BlockPos.of(tag.getLong("BoxPos").get()));
+        data.buildingId = tag.getString("BuildingId").get();
+        data.definitionId = tag.getString("DefinitionId").get();
+        data.selectedRecipeId = tag.getString("SelectedRecipeId").get();
+        data.running = tag.getBoolean("Running").get();
+        data.spawnEntityDone = tag.getBoolean("SpawnEntityDone").get();
+        data.currentStep = Math.max(0, tag.getInt("CurrentStep").get());
+        data.statusKey = tag.getString("StatusKey").get();
+        data.statusText = tag.getString("StatusText").get();
+        data.machineState = tag.getString("MachineState").get();
+        data.workState = tag.getString("WorkState").get();
+        data.updatedAt = tag.getLong("UpdatedAt").get();
+        data.stepElapsedTicks = Math.max(0, tag.getLong("StepElapsedTicks").get());
+        data.workerWorkPos = tag.contains("WorkerWorkPos") ? tag.getLong("WorkerWorkPos").get() : Long.MIN_VALUE;
         return data;
     }
 }

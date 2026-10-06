@@ -21,21 +21,16 @@ public final class LogisticsServerBoxBlock extends Block {
         super(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE).strength(1.0F).sound(SoundType.METAL));
     }
 
-    /** useWithoutItem: 玩家空手右键打开物流服务器盒界面。 */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             LogisticsServerBoxOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
-    /** onRemove: 服务器盒移除时清理仓库、路线和仓储管理员。 */
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            LogisticsControlBoxService.onServerRemoved(serverLevel, pos);
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        LogisticsControlBoxService.onServerRemoved(level, pos);
     }
 }

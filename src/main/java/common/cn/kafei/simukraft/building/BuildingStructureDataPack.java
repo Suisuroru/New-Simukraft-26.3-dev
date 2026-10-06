@@ -5,13 +5,14 @@ import com.google.gson.JsonObject;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.AbstractPackResources;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.AbstractPackMetadataResources;
 import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackMetadataResources;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.metadata.pack.PackFormat;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -32,6 +33,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -73,13 +75,13 @@ public final class BuildingStructureDataPack {
                     location,
                     new Pack.ResourcesSupplier() {
                         @Override
-                        public PackResources openPrimary(PackLocationInfo packLocation) {
+                        public PackMetadataResources openMetadata(PackLocationInfo packLocation) {
                             return new Resources(packLocation);
                         }
 
                         @Override
-                        public PackResources openFull(PackLocationInfo packLocation, Pack.Metadata metadata) {
-                            return openPrimary(packLocation);
+                        public Stream<PackResources> openResources(PackLocationInfo packLocation, Pack.Metadata metadata) {
+                            return Stream.of(new Resources(packLocation));
                         }
                     },
                     PackType.SERVER_DATA,
@@ -91,8 +93,8 @@ public final class BuildingStructureDataPack {
         });
     }
 
-    private static Map<String, ResourceLocation> scanBuildings() {
-        Map<String, ResourceLocation> structures = new LinkedHashMap<>();
+    private static Map<String, Identifier> scanBuildings() {
+        Map<String, Identifier> structures = new LinkedHashMap<>();
         readZip(BuildingBuiltinResourceService.openOfficialPackage(), "official_building.zip", structures);
         Path root = FMLPaths.GAMEDIR.get().resolve(BuildingPackageCatalog.ROOT_DIR);
         if (!Files.isDirectory(root)) {
@@ -120,7 +122,7 @@ public final class BuildingStructureDataPack {
         return structures;
     }
 
-    private static void readZip(InputStream inputStream, String sourceName, Map<String, ResourceLocation> structures) {
+    private static void readZip(InputStream inputStream, String sourceName, Map<String, Identifier> structures) {
         if (inputStream == null) {
             return;
         }
@@ -134,7 +136,7 @@ public final class BuildingStructureDataPack {
         }
     }
 
-    private static void addEntry(String entryName, Map<String, ResourceLocation> structures) {
+    private static void addEntry(String entryName, Map<String, Identifier> structures) {
         String normalized = entryName == null ? "" : entryName.replace('\\', '/');
         while (normalized.startsWith("/")) {
             normalized = normalized.substring(1);
@@ -146,7 +148,7 @@ public final class BuildingStructureDataPack {
         if (parts.length != 3 || parts[2].isBlank() || parts[2].contains("..")) {
             return;
         }
-        ResourceLocation id = BuildingStructureIds.location(parts[1], parts[2]);
+        Identifier id = BuildingStructureIds.location(parts[1], parts[2]);
         if (id == null) {
             SimuKraft.LOGGER.warn("Simukraft: Skipped building {} because its name is not a valid structure id", normalized);
             return;
@@ -154,16 +156,15 @@ public final class BuildingStructureDataPack {
         structures.put(id.getPath(), id);
     }
 
-    private static final class Resources implements PackResources {
-        private final PackLocationInfo location;
-        private Map<String, ResourceLocation> structures;
+    private static final class Resources extends AbstractPackMetadataResources implements PackResources {
+        private Map<String, Identifier> structures;
         private Map<String, byte[]> tags;
 
         private Resources(PackLocationInfo location) {
-            this.location = location;
+            super(location);
         }
 
-        private Map<String, ResourceLocation> structures() {
+        private Map<String, Identifier> structures() {
             if (this.structures == null) {
                 this.structures = scanBuildings();
                 this.tags = buildTags(this.structures);
@@ -175,19 +176,20 @@ public final class BuildingStructureDataPack {
         @Override
         public IoSupplier<InputStream> getRootResource(String... elements) {
             if (elements.length == 1 && PackResources.PACK_META.equals(elements[0])) {
-                int packFormat = SharedConstants.getCurrentVersion().getPackVersion(PackType.SERVER_DATA);
-                String meta = "{\"pack\":{\"description\":\"Simukraft placed building structures\",\"pack_format\":" + packFormat + "}}";
+                PackFormat packFormat = SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA);
+                // MC 26.3 的 PackMetadataSection 已改用 supported_formats（InclusiveRange<PackFormat>），不再识别 pack_format。
+                String meta = "{\"pack\":{\"description\":\"Simukraft placed building structures\",\"supported_formats\":{\"min_inclusive\":" + packFormat.major() + ",\"max_inclusive\":" + packFormat.major() + "}}}";
                 return () -> new ByteArrayInputStream(meta.getBytes(StandardCharsets.UTF_8));
             }
             return null;
         }
 
         @Override
-        public IoSupplier<InputStream> getResource(PackType packType, ResourceLocation resourceLocation) {
-            if (packType != PackType.SERVER_DATA || !SimuKraft.MOD_ID.equals(resourceLocation.getNamespace())) {
+        public IoSupplier<InputStream> getResource(PackType packType, Identifier Identifier) {
+            if (packType != PackType.SERVER_DATA || !SimuKraft.MOD_ID.equals(Identifier.getNamespace())) {
                 return null;
             }
-            byte[] bytes = resourceBytes(resourceLocation.getPath());
+            byte[] bytes = resourceBytes(Identifier.getPath());
             return bytes == null ? null : () -> new ByteArrayInputStream(bytes);
         }
 
@@ -197,16 +199,16 @@ public final class BuildingStructureDataPack {
                 return;
             }
             String prefix = path.endsWith("/") ? path : path + "/";
-            for (ResourceLocation id : structures().values()) {
+            for (Identifier id : structures().values()) {
                 String resourcePath = STRUCTURE_DIRECTORY + id.getPath() + ".json";
                 if (resourcePath.equals(path) || resourcePath.startsWith(prefix)) {
-                    output.accept(ResourceLocation.fromNamespaceAndPath(namespace, resourcePath), () -> new ByteArrayInputStream(STRUCTURE_JSON));
+                    output.accept(Identifier.fromNamespaceAndPath(namespace, resourcePath), () -> new ByteArrayInputStream(STRUCTURE_JSON));
                 }
             }
             for (Map.Entry<String, byte[]> tag : tags.entrySet()) {
                 if (tag.getKey().equals(path) || tag.getKey().startsWith(prefix)) {
                     byte[] bytes = tag.getValue();
-                    output.accept(ResourceLocation.fromNamespaceAndPath(namespace, tag.getKey()), () -> new ByteArrayInputStream(bytes));
+                    output.accept(Identifier.fromNamespaceAndPath(namespace, tag.getKey()), () -> new ByteArrayInputStream(bytes));
                 }
             }
         }
@@ -214,27 +216,6 @@ public final class BuildingStructureDataPack {
         @Override
         public Set<String> getNamespaces(PackType packType) {
             return packType == PackType.SERVER_DATA ? Set.of(SimuKraft.MOD_ID) : Set.of();
-        }
-
-        @Override
-        public <T> T getMetadataSection(MetadataSectionSerializer<T> deserializer) throws IOException {
-            IoSupplier<InputStream> supplier = getRootResource(PackResources.PACK_META);
-            if (supplier == null) {
-                return null;
-            }
-            try (InputStream inputStream = supplier.get()) {
-                return AbstractPackResources.getMetadataFromStream(deserializer, inputStream);
-            }
-        }
-
-        @Override
-        public PackLocationInfo location() {
-            return location;
-        }
-
-        @Override
-        public boolean isHidden() {
-            return true;
         }
 
         @Override
@@ -251,12 +232,12 @@ public final class BuildingStructureDataPack {
         }
     }
 
-    private static Map<String, byte[]> buildTags(Map<String, ResourceLocation> structures) {
-        Map<String, List<ResourceLocation>> byCategory = new LinkedHashMap<>();
+    private static Map<String, byte[]> buildTags(Map<String, Identifier> structures) {
+        Map<String, List<Identifier>> byCategory = new LinkedHashMap<>();
         for (String category : BuildingPackageCatalog.categories()) {
             byCategory.put(category, new ArrayList<>());
         }
-        for (ResourceLocation id : structures.values()) {
+        for (Identifier id : structures.values()) {
             String path = id.getPath();
             int slash = path.indexOf('/');
             String category = slash > 0 ? path.substring(0, slash) : "other";
@@ -264,7 +245,7 @@ public final class BuildingStructureDataPack {
         }
         Map<String, byte[]> tags = new LinkedHashMap<>();
         tags.put(TAG_DIRECTORY + BuildingStructureIds.ALL_TAG + ".json", tagJson(structures.values()));
-        for (Map.Entry<String, List<ResourceLocation>> entry : byCategory.entrySet()) {
+        for (Map.Entry<String, List<Identifier>> entry : byCategory.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 tags.put(TAG_DIRECTORY + entry.getKey() + ".json", tagJson(entry.getValue()));
             }
@@ -272,9 +253,9 @@ public final class BuildingStructureDataPack {
         return tags;
     }
 
-    private static byte[] tagJson(Iterable<ResourceLocation> ids) {
+    private static byte[] tagJson(Iterable<Identifier> ids) {
         JsonArray values = new JsonArray();
-        for (ResourceLocation id : ids) {
+        for (Identifier id : ids) {
             values.add(id.toString());
         }
         JsonObject root = new JsonObject();

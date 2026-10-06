@@ -3,11 +3,10 @@ package common.cn.kafei.simukraft.exchange;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import common.cn.kafei.simukraft.SimuKraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -35,20 +34,18 @@ public final class ExchangeCompanyLoader implements PreparableReloadListener {
     }
 
     @Override
-    public CompletableFuture<Void> reload(PreparationBarrier barrier,
-                                          ResourceManager resourceManager,
-                                          ProfilerFiller preparationsProfiler,
-                                          ProfilerFiller reloadProfiler,
+    public CompletableFuture<Void> reload(SharedState sharedState,
                                           Executor backgroundExecutor,
-                                          Executor gameExecutor) {
-        return CompletableFuture.supplyAsync(() -> load(resourceManager), backgroundExecutor)
+                                          PreparationBarrier barrier,
+                                          Executor targetExecutor) {
+        return CompletableFuture.supplyAsync(() -> load(sharedState.resourceManager()), backgroundExecutor)
                 .thenCompose(barrier::wait)
-                .thenAcceptAsync(loaded -> companies.set(loaded.isEmpty() ? defaults() : loaded), gameExecutor);
+                .thenAcceptAsync(loaded -> companies.set(loaded.isEmpty() ? defaults() : loaded), targetExecutor);
     }
 
     private List<ExchangeCompany> load(ResourceManager resourceManager) {
         List<ExchangeCompany> loaded = new ArrayList<>();
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources(DIRECTORY, path -> path.getPath().endsWith(".json"));
+        Map<Identifier, Resource> resources = resourceManager.listResources(DIRECTORY, path -> path.getPath().endsWith(".json"));
         resources.forEach((resourceId, resource) -> {
             try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
                 loaded.add(parse(resourceId, JsonParser.parseReader(reader).getAsJsonObject()));
@@ -61,7 +58,7 @@ public final class ExchangeCompanyLoader implements PreparableReloadListener {
         return List.copyOf(loaded);
     }
 
-    static ExchangeCompany parse(ResourceLocation resourceId, JsonObject root) {
+    static ExchangeCompany parse(Identifier resourceId, JsonObject root) {
         String id = text(root, "id", resourceId.getPath());
         String name = text(root, "display_name", id);
         String sector = text(root, "sector", "other");

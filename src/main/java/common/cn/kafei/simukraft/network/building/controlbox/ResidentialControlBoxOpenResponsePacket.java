@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ public record ResidentialControlBoxOpenResponsePacket(BlockPos controlBoxPos,
                                                       boolean occupancyAllowed,
                                                       double evictionCost,
                                                       List<UnitEntry> units) implements CustomPacketPayload {
-    public static final Type<ResidentialControlBoxOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_open_response"));
+    public static final Type<ResidentialControlBoxOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ResidentialControlBoxOpenResponsePacket> STREAM_CODEC = StreamCodec.of(ResidentialControlBoxOpenResponsePacket::encode, ResidentialControlBoxOpenResponsePacket::decode);
 
     @Override

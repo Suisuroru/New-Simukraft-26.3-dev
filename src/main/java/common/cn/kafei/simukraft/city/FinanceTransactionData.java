@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.city;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.UUID;
@@ -11,7 +12,7 @@ public record FinanceTransactionData(long time, UUID actorId, String actorName, 
         CompoundTag tag = new CompoundTag();
         tag.putLong("Time", time);
         if (actorId != null) {
-            tag.putUUID("ActorId", actorId);
+            NbtUuid.put(tag, "ActorId", actorId);
         }
         tag.putString("ActorName", actorName != null ? actorName : "");
         tag.putDouble("Amount", amount);
@@ -22,15 +23,15 @@ public record FinanceTransactionData(long time, UUID actorId, String actorName, 
     }
 
     public static FinanceTransactionData fromTag(CompoundTag tag) {
-        UUID actorId = tag.hasUUID("ActorId") ? tag.getUUID("ActorId") : null;
+        UUID actorId = NbtUuid.readOrNull(tag, "ActorId");
         return new FinanceTransactionData(
-                tag.getLong("Time"),
+                tag.getLong("Time").get(),
                 actorId,
-                tag.getString("ActorName"),
-                tag.getDouble("Amount"),
-                tag.getDouble("BalanceAfter"),
-                Type.fromName(tag.getString("Type")),
-                tag.getString("Reason")
+                tag.getString("ActorName").get(),
+                tag.getDouble("Amount").get(),
+                tag.getDouble("BalanceAfter").get(),
+                Type.fromName(tag.getString("Type").get()),
+                tag.getString("Reason").get()
         );
     }
 

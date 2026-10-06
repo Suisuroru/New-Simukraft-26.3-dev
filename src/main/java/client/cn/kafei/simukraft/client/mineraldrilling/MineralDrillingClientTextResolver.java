@@ -2,7 +2,7 @@ package client.cn.kafei.simukraft.client.mineraldrilling;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -19,7 +19,7 @@ final class MineralDrillingClientTextResolver {
         if (productId == null || productId.isBlank()) {
             return noProductText();
         }
-        ResourceLocation itemId = ResourceLocation.tryParse(productId);
+        Identifier itemId = Identifier.tryParse(productId);
         if (itemId == null) {
             return noProductText();
         }

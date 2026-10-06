@@ -2,12 +2,14 @@ package common.cn.kafei.simukraft.farmland;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,32 +23,41 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class FarmlandBoxManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_farmland_boxes";
-    private static final Factory<FarmlandBoxManager> FACTORY = new Factory<>(FarmlandBoxManager::new, FarmlandBoxManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "farmland_boxes");
+    private static final SavedDataType<FarmlandBoxManager> TYPE = createType();
+
+    @SuppressWarnings("unchecked")
+    private static SavedDataType<FarmlandBoxManager> createType() {
+        Codec<FarmlandBoxManager> codec = CompoundTag.CODEC.xmap(FarmlandBoxManager::load, FarmlandBoxManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, FarmlandBoxManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<BlockPos, FarmlandBoxData> boxes = new ConcurrentHashMap<>();
     private volatile boolean sqliteLoaded;
     private volatile ServerLevel level;
 
     public static FarmlandBoxManager get(ServerLevel level) {
-        FarmlandBoxManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        FarmlandBoxManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static FarmlandBoxManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static FarmlandBoxManager load(CompoundTag tag) {
         FarmlandBoxManager manager = new FarmlandBoxManager();
-        ListTag list = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag list = tag.getList("Boxes").orElse(new ListTag());
         for (int i = 0; i < list.size(); i++) {
-            FarmlandBoxData data = FarmlandBoxData.fromTag(list.getCompound(i));
+            FarmlandBoxData data = FarmlandBoxData.fromTag(list.getCompound(i).orElse(new CompoundTag()));
             manager.boxes.put(data.boxPos(), data);
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag list = new ListTag();
         boxes.values().forEach(data -> list.add(data.toTag()));
         tag.put("Boxes", list);
@@ -55,7 +66,7 @@ public final class FarmlandBoxManager extends SavedData {
 
     public synchronized void saveToSqlite(ServerLevel level) {
         if (level != null) {
-            SimuSqliteStorage.saveFarmlandBoxes(level, save(new CompoundTag(), level.registryAccess()));
+            SimuSqliteStorage.saveFarmlandBoxes(level, save(new CompoundTag()));
         }
     }
 
@@ -74,7 +85,7 @@ public final class FarmlandBoxManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        FarmlandBoxManager loaded = load(sqliteTag, level.registryAccess());
+        FarmlandBoxManager loaded = load(sqliteTag);
         boxes.clear();
         boxes.putAll(loaded.boxes);
     }

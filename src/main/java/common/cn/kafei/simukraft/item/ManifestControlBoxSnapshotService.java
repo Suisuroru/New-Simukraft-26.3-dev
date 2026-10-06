@@ -138,12 +138,13 @@ final class ManifestControlBoxSnapshotService {
             addMaterial(materials, materialItemId(itemRequirement.spec()), itemRequirement.count());
             return;
         }
-        if (requirement instanceof IndustrialDefinition.InputRequirementGroup group) {
-            List<IndustrialDefinition.InputRequirement> children = group.children();
+        if (requirement instanceof IndustrialDefinition.InputRequirementGroup(
+                IndustrialDefinition.InputLogic logic, List<IndustrialDefinition.InputRequirement> children
+        )) {
             if (children.isEmpty()) {
                 return;
             }
-            if (group.logic() == IndustrialDefinition.InputLogic.ANY) {
+            if (logic == IndustrialDefinition.InputLogic.ANY) {
                 appendIndustrialRequirement(materials, children.getFirst());
                 return;
             }
@@ -252,12 +253,13 @@ final class ManifestControlBoxSnapshotService {
             specs.add(itemRequirement.spec());
             return;
         }
-        if (requirement instanceof IndustrialDefinition.InputRequirementGroup group) {
-            List<IndustrialDefinition.InputRequirement> children = group.children();
+        if (requirement instanceof IndustrialDefinition.InputRequirementGroup(
+                IndustrialDefinition.InputLogic logic, List<IndustrialDefinition.InputRequirement> children
+        )) {
             if (children.isEmpty()) {
                 return;
             }
-            if (group.logic() == IndustrialDefinition.InputLogic.ANY) {
+            if (logic == IndustrialDefinition.InputLogic.ANY) {
                 collectIndustrialInputSpec(specs, children.getFirst());
                 return;
             }

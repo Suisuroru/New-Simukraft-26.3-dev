@@ -70,8 +70,8 @@ public final class CitizenHomeRestService {
         ConcurrentMap<UUID, Vec3> homeTargets = HOME_TARGETS_BY_LEVEL.computeIfAbsent(levelKey, ignored -> new ConcurrentHashMap<>());
         CityPoiManager poiManager = CityPoiManager.get(level);
         CitizenManager manager = CitizenManager.get(level);
-        String dimensionId = level.dimension().location().toString();
-        long currentDay = level.getDayTime() / 24_000L;
+        String dimensionId = level.dimension().registry().toString();
+        long currentDay = level.getDefaultClockTime() / 24_000L;
         for (CitizenData citizen : manager.allCitizens()) {
             if (citizen.dead()) {
                 continue;
@@ -130,7 +130,7 @@ public final class CitizenHomeRestService {
     }
 
     private static void retryBlockedWorkNavigation(ServerLevel level) {
-        String dimensionId = level.dimension().location().toString();
+        String dimensionId = level.dimension().registry().toString();
         for (CitizenData citizen : CitizenManager.get(level).allCitizens()) {
             if (citizen.dead() || !dimensionId.equals(citizen.dimensionId())
                     || !CityRuntimeService.isCitizenActive(level, citizen)
@@ -163,7 +163,7 @@ public final class CitizenHomeRestService {
 
     private static void restoreHomeRestingCitizens(ServerLevel level) {
         CitizenManager manager = CitizenManager.get(level);
-        String dimensionId = level.dimension().location().toString();
+        String dimensionId = level.dimension().registry().toString();
         for (CitizenData citizen : manager.allCitizens()) {
             if (citizen.dead()) {
                 continue;
@@ -177,7 +177,7 @@ public final class CitizenHomeRestService {
             if (!HOME_REST_MARKER.equals(citizen.workNeedDetail())) {
                 continue;
             }
-            if (shouldKeepMedicalStatus(citizen, level.getDayTime() / 24_000L)) {
+            if (shouldKeepMedicalStatus(citizen, level.getDefaultClockTime() / 24_000L)) {
                 continue;
             }
             CitizenEntity entityToWake = CitizenTeleportService.findCitizenEntity(level, citizen.uuid());
@@ -205,7 +205,7 @@ public final class CitizenHomeRestService {
 
     // isRestTime：统一夜间休息窗口，建筑师、规划师、农民和回家服务共用同一判定。
     public static boolean isRestTime(ServerLevel level) {
-        int time = (int) Math.floorMod(level.getDayTime(), 24000L);
+        int time = (int) Math.floorMod(level.getDefaultClockTime(), 24000L);
         int start = REST_START_TIME;
         int end = REST_END_TIME;
         if (start == end) {
@@ -444,7 +444,7 @@ public final class CitizenHomeRestService {
     }
 
     public static boolean isResidentialBedHead(BlockState state) {
-        return state.is(Blocks.RED_BED)
+        return state.is(Blocks.BED.red())
                 && (!state.hasProperty(BlockStateProperties.BED_PART) || state.getValue(BlockStateProperties.BED_PART) == BedPart.HEAD);
     }
 

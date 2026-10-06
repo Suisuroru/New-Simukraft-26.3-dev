@@ -12,7 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -27,7 +27,7 @@ import java.util.Optional;
  */
 
 public record CityCitizenManageRequestPacket(BlockPos pos) implements CustomPacketPayload {
-    public static final Type<CityCitizenManageRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_manage_request"));
+    public static final Type<CityCitizenManageRequestPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_manage_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCitizenManageRequestPacket> STREAM_CODEC = StreamCodec.of(CityCitizenManageRequestPacket::encode, CityCitizenManageRequestPacket::decode);
 
     @Override

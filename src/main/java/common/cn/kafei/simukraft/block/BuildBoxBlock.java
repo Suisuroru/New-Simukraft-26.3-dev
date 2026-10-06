@@ -7,6 +7,7 @@ import common.cn.kafei.simukraft.clientbridge.ClientInteractionBridge;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +31,7 @@ public class BuildBoxBlock extends Block {
         } else {
             level.playSound(null, pos, ModSoundEvents.BUILD_BOX_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
     @Override
@@ -42,26 +43,19 @@ public class BuildBoxBlock extends Block {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (state.is(newState.getBlock())) {
-            super.onRemove(state, level, pos, newState, movedByPiston);
-            return;
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        level.playSound(null, pos, ModSoundEvents.BUILD_BOX_BREAK.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        BuilderConstructionService.interruptTasksByBuildBox(level, pos, "build_box_removed");
+        common.cn.kafei.simukraft.planner.PlannerWorkService.interruptTasksByBuildBox(level, pos, "build_box_removed");
+        releaseAssignedCitizen(level, pos, "builder");
+        releaseAssignedCitizen(level, pos, "planner");
+        PlacedBuildingRecord building = PlacedBuildingService.findByContainedPos(level, pos);
+        if (building != null) {
+            PlacedBuildingService.unregister(level, building.buildingId());
         }
-        if (!level.isClientSide() && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            level.playSound(null, pos, ModSoundEvents.BUILD_BOX_BREAK.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-            BuilderConstructionService.interruptTasksByBuildBox(serverLevel, pos, "build_box_removed");
-            common.cn.kafei.simukraft.planner.PlannerWorkService.interruptTasksByBuildBox(serverLevel, pos, "build_box_removed");
-            releaseAssignedCitizen(serverLevel, pos, "builder");
-            releaseAssignedCitizen(serverLevel, pos, "planner");
-            PlacedBuildingRecord building = PlacedBuildingService.findByContainedPos(serverLevel, pos);
-            if (building != null) {
-                PlacedBuildingService.unregister(serverLevel, building.buildingId());
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
-    private static void releaseAssignedCitizen(net.minecraft.server.level.ServerLevel level, BlockPos pos, String role) {
+    private static void releaseAssignedCitizen(ServerLevel level, BlockPos pos, String role) {
         CitizenEmploymentService.fireAssigned(level, CitizenEmploymentService.workplaceId("build_box", role, pos), "build_box", role, pos, "build_box_removed");
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -24,7 +24,7 @@ import java.util.Locale;
 
 @OnlyIn(Dist.CLIENT)
 public final class LogisticsWarehouseGridScreen extends AbstractContainerScreen<LogisticsWarehouseGridMenu> {
-    private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/generic_54.png");
+    private static final Identifier GUI_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/container/generic_54.png");
     private static final int WAREHOUSE_X = 8;
     private static final int WAREHOUSE_Y = 18;
     private static final int SLOT_SIZE = 18;

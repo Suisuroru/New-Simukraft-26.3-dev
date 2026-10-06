@@ -50,7 +50,7 @@ public final class HudSyncService {
         }
         ServerLevel level = player.serverLevel();
         Optional<CityData> city = CityService.findPlayerCity(level, player.getUUID());
-        int currentDay = (int) Math.max(1L, level.getDayTime() / 24000L + 1L);
+        int currentDay = (int) Math.max(1L, level.getDefaultClockTime() / 24000L + 1L);
         boolean creativeMode = player.isCreative();
         HudState state = city.map(cityData -> {
             CityPermissionLevel permissionLevel = CityService.getPlayerPermission(cityData, player.getUUID());

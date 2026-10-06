@@ -3,7 +3,7 @@ package common.cn.kafei.simukraft.material;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
@@ -52,6 +52,6 @@ public final class WorkMaterialNotificationService {
         return value == null || value.isBlank() ? fallback : value;
     }
 
-    private record MaterialNoticeKey(ResourceLocation dimensionId, UUID cityId, UUID taskId, String materialName) {
+    private record MaterialNoticeKey(Identifier dimensionId, UUID cityId, UUID taskId, String materialName) {
     }
 }

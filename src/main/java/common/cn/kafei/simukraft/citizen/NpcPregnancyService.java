@@ -59,7 +59,7 @@ public final class NpcPregnancyService {
 
     /** forcePregnancy：由管理员命令跳过随机概率，为满足正常分娩条件的妻子开始妊娠。 */
     public static boolean forcePregnancy(ServerLevel level, CitizenData wife) {
-        if (level == null || !canStartPregnancy(wife, level.getDayTime() / 24000L)) {
+        if (level == null || !canStartPregnancy(wife, level.getDefaultClockTime() / 24000L)) {
             return false;
         }
         FamilyData family = FamilyManager.get(level).getFamilyByCitizen(wife.uuid()).orElse(null);
@@ -73,7 +73,7 @@ public final class NpcPregnancyService {
         }
 
         wife.setPregnant(true);
-        wife.setPregnantSince(level.getDayTime() / 24000L);
+        wife.setPregnantSince(level.getDefaultClockTime() / 24000L);
         wife.setReservedBabyBedPoiId(reservedBedId);
         wife.setStatusLabel(PregnancyStage.EARLY.translationKey());
         manager.saveCitizenNow(wife.uuid());

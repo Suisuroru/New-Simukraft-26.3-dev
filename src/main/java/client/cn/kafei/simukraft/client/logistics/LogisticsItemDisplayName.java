@@ -2,7 +2,7 @@ package client.cn.kafei.simukraft.client.logistics;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -16,7 +16,7 @@ final class LogisticsItemDisplayName {
 
     /** itemName: 按客户端语言把物品 ID 转成可读名称。 */
     static String itemName(String itemId) {
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return safeItemId(itemId);
         }
@@ -47,7 +47,7 @@ final class LogisticsItemDisplayName {
 
     /** stackFor: 根据物品 ID 创建只读展示用 ItemStack。 */
     static ItemStack stackFor(String itemId) {
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return new ItemStack(Items.BARRIER);
         }

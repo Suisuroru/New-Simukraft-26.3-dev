@@ -23,6 +23,6 @@ public final class ConstructionCompletionNotificationService {
         CityGroupMessageService.send(level, CityUserGroup.members(task.cityId()),
                 Component.translatable("toast.simukraft.construction_title"), message, "success", ItemStack.EMPTY);
         CityUserGroupService.forEach(level, CityUserGroup.mayors(task.cityId()),
-                p -> p.playNotifySound(ModSoundEvents.CONSTRUCTION_COMPLETE.get(), SoundSource.PLAYERS, 1.0F, 1.0F));
+                p -> p.playSound(ModSoundEvents.CONSTRUCTION_COMPLETE.get(), 1.0F, 1.0F));
     }
 }

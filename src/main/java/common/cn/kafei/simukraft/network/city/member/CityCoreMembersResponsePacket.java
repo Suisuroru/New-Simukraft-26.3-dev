@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 
 public record CityCoreMembersResponsePacket(BlockPos pos, UUID cityId, String cityName, double funds, int cityLevel, List<MemberEntry> members, List<CandidateEntry> onlineCandidates, CityPermissionLevel viewerPermission, boolean canManageCity) implements CustomPacketPayload {
-    public static final Type<CityCoreMembersResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_members_response"));
+    public static final Type<CityCoreMembersResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_members_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreMembersResponsePacket> STREAM_CODEC = StreamCodec.of(CityCoreMembersResponsePacket::encode, CityCoreMembersResponsePacket::decode);
 
     public CityCoreMembersResponsePacket {

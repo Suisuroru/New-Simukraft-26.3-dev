@@ -116,7 +116,7 @@ public final class CityJobAssignmentService {
     private static AssignmentIndex index(ServerLevel level, UUID cityId) {
         AssignmentCacheKey key = new AssignmentCacheKey(
                 SaveScopedCacheKey.serverKey(level.getServer()),
-                level.dimension().location().toString(),
+                level.dimension().registry().toString(),
                 cityId);
         return INDICES.computeIfAbsent(key, ignored -> buildIndex(level, cityId));
     }

@@ -135,7 +135,7 @@ public final class BuildingVoxelCodec {
                 return fallbackState(blockId);
             }
             String name = tag.getString("Name");
-            Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.ResourceLocation.parse(name)).orElse(null);
+            Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.Identifier.parse(name)).orElse(null);
             if (block == null) {
                 return fallbackState(blockId);
             }
@@ -207,7 +207,7 @@ public final class BuildingVoxelCodec {
             keys[index] = data.readUTF();
             values[index] = data.readUTF();
         }
-        Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.ResourceLocation.parse(blockId)).orElse(null);
+        Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.Identifier.parse(blockId)).orElse(null);
         if (block == null) {
             return null;
         }
@@ -225,7 +225,7 @@ public final class BuildingVoxelCodec {
         if (blockId == null || blockId.isBlank()) {
             return null;
         }
-        Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.ResourceLocation.parse(blockId)).orElse(null);
+        Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.Identifier.parse(blockId)).orElse(null);
         return block != null ? block.defaultBlockState() : null;
     }
 

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import common.cn.kafei.simukraft.job.CityJobType;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
@@ -19,7 +20,7 @@ class CitizenDataTest {
         UUID homeId = UUID.randomUUID();
         CompoundTag tag = baseCitizenTag(citizenId);
         tag.putString("WorkStatus", "work_status.dead");
-        tag.putUUID("HomeId", homeId);
+        NbtUuid.put(tag, "HomeId", homeId);
 
         CitizenData data = CitizenData.fromTag(tag);
 
@@ -115,7 +116,7 @@ class CitizenDataTest {
 
     private static CompoundTag baseCitizenTag(UUID citizenId) {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("Uuid", citizenId);
+        NbtUuid.put(tag, "Uuid", citizenId);
         tag.putString("Name", "Test Citizen");
         tag.putString("Gender", "male");
         tag.putInt("Age", 20);

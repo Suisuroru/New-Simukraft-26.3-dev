@@ -15,7 +15,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -27,7 +27,7 @@ import java.util.UUID;
 /** 请求指定市民的五代直系关系图。 */
 public record CityCitizenFamilyGraphRequestPacket(BlockPos pos, UUID citizenId) implements CustomPacketPayload {
     public static final Type<CityCitizenFamilyGraphRequestPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_family_graph_request"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_family_graph_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCitizenFamilyGraphRequestPacket> STREAM_CODEC =
             StreamCodec.of(CityCitizenFamilyGraphRequestPacket::encode, CityCitizenFamilyGraphRequestPacket::decode);
 

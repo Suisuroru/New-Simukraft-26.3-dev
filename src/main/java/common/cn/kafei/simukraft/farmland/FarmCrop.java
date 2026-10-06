@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.farmland;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -66,7 +66,7 @@ public enum FarmCrop {
         return "gui.simukraft.farmland_box.crop." + id();
     }
 
-    public ResourceLocation seedId() {
+    public Identifier seedId() {
         return BuiltInRegistries.ITEM.getKey(seed);
     }
 

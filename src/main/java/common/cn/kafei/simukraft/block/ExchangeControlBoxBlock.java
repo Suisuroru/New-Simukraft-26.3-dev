@@ -51,22 +51,17 @@ public final class ExchangeControlBoxBlock extends Block {
         return state.setValue(BlockStateProperties.HORIZONTAL_FACING, mirror.getRotation(facing).rotate(facing));
     }
 
-    /** useWithoutItem: 空手右键打开交易所控制箱。 */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             ExchangeControlBoxOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
-    /** onRemove: 拆除时解除经纪人并注销建筑。 */
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            ExchangeControlBoxService.onRemoved(serverLevel, pos);
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        ExchangeControlBoxService.onRemoved(level, pos);
     }
 
     /** createBlockStateDefinition: 注册控制箱的水平朝向属性。 */

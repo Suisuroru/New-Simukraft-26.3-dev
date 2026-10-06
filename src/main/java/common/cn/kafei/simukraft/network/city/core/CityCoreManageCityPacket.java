@@ -17,7 +17,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 
 public record CityCoreManageCityPacket(BlockPos pos, Action action, String value) implements CustomPacketPayload {
-    public static final Type<CityCoreManageCityPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_manage_city"));
+    public static final Type<CityCoreManageCityPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_manage_city"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreManageCityPacket> STREAM_CODEC = StreamCodec.of(CityCoreManageCityPacket::encode, CityCoreManageCityPacket::decode);
     private static final int MIN_CITY_NAME_LENGTH = 2;
     private static final int MAX_CITY_NAME_LENGTH = 20;

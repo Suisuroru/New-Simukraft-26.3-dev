@@ -3,12 +3,14 @@ package common.cn.kafei.simukraft.city.poi;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,8 +21,18 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class CityPoiManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_city_pois";
-    private static final Factory<CityPoiManager> FACTORY = new Factory<>(CityPoiManager::new, CityPoiManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_pois");
+    private static final SavedDataType<CityPoiManager> TYPE = createType();
+
+    @SuppressWarnings("unchecked")
+    private static SavedDataType<CityPoiManager> createType() {
+        Codec<CityPoiManager> codec = CompoundTag.CODEC.xmap(CityPoiManager::load, CityPoiManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, CityPoiManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
     private static final ConcurrentHashMap<UUID, CityPoiData> GLOBAL_POI_CACHE = new ConcurrentHashMap<>();
 
     public static CityPoiData lookupPoi(UUID poiId) {
@@ -39,24 +51,23 @@ public final class CityPoiManager extends SavedData {
     private volatile ServerLevel level;
 
     public static CityPoiManager get(ServerLevel level) {
-        CityPoiManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        CityPoiManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static CityPoiManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static CityPoiManager load(CompoundTag tag) {
         CityPoiManager manager = new CityPoiManager();
-        ListTag poiTags = tag.getList("Pois", CompoundTag.TAG_COMPOUND);
+        ListTag poiTags = tag.getList("Pois").orElse(new ListTag());
         for (int i = 0; i < poiTags.size(); i++) {
-            CityPoiData poi = CityPoiData.fromTag(poiTags.getCompound(i));
+            CityPoiData poi = CityPoiData.fromTag(poiTags.getCompound(i).orElse(new CompoundTag()));
             manager.putLoaded(poi);
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag poiTags = new ListTag();
         pois.values().forEach(poi -> poiTags.add(poi.toTag()));
         tag.put("Pois", poiTags);
@@ -67,7 +78,7 @@ public final class CityPoiManager extends SavedData {
         if (level == null) {
             return;
         }
-        SimuSqliteStorage.saveCityPois(level, save(new CompoundTag(), level.registryAccess()));
+        SimuSqliteStorage.saveCityPois(level, save(new CompoundTag()));
     }
 
     public synchronized void reloadFromSqlite(ServerLevel level) {
@@ -94,7 +105,7 @@ public final class CityPoiManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        CityPoiManager loaded = load(sqliteTag, level.registryAccess());
+        CityPoiManager loaded = load(sqliteTag);
         loaded.pois.forEach(pois::putIfAbsent);
         loaded.cityPoiIndex.forEach((cityId, ids) ->
                 cityPoiIndex.computeIfAbsent(cityId, id -> ConcurrentHashMap.newKeySet()).addAll(ids));

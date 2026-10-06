@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public record RtsBuildingBoundsSyncPacket(List<Entry> entries) implements Custom
     public static final int MAX_DISPLAY_NAME_LENGTH = 128;
     
     public static final Type<RtsBuildingBoundsSyncPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_building_bounds_sync"));
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_building_bounds_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, RtsBuildingBoundsSyncPacket> STREAM_CODEC =
             StreamCodec.of(RtsBuildingBoundsSyncPacket::encode, RtsBuildingBoundsSyncPacket::decode);
 

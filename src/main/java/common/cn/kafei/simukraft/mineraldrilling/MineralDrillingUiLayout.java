@@ -21,7 +21,7 @@ import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.function.Supplier;
@@ -29,9 +29,9 @@ import java.util.function.Supplier;
 /** MineralDrillingUiLayout: 组合钻井控制区、矿脉信息、操作按钮和玩家背包。 */
 
 public final class MineralDrillingUiLayout {
-    private static final ResourceLocation ORE_STYLESHEET = StylesheetManager.ORE;
-    private static final ResourceLocation SIMUKRAFT_ORE_STYLESHEET =
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "lss/ore.lss");
+    private static final Identifier ORE_STYLESHEET = StylesheetManager.ORE;
+    private static final Identifier SIMUKRAFT_ORE_STYLESHEET =
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "lss/ore.lss");
     private static final int OVERLAY = 0x78000000;
     private static final int FRAME_OUTER = 0xFF171919;
     private static final int FRAME_INNER = 0xFF767A7A;

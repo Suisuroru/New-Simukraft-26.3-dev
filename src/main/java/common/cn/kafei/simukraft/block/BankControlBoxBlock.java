@@ -57,16 +57,12 @@ public final class BankControlBoxBlock extends Block {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             BankControlBoxOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
-    /** onRemove: 拆除时解除柜员并注销建筑。 */
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            BankControlBoxService.onRemoved(serverLevel, pos);
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        BankControlBoxService.onRemoved(level, pos);
     }
 
     /** createBlockStateDefinition: 注册控制箱的水平朝向属性。 */

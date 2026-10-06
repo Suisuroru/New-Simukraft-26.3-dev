@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -19,7 +19,7 @@ public record LogisticsWarehouseGridResponsePacket(BlockPos pos,
                                                    List<BlockPos> containerPositions,
                                                    List<Integer> actualCounts) implements CustomPacketPayload {
     private static final int MAX_ITEMS = 4096;
-    public static final Type<LogisticsWarehouseGridResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "logistics_warehouse_grid_response"));
+    public static final Type<LogisticsWarehouseGridResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "logistics_warehouse_grid_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, LogisticsWarehouseGridResponsePacket> STREAM_CODEC = StreamCodec.of(LogisticsWarehouseGridResponsePacket::encode, LogisticsWarehouseGridResponsePacket::decode);
 
     public LogisticsWarehouseGridResponsePacket {

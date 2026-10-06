@@ -5,7 +5,7 @@ import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlot;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlotState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
@@ -62,7 +62,7 @@ class GeologicalHammerItemTest {
     @Test
     void matchesOnlyVeinsIntersectingProspectingRange() {
         VirtualVeinSlot slot = new VirtualVeinSlot("copper", "铜矿脉",
-                ResourceLocation.withDefaultNamespace("raw_copper"), 20, 45,
+                Identifier.withDefaultNamespace("raw_copper"), 20, 45,
                 1, 20, 100, 100, VirtualVeinSlotState.ACTIVE);
 
         assertTrue(slot.intersectsYRange(40, 100));

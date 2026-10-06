@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
@@ -22,7 +22,7 @@ public record FarmlandBoxOpenResponsePacket(BlockPos boxPos,
                                             boolean running,
                                             boolean hasFarmer,
                                             String farmerName) implements CustomPacketPayload {
-    public static final Type<FarmlandBoxOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "farmland_box_open_response"));
+    public static final Type<FarmlandBoxOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "farmland_box_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, FarmlandBoxOpenResponsePacket> STREAM_CODEC = StreamCodec.of(FarmlandBoxOpenResponsePacket::encode, FarmlandBoxOpenResponsePacket::decode);
 
     @Override

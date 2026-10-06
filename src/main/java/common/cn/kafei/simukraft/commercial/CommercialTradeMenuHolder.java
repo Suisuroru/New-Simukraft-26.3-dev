@@ -22,7 +22,7 @@ public final class CommercialTradeMenuHolder implements IContainerUIHolder {
     /** createUI: 创建包含真实玩家背包槽位的 LDLib 交易 UI。 */
     @Override
     public ModularUI createUI(Player player) {
-        if (FMLEnvironment.dist == Dist.DEDICATED_SERVER) {
+        if (FMLEnvironment.getDist() == Dist.DEDICATED_SERVER) {
             return ModularUI.of(UI.empty(), player);
         }
         return ModularUI.of(UI.of(new CommercialTradeUiRoot(packet)), player);

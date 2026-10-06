@@ -2,13 +2,16 @@ package common.cn.kafei.simukraft.city;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import net.minecraft.core.HolderLookup;
+import com.mojang.serialization.Codec;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -19,8 +22,17 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class CityChunkManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_city_chunks";
-    private static final Factory<CityChunkManager> FACTORY = new Factory<>(CityChunkManager::new, CityChunkManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_chunks");
+    private static final SavedDataType<CityChunkManager> TYPE = createType();
+
+    private static SavedDataType<CityChunkManager> createType() {
+        Codec<CityChunkManager> codec = CompoundTag.CODEC.xmap(CityChunkManager::load, CityChunkManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, CityChunkManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     // cityChunks 方便按城市取领地，chunkCityIndex 方便按区块反查归属。
     private final ConcurrentMap<UUID, Set<Long>> cityChunks = new ConcurrentHashMap<>();
@@ -29,22 +41,22 @@ public final class CityChunkManager extends SavedData {
     private volatile ServerLevel level;
 
     public static CityChunkManager get(ServerLevel level) {
-        CityChunkManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        CityChunkManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static CityChunkManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static CityChunkManager load(CompoundTag tag) {
         CityChunkManager manager = new CityChunkManager();
-        ListTag cityTags = tag.getList("CityChunks", CompoundTag.TAG_COMPOUND);
+        ListTag cityTags = tag.getList("CityChunks").get();
         for (int i = 0; i < cityTags.size(); i++) {
-            CompoundTag cityTag = cityTags.getCompound(i);
-            UUID cityId = cityTag.getUUID("CityId");
+            CompoundTag cityTag = cityTags.getCompound(i).get();
+            UUID cityId = NbtUuid.readOrNull(cityTag, "CityId");
             Set<Long> chunks = ConcurrentHashMap.newKeySet();
-            ListTag chunkTags = cityTag.getList("Chunks", LongTag.TAG_LONG);
-            for (int j = 0; j < chunkTags.size(); j++) {
-                long chunkLong = ((LongTag) chunkTags.get(j)).getAsLong();
+            ListTag chunkTags = cityTag.getList("Chunks").get();
+            for (net.minecraft.nbt.Tag chunkTag : chunkTags) {
+                long chunkLong = ((LongTag) chunkTag).longValue();
                 chunks.add(chunkLong);
                 manager.chunkCityIndex.put(chunkLong, cityId);
             }
@@ -53,12 +65,11 @@ public final class CityChunkManager extends SavedData {
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag cityTags = new ListTag();
         cityChunks.forEach((cityId, chunks) -> {
             CompoundTag cityTag = new CompoundTag();
-            cityTag.putUUID("CityId", cityId);
+            NbtUuid.put(cityTag, "CityId", cityId);
             ListTag chunkTags = new ListTag();
             chunks.forEach(chunk -> chunkTags.add(LongTag.valueOf(chunk)));
             cityTag.put("Chunks", chunkTags);
@@ -72,7 +83,7 @@ public final class CityChunkManager extends SavedData {
         if (level == null) {
             return;
         }
-        SimuSqliteStorage.saveCityChunks(level, save(new CompoundTag(), level.registryAccess()));
+        SimuSqliteStorage.saveCityChunks(level, save(new CompoundTag()));
     }
 
     public synchronized void reloadFromSqlite(ServerLevel level) {
@@ -95,7 +106,7 @@ public final class CityChunkManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        CityChunkManager loaded = load(sqliteTag, level.registryAccess());
+        CityChunkManager loaded = load(sqliteTag);
         cityChunks.clear();
         chunkCityIndex.clear();
         cityChunks.putAll(loaded.cityChunks);
@@ -130,7 +141,7 @@ public final class CityChunkManager extends SavedData {
         // 建城初始领地固定检查 3x3，任意一个 chunk 已占用就不能创建。
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-                if (chunkCityIndex.containsKey(ChunkPos.asLong(centerChunk.x + x, centerChunk.z + z))) {
+                if (chunkCityIndex.containsKey(ChunkPos.pack(centerChunk.x() + x, centerChunk.z() + z))) {
                     return false;
                 }
             }
@@ -145,7 +156,7 @@ public final class CityChunkManager extends SavedData {
         Set<Long> chunks = cityChunks.computeIfAbsent(cityId, id -> ConcurrentHashMap.newKeySet());
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-                long chunkLong = ChunkPos.asLong(centerChunk.x + x, centerChunk.z + z);
+                long chunkLong = ChunkPos.pack(centerChunk.x() + x, centerChunk.z() + z);
                 chunks.add(chunkLong);
                 chunkCityIndex.put(chunkLong, cityId);
                 saveChunkIncremental(cityId, chunkLong);
@@ -196,12 +207,12 @@ public final class CityChunkManager extends SavedData {
         if (chunks == null || chunks.isEmpty()) {
             return false;
         }
-        ChunkPos chunkPos = new ChunkPos(chunkLong);
+        ChunkPos chunkPos = ChunkPos.unpack(chunkLong);
         // 扩张只允许四向相邻，斜角接触不算连通领地。
-        return chunks.contains(ChunkPos.asLong(chunkPos.x + 1, chunkPos.z))
-                || chunks.contains(ChunkPos.asLong(chunkPos.x - 1, chunkPos.z))
-                || chunks.contains(ChunkPos.asLong(chunkPos.x, chunkPos.z + 1))
-                || chunks.contains(ChunkPos.asLong(chunkPos.x, chunkPos.z - 1));
+        return chunks.contains(ChunkPos.pack(chunkPos.x() + 1, chunkPos.z()))
+                || chunks.contains(ChunkPos.pack(chunkPos.x() - 1, chunkPos.z()))
+                || chunks.contains(ChunkPos.pack(chunkPos.x(), chunkPos.z() + 1))
+                || chunks.contains(ChunkPos.pack(chunkPos.x(), chunkPos.z() - 1));
     }
 
     /** isConnectedToCore：判断目标区块是否与城市核心所在的主领地连通。 */
@@ -218,12 +229,12 @@ public final class CityChunkManager extends SavedData {
         visited.add(coreChunkLong);
         pending.add(coreChunkLong);
         while (!pending.isEmpty()) {
-            ChunkPos current = new ChunkPos(pending.removeFirst());
+            ChunkPos current = ChunkPos.unpack(pending.removeFirst());
             long[] neighbors = {
-                    ChunkPos.asLong(current.x + 1, current.z),
-                    ChunkPos.asLong(current.x - 1, current.z),
-                    ChunkPos.asLong(current.x, current.z + 1),
-                    ChunkPos.asLong(current.x, current.z - 1)
+                    ChunkPos.pack(current.x() + 1, current.z()),
+                    ChunkPos.pack(current.x() - 1, current.z()),
+                    ChunkPos.pack(current.x(), current.z() + 1),
+                    ChunkPos.pack(current.x(), current.z() - 1)
             };
             for (long neighbor : neighbors) {
                 if (neighbor == chunkLong) {
@@ -254,12 +265,12 @@ public final class CityChunkManager extends SavedData {
             ArrayDeque<Long> pending = new ArrayDeque<>();
             pending.add(start);
             while (!pending.isEmpty()) {
-                ChunkPos current = new ChunkPos(pending.removeFirst());
+                ChunkPos current = ChunkPos.unpack(pending.removeFirst());
                 long[] neighbors = {
-                        ChunkPos.asLong(current.x + 1, current.z),
-                        ChunkPos.asLong(current.x - 1, current.z),
-                        ChunkPos.asLong(current.x, current.z + 1),
-                        ChunkPos.asLong(current.x, current.z - 1)
+                        ChunkPos.pack(current.x() + 1, current.z()),
+                        ChunkPos.pack(current.x() - 1, current.z()),
+                        ChunkPos.pack(current.x(), current.z()   + 1),
+                        ChunkPos.pack(current.x(), current.z() - 1)
                 };
                 for (long neighbor : neighbors) {
                     if (hasCoreChunk && neighbor == coreChunkLong) {

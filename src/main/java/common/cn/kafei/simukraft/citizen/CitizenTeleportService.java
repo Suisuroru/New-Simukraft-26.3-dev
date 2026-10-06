@@ -63,7 +63,7 @@ public final class CitizenTeleportService {
         if (data.dead()) {
             return false;
         }
-        if (!level.dimension().location().toString().equals(data.dimensionId())) {
+        if (!level.dimension().registry().toString().equals(data.dimensionId())) {
             return false;
         }
         Vec3 landing = boundedLandingTarget(level, target);

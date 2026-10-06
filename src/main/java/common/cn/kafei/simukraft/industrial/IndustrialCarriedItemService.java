@@ -12,6 +12,7 @@ import common.cn.kafei.simukraft.material.GenericContainerAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -258,8 +259,11 @@ public final class IndustrialCarriedItemService {
                 if (!object.has("nbt")) {
                     continue;
                 }
-                CompoundTag tag = TagParser.parseTag(object.get("nbt").getAsString());
-                ItemStack stack = ItemStack.parseOptional(registries, tag);
+                CompoundTag tag = TagParser.parseCompoundFully(object.get("nbt").getAsString());
+                ItemStack stack = ItemStack.OPTIONAL_CODEC
+                        .parse(registries.createSerializationContext(NbtOps.INSTANCE), tag)
+                        .result()
+                        .orElse(ItemStack.EMPTY);
                 if (!stack.isEmpty()) {
                     result.add(stack);
                 }

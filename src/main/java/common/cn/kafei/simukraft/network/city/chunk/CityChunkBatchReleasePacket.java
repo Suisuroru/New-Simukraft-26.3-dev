@@ -13,7 +13,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
@@ -26,7 +26,7 @@ import java.util.List;
 
 public record CityChunkBatchReleasePacket(BlockPos pos, List<ChunkEntry> chunks) implements CustomPacketPayload {
     private static final int MAX_CHUNKS = 256;
-    public static final Type<CityChunkBatchReleasePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_chunk_batch_release"));
+    public static final Type<CityChunkBatchReleasePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_chunk_batch_release"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityChunkBatchReleasePacket> STREAM_CODEC = StreamCodec.of(CityChunkBatchReleasePacket::encode, CityChunkBatchReleasePacket::decode);
 
     public CityChunkBatchReleasePacket {

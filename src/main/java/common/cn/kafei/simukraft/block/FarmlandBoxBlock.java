@@ -28,7 +28,7 @@ public final class FarmlandBoxBlock extends Block {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             FarmlandBoxOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
     @Override
@@ -40,14 +40,8 @@ public final class FarmlandBoxBlock extends Block {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock())) {
-            level.playSound(null, pos, ModSoundEvents.FARMLAND_BOX_BREAK.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-            if (level instanceof ServerLevel serverLevel) {
-                // 方块移除时清理农田盒配置（FARMLAND POI 注销由放置事件处理器负责）。
-                FarmlandBoxService.onRemoved(serverLevel, pos);
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        level.playSound(null, pos, ModSoundEvents.FARMLAND_BOX_BREAK.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        FarmlandBoxService.onRemoved(level, pos);
     }
 }

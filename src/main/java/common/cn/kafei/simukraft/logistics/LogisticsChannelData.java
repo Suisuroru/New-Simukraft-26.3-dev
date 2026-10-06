@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.logistics;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
@@ -38,12 +39,12 @@ public record LogisticsChannelData(UUID channelId,
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("ChannelId", channelId);
+        NbtUuid.put(tag, "ChannelId", channelId);
         if (warehouseId != null) {
-            tag.putUUID("WarehouseId", warehouseId);
+            NbtUuid.put(tag, "WarehouseId", warehouseId);
         }
         if (clientId != null) {
-            tag.putUUID("ClientId", clientId);
+            NbtUuid.put(tag, "ClientId", clientId);
         }
         tag.putString("Direction", direction.name());
         tag.putString("Name", name);
@@ -64,21 +65,21 @@ public record LogisticsChannelData(UUID channelId,
 
     public static LogisticsChannelData fromTag(CompoundTag tag) {
         List<LogisticsItemFilter> filters = new ArrayList<>();
-        ListTag filterTags = tag.getList("Filters", CompoundTag.TAG_COMPOUND);
+        ListTag filterTags = tag.getList("Filters").get();
         for (int i = 0; i < filterTags.size(); i++) {
-            CompoundTag filter = filterTags.getCompound(i);
-            filters.add(new LogisticsItemFilter(filter.getString("ItemId"), filter.getString("StackTag")));
+            CompoundTag filter = filterTags.getCompound(i).get();
+            filters.add(new LogisticsItemFilter(filter.getString("ItemId").get(), filter.getString("StackTag").get()));
         }
         return new LogisticsChannelData(
-                tag.hasUUID("ChannelId") ? tag.getUUID("ChannelId") : UUID.randomUUID(),
-                tag.hasUUID("WarehouseId") ? tag.getUUID("WarehouseId") : null,
-                tag.hasUUID("ClientId") ? tag.getUUID("ClientId") : null,
-                LogisticsDirection.fromName(tag.getString("Direction")),
-                tag.getString("Name"),
-                !tag.contains("Enabled") || tag.getBoolean("Enabled"),
+                tag.contains("ChannelId") ? NbtUuid.readOrNull(tag, "ChannelId") : UUID.randomUUID(),
+                NbtUuid.readOrNull(tag, "WarehouseId"),
+                NbtUuid.readOrNull(tag, "ClientId"),
+                LogisticsDirection.fromName(tag.getString("Direction").get()),
+                tag.getString("Name").get(),
+                !tag.contains("Enabled") || tag.getBoolean("Enabled").get() ,
                 filters,
-                tag.getLong("UpdatedAt"),
-                tag.contains("KeepSourceQuantity") ? tag.getInt("KeepSourceQuantity") : 0,
-                tag.contains("KeepQuantity") ? tag.getInt("KeepQuantity") : 0);
+                tag.getLong("UpdatedAt").get(),
+                tag.contains("KeepSourceQuantity") ? tag.getInt("KeepSourceQuantity").get() : 0,
+                tag.contains("KeepQuantity") ? tag.getInt("KeepQuantity").get() : 0);
     }
 }

@@ -2,7 +2,7 @@ package common.cn.kafei.simukraft.commercial;
 
 import common.cn.kafei.simukraft.economy.EconomyService;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -48,7 +48,7 @@ public record CommercialResource(Type type, String itemId, int count, double mon
             return Items.AIR;
         }
         try {
-            return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(itemId)).orElse(Items.AIR);
+            return BuiltInRegistries.ITEM.getOptional(Identifier.parse(itemId)).orElse(Items.AIR);
         } catch (Exception exception) {
             return Items.AIR;
         }

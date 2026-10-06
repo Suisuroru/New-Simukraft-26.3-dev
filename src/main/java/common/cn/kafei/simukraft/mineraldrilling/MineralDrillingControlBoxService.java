@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 
@@ -490,7 +491,7 @@ public final class MineralDrillingControlBoxService {
 
     private static boolean canManageBuilding(
             ServerLevel level, ServerPlayer player, PlacedBuildingRecord building) {
-        if (player.hasPermissions(2)) {
+        if (player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             return true;
         }
         return building.cityId() != null

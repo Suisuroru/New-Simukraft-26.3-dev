@@ -70,7 +70,7 @@ public final class MedicalControlBoxService {
             return false;
         }
         CitizenData doctor = findAssignedDoctor(level, boxPos);
-        long currentDay = level.getDayTime() / 24_000L;
+        long currentDay = level.getDefaultClockTime() / 24_000L;
         return doctor != null && !doctor.dead()
                 && !MedicalService.isOnMedicalLeave(doctor, currentDay)
                 && !MedicalService.needsCare(level, doctor, currentDay);

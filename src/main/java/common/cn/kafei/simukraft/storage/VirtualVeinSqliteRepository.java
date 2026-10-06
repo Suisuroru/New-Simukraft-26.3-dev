@@ -6,7 +6,7 @@ import common.cn.kafei.simukraft.virtualvein.VirtualVeinFieldKey;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinFieldProfile;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlot;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlotState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -147,7 +147,7 @@ public final class VirtualVeinSqliteRepository {
         return Optional.of(new VirtualVeinSlot(
                 veinId,
                 resultSet.getString(prefix + "display_name"),
-                ResourceLocation.parse(resultSet.getString(prefix + "product_id")),
+                Identifier.parse(resultSet.getString(prefix + "product_id")),
                 resultSet.getInt(prefix + "min_y"),
                 resultSet.getInt(prefix + "max_y"),
                 resultSet.getInt(prefix + "amount"),

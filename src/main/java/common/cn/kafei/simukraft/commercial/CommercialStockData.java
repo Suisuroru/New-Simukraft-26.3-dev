@@ -104,13 +104,13 @@ public final class CommercialStockData {
     /** fromTag: 从 NBT 读取库存条目。 */
     public static CommercialStockData fromTag(CompoundTag tag) {
         CommercialStockData data = new CommercialStockData(
-                BlockPos.of(tag.getLong("BoxPos")),
-                tag.getString("ItemId"),
-                tag.getInt("CurrentStock"),
-                tag.getInt("MaxStock"),
-                tag.getLong("LastRestockGameTime")
+                BlockPos.of(tag.getLong("BoxPos").get()),
+                tag.getString("ItemId").get(),
+                tag.getInt("CurrentStock").get(),
+                tag.getInt("MaxStock").get(),
+                tag.getLong("LastRestockGameTime").get()
         );
-        data.updatedAt = tag.getLong("UpdatedAt");
+        data.updatedAt = tag.getLong("UpdatedAt").get();
         return data;
     }
 

@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.registries.BuiltInRegistries;
 
@@ -144,7 +144,7 @@ public final class ClientConfig {
         if (state == null) {
             return false;
         }
-        ResourceLocation key = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        Identifier key = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         if ("simukraft".equals(key.getNamespace())) {
             return RTS_TARGET_SIMUKRAFT_BLOCKS.get();
         }
@@ -156,7 +156,7 @@ public final class ClientConfig {
 
     /** rtsMoveHoldSeconds: 返回 RTS 长按移动所需秒数。 */
     public static int rtsMoveHoldSeconds() {
-        return Math.max(1, Math.min(10, RTS_MOVE_HOLD_SECONDS.get()));
+        return Math.clamp(RTS_MOVE_HOLD_SECONDS.get(), 1, 10);
     }
 
     /** hudMaxWidth: 获取 HUD 最大行宽（0=不限制）。 */

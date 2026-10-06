@@ -7,8 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -102,34 +101,34 @@ public final class BuildingStructureService {
 
     static List<BuildingBlockData> parseBlocks(CompoundTag rootTag) {
         List<BuildingBlockData> blocks = new ArrayList<>();
-        if (rootTag.contains("Schematic", Tag.TAG_COMPOUND)) {
-            return parseBlocks(rootTag.getCompound("Schematic"));
+        if (rootTag.contains("Schematic")) {
+            return parseBlocks(rootTag.getCompound("Schematic").get());
         }
-        if (rootTag.contains("blocks", Tag.TAG_LIST) && rootTag.contains("palette", Tag.TAG_LIST)) {
-            ListTag palette = rootTag.getList("palette", Tag.TAG_COMPOUND);
-            ListTag blockTags = rootTag.getList("blocks", Tag.TAG_COMPOUND);
+        if (rootTag.contains("blocks") && rootTag.contains("palette")) {
+            ListTag palette = rootTag.getList("palette").get();
+            ListTag blockTags = rootTag.getList("blocks").get();
             for (int i = 0; i < blockTags.size(); i++) {
-                CompoundTag blockTag = blockTags.getCompound(i);
-                if (!blockTag.contains("pos", Tag.TAG_LIST)) {
+                CompoundTag blockTag = blockTags.getCompound(i).get();
+                if (!blockTag.contains("pos")) {
                     continue;
                 }
-                ListTag posList = blockTag.getList("pos", Tag.TAG_INT);
+                ListTag posList = blockTag.getList("pos").get();
                 if (posList.size() < 3) {
                     continue;
                 }
-                int x = posList.getInt(0);
-                int y = posList.getInt(1);
-                int z = posList.getInt(2);
-                int stateIndex = blockTag.getInt("state");
+                int x = posList.getInt(0).get();
+                int y = posList.getInt(1).get();
+                int z = posList.getInt(2).get();
+                int stateIndex = blockTag.getInt("state").get();
                 if (stateIndex < 0 || stateIndex >= palette.size()) {
                     continue;
                 }
-                BlockState state = parseState(palette.getCompound(stateIndex));
+                BlockState state = parseState(palette.getCompound(stateIndex).get());
                 if (state == null) {
                     continue;
                 }
                 BlockPos relative = new BlockPos(x, y, z);
-                CompoundTag blockEntityData = blockTag.contains("nbt", Tag.TAG_COMPOUND) ? blockTag.getCompound("nbt") : null;
+                CompoundTag blockEntityData = blockTag.contains("nbt") ? blockTag.getCompound("nbt").get() : null;
                 blocks.add(new BuildingBlockData(relative, state, relative, blockEntityData));
             }
         }
@@ -137,32 +136,32 @@ public final class BuildingStructureService {
     }
 
     static List<BuildingEntityData> parseEntities(CompoundTag rootTag) {
-        if (rootTag.contains("Schematic", Tag.TAG_COMPOUND)) {
-            return parseEntities(rootTag.getCompound("Schematic"));
+        if (rootTag.contains("Schematic")) {
+            return parseEntities(rootTag.getCompound("Schematic").get());
         }
-        if (!rootTag.contains("entities", Tag.TAG_LIST)) {
+        if (!rootTag.contains("entities")) {
             return List.of();
         }
 
         List<BuildingEntityData> entities = new ArrayList<>();
-        ListTag entityTags = rootTag.getList("entities", Tag.TAG_COMPOUND);
+        ListTag entityTags = rootTag.getList("entities").get();
         for (int i = 0; i < entityTags.size(); i++) {
-            CompoundTag entityTag = entityTags.getCompound(i);
-            if (!entityTag.contains("pos", Tag.TAG_LIST) || !entityTag.contains("nbt", Tag.TAG_COMPOUND)) {
+            CompoundTag entityTag = entityTags.getCompound(i).get();
+            if (!entityTag.contains("pos") || !entityTag.contains("nbt")) {
                 continue;
             }
-            ListTag posTag = entityTag.getList("pos", Tag.TAG_DOUBLE);
+            ListTag posTag = entityTag.getList("pos").get();
             if (posTag.size() < 3) {
                 continue;
             }
-            CompoundTag entityData = entityTag.getCompound("nbt");
-            String entityId = entityData.getString("id");
+            CompoundTag entityData = entityTag.getCompound("nbt").get();
+            String entityId = entityData.getString("id").get();
             if (!"minecraft:item_frame".equals(entityId)
                     && !"minecraft:glow_item_frame".equals(entityId)
                     && !"minecraft:painting".equals(entityId)) {
                 continue;
             }
-            Vec3 pos = new Vec3(posTag.getDouble(0), posTag.getDouble(1), posTag.getDouble(2));
+            Vec3 pos = new Vec3(posTag.getDouble(0).get(), posTag.getDouble(1).get(), posTag.getDouble(2).get());
             BlockPos blockPos = readEntityBlockPos(entityTag, pos);
             entities.add(new BuildingEntityData(pos, blockPos, entityData));
         }
@@ -170,35 +169,35 @@ public final class BuildingStructureService {
     }
 
     private static BlockPos readEntityBlockPos(CompoundTag entityTag, Vec3 pos) {
-        if (entityTag.contains("blockPos", Tag.TAG_LIST)) {
-            ListTag blockPosTag = entityTag.getList("blockPos", Tag.TAG_INT);
+        if (entityTag.contains("blockPos")) {
+            ListTag blockPosTag = entityTag.getList("blockPos").get();
             if (blockPosTag.size() >= 3) {
-                return new BlockPos(blockPosTag.getInt(0), blockPosTag.getInt(1), blockPosTag.getInt(2));
+                return new BlockPos(blockPosTag.getInt(0).get(), blockPosTag.getInt(1).get(), blockPosTag.getInt(2).get());
             }
         }
         return BlockPos.containing(pos);
     }
 
     private static BlockState parseState(CompoundTag stateTag) {
-        String name = stateTag.getString("Name");
+        String name = stateTag.getString("Name").get();
         if (name == null || name.isBlank()) {
             return null;
         }
         name = LEGACY_BLOCK_REMAPS.getOrDefault(name, name);
-        Block block = BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(name)).orElse(null);
+        Block block = BuiltInRegistries.BLOCK.getOptional(Identifier.parse(name)).orElse(null);
         if (block == null) {
             SimuKraft.LOGGER.warn("Simukraft: Missing block {} while loading structure", name);
             return null;
         }
         BlockState state = block.defaultBlockState();
-        if (stateTag.contains("Properties", Tag.TAG_COMPOUND)) {
-            CompoundTag properties = stateTag.getCompound("Properties");
-            for (String key : properties.getAllKeys()) {
+        if (stateTag.contains("Properties")) {
+            CompoundTag properties = stateTag.getCompound("Properties").get();
+            for (String key : properties.keySet()) {
                 Property<?> property = state.getBlock().getStateDefinition().getProperty(key);
                 if (property == null) {
                     continue;
                 }
-                state = applyProperty(state, property, properties.getString(key));
+                state = applyProperty(state, property, properties.getString(key).get());
             }
         }
         return state;
@@ -234,9 +233,9 @@ public final class BuildingStructureService {
                     state.getValue(BlockStateProperties.BED_PART) != BedPart.HEAD) {
                 continue;
             }
-            if (state.is(Blocks.RED_BED)) {
+            if (state.is(Blocks.BED.red())) {
                 residentialCount++;
-            } else if (state.is(Blocks.WHITE_BED) && type != BuildingCatalog.BuildingType.BANK
+            } else if (state.is(Blocks.BED.white()) && type != BuildingCatalog.BuildingType.BANK
                     && type != BuildingCatalog.BuildingType.EXCHANGE) {
                 medicalCount++;
             }

@@ -6,9 +6,10 @@ import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public final class CityUpgradeService {
             }
             for (CityLevelDefinition.ItemRequirement requirement : definition.items()) {
                 if (countPlayerItems(player, requirement) < requirement.count()) {
-                    ResourceLocation missingId = requirement.isTag() ? requirement.itemTag() : requirement.itemId();
+                    Identifier missingId = requirement.isTag() ? requirement.itemTag() : requirement.itemId();
                     return new UpgradeResult(Status.NOT_ENOUGH_ITEMS, definition, missingId);
                 }
             }
@@ -126,7 +127,7 @@ public final class CityUpgradeService {
                 financeTransaction = new FinanceTransactionData(
                         level.getGameTime(),
                         player.getUUID(),
-                        player.getGameProfile().getName(),
+                        player.getGameProfile().name(),
                         -definition.requiredFunds(),
                         city.funds(),
                         FinanceTransactionData.Type.EXPENSE,
@@ -215,7 +216,7 @@ public final class CityUpgradeService {
                     && current.getCount() + restored.getCount() <= current.getMaxStackSize()) {
                 current.grow(restored.getCount());
             } else {
-                player.getInventory().placeItemBackInInventory(restored);
+                player.getInventory().placeItemBackInInventory(restored, Prediction.SERVER_ONLY);
             }
         }
     }
@@ -237,7 +238,7 @@ public final class CityUpgradeService {
     }
 
     /** UpgradeResult: 返回升级状态以及客户端提示所需的目标定义。 */
-    public record UpgradeResult(Status status, CityLevelDefinition definition, ResourceLocation missingItemId) {
+    public record UpgradeResult(Status status, CityLevelDefinition definition, Identifier missingItemId) {
         public boolean success() {
             return status == Status.STARTED;
         }

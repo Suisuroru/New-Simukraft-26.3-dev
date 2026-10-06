@@ -5,7 +5,7 @@ import common.cn.kafei.simukraft.virtualvein.VirtualVeinFieldKey;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinFieldProfile;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlot;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlotState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -120,7 +120,7 @@ class VirtualVeinSqliteRepositoryTest {
         return new VirtualVeinSlot(
                 id,
                 displayName,
-                ResourceLocation.parse("minecraft:raw_iron"),
+                Identifier.parse("minecraft:raw_iron"),
                 16,
                 80,
                 5,

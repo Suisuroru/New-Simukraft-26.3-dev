@@ -53,7 +53,7 @@ public final class CitizenWorkplaceMoveService {
         if (!CityRuntimeService.isCitizenActive(level, citizen)) {
             return false;
         }
-        if (MedicalService.isOnMedicalLeave(citizen, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(citizen, level.getDefaultClockTime() / 24_000L)) {
             return false;
         }
         if (!recoveringFromUnloadedChunk && citizen.jobType() == CityJobType.INDUSTRIAL_WORKER

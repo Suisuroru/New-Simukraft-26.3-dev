@@ -23,7 +23,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
@@ -52,7 +52,7 @@ public final class RtsSelectionManager {
     private static final int HOLD_RING_FRAME_SIZE = 24;
     private static final int HOLD_RING_FRAME_COLUMNS = 8;
     private static final int HOLD_RING_FRAME_COUNT = 64;
-    private static final ResourceLocation HOLD_RING_TEXTURE = ResourceLocation.fromNamespaceAndPath(
+    private static final Identifier HOLD_RING_TEXTURE = Identifier.fromNamespaceAndPath(
             SimuKraft.MOD_ID, "textures/gui/rts_hold_ring.png");
     private static volatile boolean active;
     private static volatile BlockPos targetPos;

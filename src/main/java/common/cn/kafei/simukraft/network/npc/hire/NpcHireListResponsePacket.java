@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 
 public record NpcHireListResponsePacket(BlockPos sourcePos, String sourceType, String role, UUID assignedCitizenId, List<HireCandidate> candidates) implements CustomPacketPayload {
-    public static final Type<NpcHireListResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "npc_hire_list_response"));
+    public static final Type<NpcHireListResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "npc_hire_list_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NpcHireListResponsePacket> STREAM_CODEC = StreamCodec.of(NpcHireListResponsePacket::encode, NpcHireListResponsePacket::decode);
 
     @Override

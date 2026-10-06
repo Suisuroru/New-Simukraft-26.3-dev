@@ -50,7 +50,7 @@ public final class CityCoreBlock extends Block {
             level.playSound(null, pos, ModSoundEvents.CITY_CORE_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
             CityCoreOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
     @Override
@@ -62,12 +62,8 @@ public final class CityCoreBlock extends Block {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        super.onRemove(state, level, pos, newState, movedByPiston);
-        if (!(level instanceof ServerLevel serverLevel) || newState.is(state.getBlock())) {
-            return;
-        }
-        CityData city = CityService.findCityByCorePos(serverLevel, pos).orElse(null);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        CityData city = CityService.findCityByCorePos(level, pos).orElse(null);
         if (city == null) {
             return;
         }

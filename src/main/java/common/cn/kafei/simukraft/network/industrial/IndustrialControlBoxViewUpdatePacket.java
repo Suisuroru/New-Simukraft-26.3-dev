@@ -6,12 +6,12 @@ import common.cn.kafei.simukraft.industrial.IndustrialControlBoxView;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record IndustrialControlBoxViewUpdatePacket(IndustrialControlBoxOpenResponsePacket view) implements CustomPacketPayload {
-    public static final Type<IndustrialControlBoxViewUpdatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "industrial_control_box_view_update"));
+    public static final Type<IndustrialControlBoxViewUpdatePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "industrial_control_box_view_update"));
     public static final StreamCodec<RegistryFriendlyByteBuf, IndustrialControlBoxViewUpdatePacket> STREAM_CODEC = StreamCodec.of(IndustrialControlBoxViewUpdatePacket::encode, IndustrialControlBoxViewUpdatePacket::decode);
 
     public static IndustrialControlBoxViewUpdatePacket from(IndustrialControlBoxView view) {

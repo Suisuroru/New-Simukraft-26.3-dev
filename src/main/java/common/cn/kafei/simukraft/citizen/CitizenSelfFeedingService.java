@@ -14,6 +14,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -202,7 +203,7 @@ public final class CitizenSelfFeedingService {
             }
             // 购买成功后额外多买5~10个存入背包
             buyExtraForBackpack(level, citizen, entity, feeding.plan,
-                    level.random.nextIntBetweenInclusive(BACKPACK_BUY_MIN, BACKPACK_BUY_MAX));
+                    level.getRandom().nextIntBetweenInclusive(BACKPACK_BUY_MIN, BACKPACK_BUY_MAX));
             beginEating(level, manager, citizen, entity, feeding, result.foodStack(), gameTime);
             return;
         }
@@ -237,8 +238,8 @@ public final class CitizenSelfFeedingService {
         entity.setHunger(FULL_HUNGER);
         setStatus(level, manager, citizen, EATING_FOOD_STATUS, CommercialFoodMarketService.foodDetailKey(feeding.plan));
         CitizenJobVisualService.setMainHandOverride(citizen.uuid(), foodStack);
-        level.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EAT, SoundSource.NEUTRAL, 0.8F, 1.0F);
-        entity.swing(InteractionHand.MAIN_HAND);
+        level.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EAT.value(), SoundSource.NEUTRAL, 0.8F, 1.0F);
+        entity.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
         manager.syncEntity(entity);
     }
 

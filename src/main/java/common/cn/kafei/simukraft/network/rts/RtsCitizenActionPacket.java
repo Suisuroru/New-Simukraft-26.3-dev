@@ -17,7 +17,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -34,7 +34,7 @@ import java.util.UUID;
 public record RtsCitizenActionPacket(Action action, List<UUID> citizenIds, BlockPos destination) implements CustomPacketPayload {
     private static final int MAX_CITIZENS = 32;
     public static final Type<RtsCitizenActionPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_citizen_action"));
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_citizen_action"));
     public static final StreamCodec<RegistryFriendlyByteBuf, RtsCitizenActionPacket> STREAM_CODEC =
             StreamCodec.of(RtsCitizenActionPacket::encode, RtsCitizenActionPacket::decode);
 

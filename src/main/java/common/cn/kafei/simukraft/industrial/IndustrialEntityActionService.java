@@ -5,7 +5,7 @@ import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.material.GenericContainerAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
@@ -77,7 +77,7 @@ public final class IndustrialEntityActionService {
             }
             target.hurt(level.damageSources().generic(), target.getMaxHealth() + 20.0F);
             if (target.isAlive()) {
-                target.kill();
+                target.kill(level);
             }
             killed++;
         }
@@ -273,7 +273,7 @@ public final class IndustrialEntityActionService {
             return Optional.empty();
         }
         try {
-            return BuiltInRegistries.ENTITY_TYPE.getOptional(ResourceLocation.parse(id));
+            return BuiltInRegistries.ENTITY_TYPE.getOptional(Identifier.parse(id));
         } catch (Exception exception) {
             return Optional.empty();
         }

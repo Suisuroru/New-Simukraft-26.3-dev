@@ -32,7 +32,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -668,7 +668,7 @@ public final class PlannerMaterialSelectionScreenOpener {
     }
 
     private static Component blockName(String blockId) {
-        ResourceLocation id = ResourceLocation.tryParse(blockId);
+        Identifier id = Identifier.tryParse(blockId);
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return Component.literal(blockId);
         }
@@ -680,7 +680,7 @@ public final class PlannerMaterialSelectionScreenOpener {
     }
 
     private static ItemStack blockStack(String blockId) {
-        ResourceLocation id = ResourceLocation.tryParse(blockId);
+        Identifier id = Identifier.tryParse(blockId);
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return new ItemStack(Items.BARRIER);
         }

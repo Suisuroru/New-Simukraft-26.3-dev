@@ -37,14 +37,14 @@ public final class CityPermissionInviteService {
         Optional<CityMemberData> existingMember = city.member(target.getUUID());
         CityPermissionLevel currentPermission = existingMember.map(CityMemberData::permissionLevel).orElse(null);
         if (currentPermission == targetPermission) {
-            return RequestResult.failed(Component.translatable("message.simukraft.city_core.permission_invite_already_role", target.getGameProfile().getName(), city.cityName(), permissionName(targetPermission)));
+            return RequestResult.failed(Component.translatable("message.simukraft.city_core.permission_invite_already_role", target.getGameProfile().name(), city.cityName(), permissionName(targetPermission)));
         }
         if (!canInvite(city, operator.getUUID(), existingMember.isPresent(), targetPermission)) {
             return RequestResult.failed(Component.translatable("message.simukraft.city_core.member_action_failed"));
         }
         Optional<CityData> targetCity = CityService.findPlayerCity(level, target.getUUID());
         if (targetCity.isPresent() && !targetCity.get().cityId().equals(city.cityId())) {
-            return RequestResult.failed(Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().getName()));
+            return RequestResult.failed(Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().name()));
         }
         removePreviousInvite(city.cityId(), target.getUUID());
         UUID inviteId = UUID.randomUUID();
@@ -53,16 +53,16 @@ public final class CityPermissionInviteService {
                 city.cityId(),
                 city.cityName(),
                 operator.getUUID(),
-                operator.getGameProfile().getName(),
+                operator.getGameProfile().name(),
                 target.getUUID(),
-                target.getGameProfile().getName(),
+                target.getGameProfile().name(),
                 targetPermission,
                 currentPermission,
                 System.currentTimeMillis() + INVITE_TTL_MILLIS
         );
         INVITES.put(inviteId, invite);
         target.sendSystemMessage(inviteMessage(invite));
-        return RequestResult.succeeded(Component.translatable("message.simukraft.city_core.permission_invite_sent", target.getGameProfile().getName(), city.cityName(), permissionName(targetPermission)));
+        return RequestResult.succeeded(Component.translatable("message.simukraft.city_core.permission_invite_sent", target.getGameProfile().name(), city.cityName(), permissionName(targetPermission)));
     }
 
     // respond: 处理聊天栏点击后的接受或拒绝命令。
@@ -101,7 +101,7 @@ public final class CityPermissionInviteService {
 
     // accept: 接受任命后再次通过城市服务写入目标权限。
     private static boolean accept(ServerPlayer target, PermissionInvite invite) {
-        ServerLevel level = target.serverLevel();
+        ServerLevel level = target.level();
         Optional<CityData> city = CityService.findCity(level, invite.cityId());
         if (city.isEmpty()) {
             InfoToastService.warning(target, Component.translatable("message.simukraft.city_core.permission_invite_invalid"));
@@ -109,7 +109,7 @@ public final class CityPermissionInviteService {
         }
         Optional<CityData> targetCity = CityService.findPlayerCity(level, target.getUUID());
         if (targetCity.isPresent() && !targetCity.get().cityId().equals(invite.cityId())) {
-            InfoToastService.warning(target, Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().getName()));
+            InfoToastService.warning(target, Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().name()));
             return false;
         }
         boolean changed = applyPermission(level, city.get(), invite, target);
@@ -129,35 +129,35 @@ public final class CityPermissionInviteService {
     // applyPermission: 根据邀请目标执行加入、调权或市长转让。
     private static boolean applyPermission(ServerLevel level, CityData city, PermissionInvite invite, ServerPlayer target) {
         if (invite.targetPermission() == CityPermissionLevel.MAYOR) {
-            return CityService.transferMayor(level, invite.cityId(), invite.operatorId(), target.getUUID(), target.getGameProfile().getName());
+            return CityService.transferMayor(level, invite.cityId(), invite.operatorId(), target.getUUID(), target.getGameProfile().name());
         }
         boolean existingMember = city.member(target.getUUID()).isPresent();
         if (existingMember) {
             return CityService.setPlayerPermission(level, invite.cityId(), invite.operatorId(), target.getUUID(), invite.targetPermission());
         }
-        return CityService.addPlayer(level, invite.cityId(), invite.operatorId(), target.getUUID(), target.getGameProfile().getName(), invite.targetPermission());
+        return CityService.addPlayer(level, invite.cityId(), invite.operatorId(), target.getUUID(), target.getGameProfile().name(), invite.targetPermission());
     }
 
     // acceptedGroupMessage: 生成接受后的城市用户组广播。
     private static Component acceptedGroupMessage(ServerPlayer target, CityData city, PermissionInvite invite) {
         if (invite.targetPermission() == CityPermissionLevel.MAYOR) {
-            return Component.translatable("message.simukraft.city_core.mayor_transferred", target.getGameProfile().getName(), city.cityName());
+            return Component.translatable("message.simukraft.city_core.mayor_transferred", target.getGameProfile().name(), city.cityName());
         }
         if (invite.targetPermission() == CityPermissionLevel.OFFICIAL) {
-            return Component.translatable("message.simukraft.city_core.official_added", target.getGameProfile().getName(), city.cityName());
+            return Component.translatable("message.simukraft.city_core.official_added", target.getGameProfile().name(), city.cityName());
         }
         if (invite.previousPermission() == CityPermissionLevel.OFFICIAL) {
-            return Component.translatable("message.simukraft.city_core.official_removed", target.getGameProfile().getName(), city.cityName());
+            return Component.translatable("message.simukraft.city_core.official_removed", target.getGameProfile().name(), city.cityName());
         }
-        return Component.translatable("message.simukraft.city_core.member_added", target.getGameProfile().getName(), city.cityName(), permissionName(CityPermissionLevel.CITIZEN));
+        return Component.translatable("message.simukraft.city_core.member_added", target.getGameProfile().name(), city.cityName(), permissionName(CityPermissionLevel.CITIZEN));
     }
 
     // notifyRejected: 拒绝任命时通知本人和在线邀请者，不修改城市数据。
     private static void notifyRejected(ServerPlayer target, PermissionInvite invite) {
         InfoToastService.warning(target, Component.translatable("message.simukraft.city_core.permission_invite_rejected_self", invite.cityName(), permissionName(invite.targetPermission())));
-        ServerPlayer operator = target.getServer().getPlayerList().getPlayer(invite.operatorId());
+        ServerPlayer operator = target.level().getServer().getPlayerList().getPlayer(invite.operatorId());
         if (operator != null) {
-            InfoToastService.warning(operator, Component.translatable("message.simukraft.city_core.permission_invite_rejected_operator", target.getGameProfile().getName(), invite.cityName(), permissionName(invite.targetPermission())));
+            InfoToastService.warning(operator, Component.translatable("message.simukraft.city_core.permission_invite_rejected_operator", target.getGameProfile().name(), invite.cityName(), permissionName(invite.targetPermission())));
         }
     }
 
@@ -175,8 +175,8 @@ public final class CityPermissionInviteService {
         return Component.translatable(labelKey).withStyle(style -> style
                 .withColor(color)
                 .withBold(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(hoverKey))));
+                .withClickEvent(new ClickEvent.RunCommand(command))
+                .withHoverEvent(new HoverEvent.ShowText(Component.translatable(hoverKey))));
     }
 
     // canInvite: 按目标权限判断操作者是否可发起邀请。

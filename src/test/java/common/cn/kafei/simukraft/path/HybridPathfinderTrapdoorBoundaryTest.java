@@ -10,12 +10,12 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 class HybridPathfinderTrapdoorBoundaryTest {
-    private static final ResourceLocation DIMENSION = ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
+    private static final Identifier DIMENSION = Identifier.fromNamespaceAndPath("minecraft", "overworld");
 
     @Test
     void directionalThinWallBlocksTheCrossingEdge() {

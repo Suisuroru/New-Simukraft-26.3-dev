@@ -11,6 +11,9 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import com.mojang.serialization.Codec;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -24,17 +27,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public final class CitizenManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_citizens";
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "citizens");
     private static final String INVENTORY_BACKUPS_TAG = "CitizenInventories";
     private static final int AI_BUDGET_PER_TICK = 20;
     private static final int SAVE_DIRTY_INTERVAL_TICKS = 100;
-    // CITIZEN_STATUS_UPDATE_INTERVAL_TICKS：居民状态轮询间隔，用 UUID 错峰执行。
     private static final long CITIZEN_STATUS_UPDATE_INTERVAL_TICKS = 200L;
-    // HUNGER_DECAY_INTERVAL_TICKS：整数饥饿值自然下降间隔，约 6 分钟扣 1 点。
     private static final long HUNGER_DECAY_INTERVAL_TICKS = 7200L;
-    // HUNGER_DECAY_PER_UPDATE：每次自然下降扣 1 点，保持原版 0-20 整数风格。
     private static final double HUNGER_DECAY_PER_UPDATE = 1.0D;
-    private static final Factory<CitizenManager> FACTORY = new Factory<>(CitizenManager::new, CitizenManager::load, null);
+    private static final SavedDataType<CitizenManager> TYPE = createType();
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static SavedDataType<CitizenManager> createType() {
+        Codec<CitizenManager> codec = CompoundTag.CODEC.xmap(CitizenManager::load, CitizenManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, CitizenManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     // 居民主数据在服务端内存中维护，SQLite 负责档案持久化，饱食度独立保存在实体 NBT。
     private final ConcurrentMap<UUID, CitizenData> citizens = new ConcurrentHashMap<>();
@@ -52,7 +62,7 @@ public final class CitizenManager extends SavedData {
 
     public static CitizenManager get(ServerLevel level) {
         ServerLevel storageLevel = storageLevel(level);
-        CitizenManager manager = storageLevel.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        CitizenManager manager = storageLevel.getDataStorage().computeIfAbsent(TYPE);
         manager.level = storageLevel;
         manager.loadFromSqlite(storageLevel);
         return manager;
@@ -66,35 +76,34 @@ public final class CitizenManager extends SavedData {
         return level;
     }
 
-    private static CitizenManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static CitizenManager load(CompoundTag tag) {
         CitizenManager manager = new CitizenManager();
-        ListTag citizensTag = tag.getList("Citizens", CompoundTag.TAG_COMPOUND);
+        ListTag citizensTag = tag.getList("Citizens").orElse(new ListTag());
         for (int i = 0; i < citizensTag.size(); i++) {
-            CitizenData data = CitizenData.fromTag(citizensTag.getCompound(i));
+            CitizenData data = CitizenData.fromTag(citizensTag.getCompound(i).orElse(new CompoundTag()));
             manager.putLoadedCitizen(data);
         }
-        ListTag inventoryTags = tag.getList(INVENTORY_BACKUPS_TAG, CompoundTag.TAG_COMPOUND);
+        ListTag inventoryTags = tag.getList(INVENTORY_BACKUPS_TAG).orElse(new ListTag());
         for (int i = 0; i < inventoryTags.size(); i++) {
-            CompoundTag entry = inventoryTags.getCompound(i);
-            if (entry.hasUUID("Uuid") && entry.contains("Inventory", CompoundTag.TAG_COMPOUND)) {
-                manager.inventoryBackups.put(entry.getUUID("Uuid"), entry.getCompound("Inventory").copy());
+            CompoundTag entry = inventoryTags.getCompound(i).orElse(new CompoundTag());
+            if (entry.contains("Uuid") && entry.contains("Inventory")) {
+                manager.inventoryBackups.put(UUID.fromString(entry.getString("Uuid").orElse("")), entry.getCompound("Inventory").orElse(new CompoundTag()).copy());
             }
         }
         if (tag.contains("LastFamilyTickDay")) {
-            manager.lastFamilyTickDay = tag.getLong("LastFamilyTickDay");
+            manager.lastFamilyTickDay = tag.getLong("LastFamilyTickDay").orElse(0L);
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag citizensTag = new ListTag();
         citizens.values().forEach(data -> citizensTag.add(data.toTag()));
         tag.put("Citizens", citizensTag);
         ListTag inventoryTags = new ListTag();
         inventoryBackups.forEach((uuid, inventory) -> {
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Uuid", uuid);
+            entry.putString("Uuid", uuid.toString());
             entry.put("Inventory", inventory.copy());
             inventoryTags.add(entry);
         });
@@ -143,7 +152,7 @@ public final class CitizenManager extends SavedData {
         if (sqliteTag.isEmpty()) {
             return;
         }
-        ListTag citizensTag = sqliteTag.getList("Citizens", CompoundTag.TAG_COMPOUND);
+        ListTag citizensTag = sqliteTag.getList("Citizens").orElse(new ListTag());
         if (citizensTag.isEmpty()) {
             return;
         }
@@ -152,7 +161,7 @@ public final class CitizenManager extends SavedData {
         aiQueue.clear();
         queuedAiCitizenIds.clear();
         for (int i = 0; i < citizensTag.size(); i++) {
-            CompoundTag citizenTag = citizensTag.getCompound(i);
+            CompoundTag citizenTag = citizensTag.getCompound(i).orElse(new CompoundTag());
             boolean repairedDeadHousing = deadCitizenHasHome(citizenTag);
             CitizenData data = CitizenData.fromTag(citizenTag);
             boolean repaired = CitizenEmploymentService.repairLoadedEmployment(level, data);
@@ -170,13 +179,13 @@ public final class CitizenManager extends SavedData {
     }
 
     private static boolean deadCitizenHasHome(CompoundTag tag) {
-        if (tag == null || !tag.hasUUID("HomeId")) {
+        if (tag == null || !tag.contains("HomeId")) {
             return false;
         }
-        return tag.getBoolean("Dead")
-                || CitizenWorkStatus.fromName(tag.getString("WorkStatus")) == CitizenWorkStatus.DEAD
-                || CitizenWorkStatus.fromName(tag.getString("Status")) == CitizenWorkStatus.DEAD
-                || CitizenWorkStatus.fromName(tag.getString("JobId")) == CitizenWorkStatus.DEAD;
+        return tag.getBoolean("Dead").orElse(false)
+                || CitizenWorkStatus.fromName(tag.getString("WorkStatus").orElse("")) == CitizenWorkStatus.DEAD
+                || CitizenWorkStatus.fromName(tag.getString("Status").orElse("")) == CitizenWorkStatus.DEAD
+                || CitizenWorkStatus.fromName(tag.getString("JobId").orElse("")) == CitizenWorkStatus.DEAD;
     }
 
     // putLoadedCitizen：加载 SQLite/SavedData 时统一恢复居民索引和 AI 队列。
@@ -292,7 +301,7 @@ public final class CitizenManager extends SavedData {
         reconcileEntityInventory(entity);
         enqueueAiTick(data.uuid());
         if (entity.level() instanceof ServerLevel level) {
-            CitizenProfileGenerator.fillMissingProfile(data, level.random, level.getDayTime() / 24000L);
+            CitizenProfileGenerator.fillMissingProfile(data, level.getRandom(), level.getDefaultClockTime() / 24000L);
         }
         recordEntityChunk(data, entity);
         syncEntityFromData(entity, data);
@@ -395,10 +404,10 @@ public final class CitizenManager extends SavedData {
     }
 
     private void tickFamilySystemsIfNewDay(ServerLevel level) {
-        long currentDay = level.getDayTime() / 24000L;
+        long currentDay = level.getDefaultClockTime() / 24000L;
         if (currentDay <= lastFamilyTickDay) return;
         lastFamilyTickDay = currentDay;
-        RandomSource random = level.random;
+        RandomSource random = level.getRandom();
         NpcGrowthService.tickGrowth(level, random, currentDay);
         NpcChildbirthService.tickChildbirths(level, random, currentDay);
         NpcPregnancyService.tickPregnancies(level, random, currentDay);
@@ -427,9 +436,9 @@ public final class CitizenManager extends SavedData {
         data.setHealth(entity.getHealth());
         data.setSick(entity.isSick());
         data.setChild(entity.isChildNpc());
-        data.setDimensionId(entity.level().dimension().location().toString());
+        data.setDimensionId(entity.level().dimension().identifier().toString());
         if (entity.level() instanceof ServerLevel level) {
-            data.setHappiness(45.0D + level.random.nextDouble() * 20.0D);
+            data.setHappiness(45.0D + level.getRandom().nextDouble() * 20.0D);
         }
         return data;
     }
@@ -453,7 +462,7 @@ public final class CitizenManager extends SavedData {
         long gameTime = level.getGameTime();
         long uuidBits = data.uuid().getLeastSignificantBits();
         if (gameTime % CITIZEN_STATUS_UPDATE_INTERVAL_TICKS == Math.floorMod(uuidBits, CITIZEN_STATUS_UPDATE_INTERVAL_TICKS)) {
-            RandomSource random = level.random;
+            RandomSource random = level.getRandom();
             CitizenEntity entity = CitizenTeleportService.findCitizenEntity(level, data.uuid());
             boolean dataChanged = false;
             boolean shouldDecayHunger = false;
@@ -509,7 +518,7 @@ public final class CitizenManager extends SavedData {
         entity.setSick(data.sick());
         entity.setChildNpc(data.child());
         long currentDay = entity.level() instanceof ServerLevel serverLevel
-                ? serverLevel.getDayTime() / 24000L : data.pregnantSince();
+                ? serverLevel.getDefaultClockTime() / 24000L : data.pregnantSince();
         PregnancyStage pregnancyStage = data.pregnant()
                 ? PregnancyStage.resolve(currentDay - data.pregnantSince(), ServerConfig.familyPregnancyDurationDays())
                 : PregnancyStage.NONE;

@@ -213,6 +213,6 @@ public final class CityService {
     }
 
     public static String dimensionId(ServerLevel level) {
-        return level.dimension().location().toString();
+        return level.dimension().registry().toString();
     }
 }

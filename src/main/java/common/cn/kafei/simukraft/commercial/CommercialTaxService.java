@@ -72,6 +72,6 @@ public final class CommercialTaxService {
 
     /** incomeDay: 使用原版 dayTime 计算商业收入所属 MC 日。 */
     private static long incomeDay(ServerLevel level) {
-        return Math.max(1L, level.getDayTime() / TICKS_PER_DAY + 1L);
+        return Math.max(1L, level.getDefaultClockTime() / TICKS_PER_DAY + 1L);
     }
 }

@@ -23,12 +23,10 @@ public final class ResidentialControlBoxBlock extends Block {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel
-                && !PlacedBuildingMoveService.isMovingBuildingBlock(serverLevel, pos)) {
-            ResidentialControlBoxService.onRemoved(serverLevel, pos);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        if (!PlacedBuildingMoveService.isMovingBuildingBlock(level, pos)) {
+            ResidentialControlBoxService.onRemoved(level, pos);
         }
-        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
     @Override
@@ -36,6 +34,6 @@ public final class ResidentialControlBoxBlock extends Block {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             ResidentialControlBoxOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 }

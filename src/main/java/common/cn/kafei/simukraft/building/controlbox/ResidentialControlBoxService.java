@@ -16,6 +16,7 @@ import common.cn.kafei.simukraft.city.poi.CityPoiType;
 import common.cn.kafei.simukraft.economy.EconomyService;
 import common.cn.kafei.simukraft.economy.ResidentialRentService;
 import common.cn.kafei.simukraft.registry.ModBlocks;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -107,7 +108,7 @@ public final class ResidentialControlBoxService {
         if (level == null || player == null || building == null || building.cityId() == null) {
             return false;
         }
-        return player.hasPermissions(2) || CityService.canManageCity(level, building.cityId(), player.getUUID());
+        return player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || CityService.canManageCity(level, building.cityId(), player.getUUID());
     }
 
     /** toggleOccupancy: 切换该住宅是否允许被分配系统入住。 */
@@ -310,7 +311,7 @@ public final class ResidentialControlBoxService {
     }
 
     private static boolean isRedBedHead(BlockState state) {
-        return state.is(Blocks.RED_BED)
+        return state.is(Blocks.BED.red())
                 && (!state.hasProperty(BlockStateProperties.BED_PART)
                 || state.getValue(BlockStateProperties.BED_PART) == BedPart.HEAD);
     }

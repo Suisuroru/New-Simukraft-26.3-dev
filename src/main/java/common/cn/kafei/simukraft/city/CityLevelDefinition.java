@@ -2,7 +2,7 @@ package common.cn.kafei.simukraft.city;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 
@@ -99,22 +99,22 @@ public record CityLevelDefinition(int level,
     }
 
     /** ItemRequirement: 一个精确物品 ID 或物品标签及其所需数量与可选显示信息。 */
-    public record ItemRequirement(ResourceLocation itemId,
-                                  ResourceLocation itemTag,
+    public record ItemRequirement(Identifier itemId,
+                                  Identifier itemTag,
                                   int count,
-                                  ResourceLocation displayIcon,
+                                  Identifier displayIcon,
                                   String displayName) {
-        public ItemRequirement(ResourceLocation itemId, int count) {
+        public ItemRequirement(Identifier itemId, int count) {
             this(itemId, null, count, null, "");
         }
 
         /** ItemRequirement: 兼容未定义展示图标和名称的旧调用。 */
-        public ItemRequirement(ResourceLocation itemId, ResourceLocation itemTag, int count) {
+        public ItemRequirement(Identifier itemId, Identifier itemTag, int count) {
             this(itemId, itemTag, count, null, "");
         }
 
         /** tag: 创建一个按物品标签匹配的升级材料条件。 */
-        public static ItemRequirement tag(ResourceLocation itemTag, int count) {
+        public static ItemRequirement tag(Identifier itemTag, int count) {
             return new ItemRequirement(null, itemTag, count, null, "");
         }
 
@@ -144,7 +144,7 @@ public record CityLevelDefinition(int level,
             }
             return isTag()
                     ? stack.is(TagKey.create(Registries.ITEM, itemTag))
-                    : stack.is(BuiltInRegistries.ITEM.get(itemId));
+                    : stack.is(BuiltInRegistries.ITEM.get(itemId).get());
         }
 
         /** serializedId: 返回网络和界面使用的物品/标签标识。 */

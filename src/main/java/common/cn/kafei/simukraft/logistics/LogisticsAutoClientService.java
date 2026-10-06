@@ -35,7 +35,7 @@ public final class LogisticsAutoClientService {
         if (level == null || cityId == null) {
             return List.of();
         }
-        String safeDimensionId = dimensionId != null ? dimensionId : level.dimension().location().toString();
+        String safeDimensionId = dimensionId != null ? dimensionId : level.dimension().registry().toString();
         return allClients(level).stream()
                 .filter(client -> cityId.equals(client.cityId()) && safeDimensionId.equals(client.dimensionId()))
                 .toList();
@@ -76,7 +76,7 @@ public final class LogisticsAutoClientService {
 
     private static List<LogisticsClientData> buildClients(ServerLevel level, long gameTime) {
         List<LogisticsClientData> clients = new ArrayList<>();
-        String dimensionId = level.dimension().location().toString();
+        String dimensionId = level.dimension().registry().toString();
         for (PlacedBuildingRecord building : PlacedBuildingService.getBuildings(level)) {
             if (building == null || building.cityId() == null) {
                 continue;

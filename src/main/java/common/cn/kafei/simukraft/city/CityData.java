@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.city;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -44,27 +45,27 @@ public final class CityData {
     }
 
     public static CityData fromTag(CompoundTag tag) {
-        CityData data = new CityData(tag.getUUID("CityId"));
-        data.cityName = tag.getString("CityName");
-        data.dimensionId = normalizeDimensionId(tag.getString("DimensionId"));
-        data.cityCorePos = new BlockPos(tag.getInt("CoreX"), tag.getInt("CoreY"), tag.getInt("CoreZ"));
-        data.funds = tag.getDouble("Funds");
-        data.cityLevel = clampCityLevel(tag.getInt("CityLevel"));
+        CityData data = new CityData(NbtUuid.readOrNull(tag, "CityId"));
+        data.cityName = tag.getString("CityName").get();
+        data.dimensionId = normalizeDimensionId(tag.getString("DimensionId").get());
+        data.cityCorePos = new BlockPos(tag.getInt("CoreX").get(), tag.getInt("CoreY").get(), tag.getInt("CoreZ").get());
+        data.funds = tag.getDouble("Funds").get();
+        data.cityLevel = clampCityLevel(tag.getInt("CityLevel").get());
         data.upgradeState = CityUpgradeState.fromSaved(
-                tag.getInt("UpgradeTargetLevel"),
-                tag.getLong("UpgradeStartedAt"),
-                tag.getInt("UpgradeDurationTicks"));
+                tag.getInt("UpgradeTargetLevel").get(),
+                tag.getLong("UpgradeStartedAt").get(),
+                tag.getInt("UpgradeDurationTicks").get());
         if (data.upgradeState.active() && data.upgradeState.targetLevel() != data.cityLevel + 1) {
             data.upgradeState = CityUpgradeState.NONE;
         }
-        ListTag memberTags = tag.getList("Members", CompoundTag.TAG_COMPOUND);
+        ListTag memberTags = tag.getList("Members").get();
         for (int i = 0; i < memberTags.size(); i++) {
-            CityMemberData member = CityMemberData.fromTag(memberTags.getCompound(i));
+            CityMemberData member = CityMemberData.fromTag(memberTags.getCompound(i).get());
             data.members.put(member.playerId(), member);
         }
-        ListTag financeTags = tag.getList("FinanceTransactions", CompoundTag.TAG_COMPOUND);
+        ListTag financeTags = tag.getList("FinanceTransactions").get();
         for (int i = 0; i < financeTags.size(); i++) {
-            data.financeTransactions.add(FinanceTransactionData.fromTag(financeTags.getCompound(i)));
+            data.financeTransactions.add(FinanceTransactionData.fromTag(financeTags.getCompound(i).get()));
         }
         return data;
     }
@@ -72,7 +73,7 @@ public final class CityData {
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
         synchronized (this) {
-            tag.putUUID("CityId", cityId);
+            NbtUuid.put(tag, "CityId", cityId);
             tag.putString("CityName", cityName);
             tag.putString("DimensionId", dimensionId);
             tag.putInt("CoreX", cityCorePos.getX());

@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record RtsPlaceBlockPacket(BlockPos clickedPos, Direction face) implements CustomPacketPayload {
     public static final Type<RtsPlaceBlockPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_place_block"));
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_place_block"));
     public static final StreamCodec<RegistryFriendlyByteBuf, RtsPlaceBlockPacket> STREAM_CODEC =
             StreamCodec.of(RtsPlaceBlockPacket::encode, RtsPlaceBlockPacket::decode);
 

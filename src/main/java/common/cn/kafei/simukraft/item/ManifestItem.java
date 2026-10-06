@@ -24,12 +24,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 
 public final class ManifestItem extends Item {
@@ -63,12 +64,12 @@ public final class ManifestItem extends Item {
     }
 
     @Override
-    public @Nonnull InteractionResultHolder<ItemStack> use(@Nonnull Level level, @Nonnull Player player, @Nonnull InteractionHand hand) {
+    public @Nonnull InteractionResult use(@Nonnull Level level, @Nonnull Player player, @Nonnull InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide()) {
             ClientInteractionBridge.openManifest(stack, hand);
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack);
     }
 
     @Override
@@ -84,31 +85,31 @@ public final class ManifestItem extends Item {
             if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 fillFromBuildBox(context.getItemInHand(), serverLevel, clickedPos, serverPlayer);
             }
-            return InteractionResult.sidedSuccess(level.isClientSide());
+            return InteractionResult.SUCCESS.withoutItem();
         }
         if (isCommercialControlBox(state)) {
             if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 fillFromCommercialControlBox(context.getItemInHand(), serverLevel, clickedPos, serverPlayer);
             }
-            return InteractionResult.sidedSuccess(level.isClientSide());
+            return InteractionResult.SUCCESS.withoutItem();
         }
         if (isIndustrialControlBox(state)) {
             if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 fillFromIndustrialControlBox(context.getItemInHand(), serverLevel, clickedPos, serverPlayer);
             }
-            return InteractionResult.sidedSuccess(level.isClientSide());
+            return InteractionResult.SUCCESS.withoutItem();
         }
         return InteractionResult.PASS;
     }
 
     @Override
-    public void appendHoverText(@Nonnull ItemStack stack, @Nonnull TooltipContext context, @Nonnull List<Component> tooltipComponents, @Nonnull TooltipFlag isAdvanced) {
-        super.appendHoverText(stack, context, tooltipComponents, isAdvanced);
+    public void appendHoverText(@Nonnull ItemStack stack, @Nonnull TooltipContext context, @Nonnull TooltipDisplay tooltipDisplay, @Nonnull Consumer<Component> tooltipComponents, @Nonnull TooltipFlag isAdvanced) {
+        super.appendHoverText(stack, context, tooltipDisplay, tooltipComponents, isAdvanced);
         if (hasData(stack)) {
-            tooltipComponents.add(Component.translatable("tooltip.simukraft.manifest.building", getBuildingName(stack)));
-            tooltipComponents.add(Component.translatable("tooltip.simukraft.manifest.progress", getProgressCurrent(stack), getProgressTotal(stack)));
+            tooltipComponents.accept(Component.translatable("tooltip.simukraft.manifest.building", getBuildingName(stack)));
+            tooltipComponents.accept(Component.translatable("tooltip.simukraft.manifest.progress", getProgressCurrent(stack), getProgressTotal(stack)));
         } else {
-            tooltipComponents.add(Component.translatable("tooltip.simukraft.manifest.empty"));
+            tooltipComponents.accept(Component.translatable("tooltip.simukraft.manifest.empty"));
         }
     }
 
@@ -277,9 +278,9 @@ public final class ManifestItem extends Item {
         for (ManifestControlBoxSnapshotService.ProductGroup group : productGroups) {
             CompoundTag groupTag = new CompoundTag();
             groupTag.put(TAG_PRODUCTS, materialList(group.products(), Map.of(), -1));
-            groupTag.put(TAG_MATERIALS, groupMaterialsList(group.materials(), tag.getList(TAG_MATERIALS, Tag.TAG_COMPOUND)));
-            if (!groupTag.getList(TAG_PRODUCTS, Tag.TAG_COMPOUND).isEmpty()
-                    && !groupTag.getList(TAG_MATERIALS, Tag.TAG_COMPOUND).isEmpty()) {
+            groupTag.put(TAG_MATERIALS, groupMaterialsList(group.materials(), tag.getList(TAG_MATERIALS).orElse(new ListTag())));
+            if (!groupTag.getList(TAG_PRODUCTS).orElse(new ListTag()).isEmpty()
+                    && !groupTag.getList(TAG_MATERIALS).orElse(new ListTag()).isEmpty()) {
                 groupsList.add(groupTag);
             }
         }
@@ -314,8 +315,8 @@ public final class ManifestItem extends Item {
             materialTag.putInt("Count", count);
             materialTag.putInt(TAG_INDEX, index);
             if (index >= 0 && index < flatMaterials.size()) {
-                CompoundTag flatTag = flatMaterials.getCompound(index);
-                materialTag.putInt(TAG_AVAILABLE, flatTag.contains(TAG_AVAILABLE) ? flatTag.getInt(TAG_AVAILABLE) : 0);
+                CompoundTag flatTag = flatMaterials.getCompound(index).orElse(new CompoundTag());
+                materialTag.putInt(TAG_AVAILABLE, flatTag.contains(TAG_AVAILABLE) ? flatTag.getInt(TAG_AVAILABLE).orElse(0) : 0);
             }
             materialsList.add(materialTag);
         });
@@ -324,7 +325,7 @@ public final class ManifestItem extends Item {
 
     private static int findMaterialIndex(ListTag flatMaterials, String itemId) {
         for (int i = 0; i < flatMaterials.size(); i++) {
-            if (flatMaterials.getCompound(i).getString("Item").equals(itemId)) {
+            if (flatMaterials.getCompound(i).orElse(new CompoundTag()).getString("Item").orElse("").equals(itemId)) {
                 return i;
             }
         }
@@ -342,14 +343,14 @@ public final class ManifestItem extends Item {
         if (tag.isEmpty() || !tag.contains(TAG_MATERIALS)) {
             return result;
         }
-        ListTag materialsList = tag.getList(TAG_MATERIALS, Tag.TAG_COMPOUND);
-        ListTag checkedList = tag.getList(TAG_CHECKED, Tag.TAG_STRING);
+        ListTag materialsList = tag.getList(TAG_MATERIALS).orElse(new ListTag());
+        ListTag checkedList = tag.getList(TAG_CHECKED).orElse(new ListTag());
         for (int i = 0; i < materialsList.size(); i++) {
-            CompoundTag materialTag = materialsList.getCompound(i);
-            String itemId = materialTag.getString("Item");
-            int count = materialTag.getInt("Count");
-            boolean checked = i < checkedList.size() && Boolean.parseBoolean(checkedList.getString(i));
-            int available = materialTag.contains(TAG_AVAILABLE) ? materialTag.getInt(TAG_AVAILABLE) : (checked ? count : 0);
+            CompoundTag materialTag = materialsList.getCompound(i).orElse(new CompoundTag());
+            String itemId = materialTag.getString("Item").orElse("");
+            int count = materialTag.getInt("Count").orElse(0);
+            boolean checked = i < checkedList.size() && Boolean.parseBoolean(checkedList.getString(i).orElse(""));
+            int available = materialTag.contains(TAG_AVAILABLE) ? materialTag.getInt(TAG_AVAILABLE).orElse(0) : (checked ? count : 0);
             result.add(new MaterialEntry(itemId, count, Math.min(count, Math.max(0, available)), checked, i));
         }
         return result;
@@ -362,12 +363,12 @@ public final class ManifestItem extends Item {
         if (tag.isEmpty() || !tag.contains(TAG_PRODUCT_GROUPS)) {
             return result;
         }
-        ListTag groupsList = tag.getList(TAG_PRODUCT_GROUPS, Tag.TAG_COMPOUND);
-        ListTag checkedList = tag.getList(TAG_CHECKED, Tag.TAG_STRING);
+        ListTag groupsList = tag.getList(TAG_PRODUCT_GROUPS).orElse(new ListTag());
+        ListTag checkedList = tag.getList(TAG_CHECKED).orElse(new ListTag());
         for (int i = 0; i < groupsList.size(); i++) {
-            CompoundTag groupTag = groupsList.getCompound(i);
-            List<MaterialEntry> products = readEntries(groupTag.getList(TAG_PRODUCTS, Tag.TAG_COMPOUND), checkedList, false);
-            List<MaterialEntry> groupMaterials = readEntries(groupTag.getList(TAG_MATERIALS, Tag.TAG_COMPOUND), checkedList, true);
+            CompoundTag groupTag = groupsList.getCompound(i).orElse(new CompoundTag());
+            List<MaterialEntry> products = readEntries(groupTag.getList(TAG_PRODUCTS).orElse(new ListTag()), checkedList, false);
+            List<MaterialEntry> groupMaterials = readEntries(groupTag.getList(TAG_MATERIALS).orElse(new ListTag()), checkedList, true);
             if (!products.isEmpty() || !groupMaterials.isEmpty()) {
                 result.add(new ProductGroup(products, groupMaterials));
             }
@@ -378,12 +379,13 @@ public final class ManifestItem extends Item {
     private static List<MaterialEntry> readEntries(ListTag entriesList, ListTag checkedList, boolean useStoredIndex) {
         List<MaterialEntry> result = new ArrayList<>();
         for (int i = 0; i < entriesList.size(); i++) {
-            CompoundTag entryTag = entriesList.getCompound(i);
-            int index = useStoredIndex && entryTag.contains(TAG_INDEX) ? entryTag.getInt(TAG_INDEX) : -1;
-            boolean checked = index >= 0 && index < checkedList.size() && Boolean.parseBoolean(checkedList.getString(index));
-            int count = entryTag.getInt("Count");
-            int available = entryTag.contains(TAG_AVAILABLE) ? entryTag.getInt(TAG_AVAILABLE) : (checked ? count : 0);
-            result.add(new MaterialEntry(entryTag.getString("Item"), count, Math.min(count, Math.max(0, available)), checked, index));
+            CompoundTag entryTag = entriesList.getCompound(i).orElse(new CompoundTag());
+            int index = useStoredIndex && entryTag.contains(TAG_INDEX) ? entryTag.getInt(TAG_INDEX).orElse(0) : -1;
+            boolean checked = index >= 0 && index < checkedList.size() && Boolean.parseBoolean(checkedList.getString(index).orElse(""));
+            int count = entryTag.getInt("Count").orElse(0);
+            int available = entryTag.contains(TAG_AVAILABLE) ? entryTag.getInt(TAG_AVAILABLE).orElse(0) : (checked ? count : 0);
+            String itemId = entryTag.getString("Item").orElse("");
+            result.add(new MaterialEntry(itemId, count, Math.min(count, Math.max(0, available)), checked, index));
         }
         return result;
     }
@@ -391,23 +393,23 @@ public final class ManifestItem extends Item {
     @Nonnull
     public static String getBuildingName(@Nonnull ItemStack stack) {
         CompoundTag tag = customTag(stack);
-        return tag.contains(TAG_BUILDING_NAME) ? tag.getString(TAG_BUILDING_NAME) : "";
+        return tag.contains(TAG_BUILDING_NAME) ? tag.getString(TAG_BUILDING_NAME).orElse("") : "";
     }
 
     public static int getProgressCurrent(@Nonnull ItemStack stack) {
         CompoundTag tag = customTag(stack);
-        return tag.contains(TAG_PROGRESS_CURRENT) ? Math.max(0, tag.getInt(TAG_PROGRESS_CURRENT)) : 0;
+        return tag.contains(TAG_PROGRESS_CURRENT) ? Math.max(0, tag.getInt(TAG_PROGRESS_CURRENT).orElse(0)) : 0;
     }
 
     public static int getProgressTotal(@Nonnull ItemStack stack) {
         CompoundTag tag = customTag(stack);
-        return tag.contains(TAG_PROGRESS_TOTAL) ? Math.max(0, tag.getInt(TAG_PROGRESS_TOTAL)) : 0;
+        return tag.contains(TAG_PROGRESS_TOTAL) ? Math.max(0, tag.getInt(TAG_PROGRESS_TOTAL).orElse(0)) : 0;
     }
 
     @Nonnull
     public static String getSourceType(@Nonnull ItemStack stack) {
         CompoundTag tag = customTag(stack);
-        return tag.contains(TAG_SOURCE_TYPE) ? tag.getString(TAG_SOURCE_TYPE) : "";
+        return tag.contains(TAG_SOURCE_TYPE) ? tag.getString(TAG_SOURCE_TYPE).orElse("") : "";
     }
 
     public static int getTotalMaterials(@Nonnull ItemStack stack) {
@@ -429,7 +431,7 @@ public final class ManifestItem extends Item {
         if (tag.isEmpty() || !tag.contains(TAG_CHECKED)) {
             return;
         }
-        ListTag checkedList = tag.getList(TAG_CHECKED, Tag.TAG_STRING);
+        ListTag checkedList = tag.getList(TAG_CHECKED).orElse(new ListTag());
         if (index < 0 || index >= checkedList.size()) {
             return;
         }

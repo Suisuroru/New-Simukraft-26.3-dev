@@ -5,11 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.StringReader;
+import net.minecraft.commands.arguments.item.ItemInput;
 import net.minecraft.commands.arguments.item.ItemParser;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.component.DataComponentPredicate;
+import net.minecraft.core.component.DataComponentExactPredicate;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -17,7 +18,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -239,7 +240,7 @@ public record IndustrialItemStackSpec(String itemId,
             return ItemStack.EMPTY;
         }
         try {
-            ItemParser.ItemResult result = new ItemParser(registries).parse(new StringReader(itemStackText));
+            ItemInput result = new ItemParser(registries).parse(new StringReader(itemStackText));
             ItemStack stack = new ItemStack(result.item(), count, result.components());
             return !stack.isEmpty() ? stack : ItemStack.EMPTY;
         } catch (Exception exception) {
@@ -252,12 +253,12 @@ public record IndustrialItemStackSpec(String itemId,
             return false;
         }
         try {
-            ItemParser.ItemResult result = new ItemParser(registries).parse(new StringReader(itemStackText));
+            ItemInput result = new ItemParser(registries).parse(new StringReader(itemStackText));
             if (!stack.is(result.item())) {
                 return false;
             }
             DataComponentPatch.SplitResult split = result.components().split();
-            if (!DataComponentPredicate.allOf(split.added()).test(stack.getComponents())) {
+            if (!DataComponentExactPredicate.allOf(split.added()).test(stack.getComponents())) {
                 return false;
             }
             for (DataComponentType<?> type : split.removed()) {
@@ -276,7 +277,7 @@ public record IndustrialItemStackSpec(String itemId,
             return true;
         }
         try {
-            ResourceLocation id = ResourceLocation.parse(itemTag);
+            Identifier id = Identifier.parse(itemTag);
             return stack.is(TagKey.create(Registries.ITEM, id));
         } catch (Exception exception) {
             return false;
@@ -312,7 +313,7 @@ public record IndustrialItemStackSpec(String itemId,
             return true;
         }
         try {
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, TagParser.parseTag(customDataText));
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, TagParser.parseCompoundFully(customDataText));
             return true;
         } catch (Exception exception) {
             return false;
@@ -324,7 +325,7 @@ public record IndustrialItemStackSpec(String itemId,
             return true;
         }
         try {
-            CompoundTag tag = TagParser.parseTag(customDataText);
+            CompoundTag tag = TagParser.parseCompoundFully(customDataText);
             CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
             return customData.matchedBy(tag);
         } catch (Exception exception) {
@@ -371,7 +372,7 @@ public record IndustrialItemStackSpec(String itemId,
     @Nullable
     private Holder<Potion> potionHolder(@Nullable HolderLookup.Provider registries) {
         try {
-            ResourceLocation id = ResourceLocation.parse(potionId);
+            Identifier id = Identifier.parse(potionId);
             if (registries != null) {
                 ResourceKey<Potion> key = ResourceKey.create(Registries.POTION, id);
                 return registries.lookupOrThrow(Registries.POTION).getOrThrow(key);
@@ -391,7 +392,7 @@ public record IndustrialItemStackSpec(String itemId,
             return null;
         }
         try {
-            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.parse(idText));
+            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(idText));
             return registries.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
         } catch (Exception exception) {
             return null;
@@ -403,7 +404,7 @@ public record IndustrialItemStackSpec(String itemId,
             return Items.AIR;
         }
         try {
-            return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(itemId)).orElse(Items.AIR);
+            return BuiltInRegistries.ITEM.getOptional(Identifier.parse(itemId)).orElse(Items.AIR);
         } catch (Exception exception) {
             return Items.AIR;
         }

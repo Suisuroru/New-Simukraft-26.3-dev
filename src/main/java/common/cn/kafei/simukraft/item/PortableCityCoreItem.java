@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -26,30 +26,30 @@ public final class PortableCityCoreItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide()) {
-            return InteractionResultHolder.success(stack);
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack);
         }
         if (!(player instanceof ServerPlayer serverPlayer) || !(level instanceof ServerLevel serverLevel)) {
-            return InteractionResultHolder.success(stack);
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack);
         }
 
         Optional<CityData> cityOptional = CityService.findManagedPlayerCity(serverLevel, player.getUUID());
         if (cityOptional.isEmpty()) {
             InfoToastService.warning(serverPlayer, Component.translatable("message.portable_city_core.no_city"));
-            return InteractionResultHolder.fail(stack);
+            return InteractionResult.FAIL;
         }
 
         CityData city = cityOptional.get();
         BlockPos corePos = city.cityCorePos();
         if (corePos == null) {
             InfoToastService.warning(serverPlayer, Component.translatable("message.portable_city_core.no_core"));
-            return InteractionResultHolder.fail(stack);
+            return InteractionResult.FAIL;
         }
 
         CityPermissionLevel permissionLevel = CityService.getPlayerPermission(city, player.getUUID());
         PacketDistributor.sendToPlayer(serverPlayer, CityNetworkViewFactory.buildOpenResponse(serverLevel, corePos, Optional.of(city), permissionLevel, false, CityService.canManageCity(city, player.getUUID())));
-        return InteractionResultHolder.success(stack);
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack);
     }
 }

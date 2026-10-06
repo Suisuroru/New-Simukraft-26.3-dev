@@ -2,12 +2,14 @@ package common.cn.kafei.simukraft.commercial;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
 import java.util.Map;
@@ -16,8 +18,18 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class CommercialStockManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_commercial_stock";
-    private static final Factory<CommercialStockManager> FACTORY = new Factory<>(CommercialStockManager::new, CommercialStockManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "commercial_stock");
+    private static final SavedDataType<CommercialStockManager> TYPE = createType();
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static SavedDataType<CommercialStockManager> createType() {
+        Codec<CommercialStockManager> codec = CompoundTag.CODEC.xmap(CommercialStockManager::load, CommercialStockManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, CommercialStockManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<BlockPos, ConcurrentMap<String, CommercialStockData>> stock = new ConcurrentHashMap<>();
     private volatile boolean sqliteLoaded;
@@ -25,24 +37,23 @@ public final class CommercialStockManager extends SavedData {
 
     /** get: 获取当前维度的商业库存管理器。 */
     public static CommercialStockManager get(ServerLevel level) {
-        CommercialStockManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        CommercialStockManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static CommercialStockManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static CommercialStockManager load(CompoundTag tag) {
         CommercialStockManager manager = new CommercialStockManager();
-        ListTag list = tag.getList("Stock", CompoundTag.TAG_COMPOUND);
+        ListTag list = tag.getList("Stock").orElse(new ListTag());
         for (int i = 0; i < list.size(); i++) {
-            CommercialStockData data = CommercialStockData.fromTag(list.getCompound(i));
+            CommercialStockData data = CommercialStockData.fromTag(list.getCompound(i).orElse(new CompoundTag()));
             manager.stock.computeIfAbsent(data.boxPos(), ignored -> new ConcurrentHashMap<>()).put(data.itemId(), data);
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag list = new ListTag();
         stock.values().forEach(map -> map.values().forEach(data -> list.add(data.toTag())));
         tag.put("Stock", list);
@@ -52,7 +63,7 @@ public final class CommercialStockManager extends SavedData {
     /** saveToSqlite: 将商业库存写入 SQLite。 */
     public synchronized void saveToSqlite(ServerLevel level) {
         if (level != null) {
-            SimuSqliteStorage.saveCommercialStock(level, save(new CompoundTag(), level.registryAccess()));
+            SimuSqliteStorage.saveCommercialStock(level, save(new CompoundTag()));
         }
     }
 
@@ -71,7 +82,7 @@ public final class CommercialStockManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        CommercialStockManager loaded = load(sqliteTag, level.registryAccess());
+        CommercialStockManager loaded = load(sqliteTag);
         stock.clear();
         stock.putAll(loaded.stock);
     }

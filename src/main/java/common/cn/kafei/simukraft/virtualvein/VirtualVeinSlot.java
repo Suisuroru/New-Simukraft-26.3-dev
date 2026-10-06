@@ -1,12 +1,12 @@
 package common.cn.kafei.simukraft.virtualvein;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Objects;
 
 public record VirtualVeinSlot(String veinId,
                               String displayName,
-                              ResourceLocation productId,
+                              Identifier productId,
                               int minY,
                               int maxY,
                               int amount,

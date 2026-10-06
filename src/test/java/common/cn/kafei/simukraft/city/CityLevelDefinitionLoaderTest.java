@@ -3,7 +3,7 @@ package common.cn.kafei.simukraft.city;
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class CityLevelDefinitionLoaderTest {
-    private static final ResourceLocation TEST_ID = ResourceLocation.fromNamespaceAndPath("simukraft", "city_levels/test.json");
+    private static final Identifier TEST_ID = Identifier.fromNamespaceAndPath("simukraft", "city_levels/test.json");
 
     @Test
     void parsesAndMergesExactItemRequirements() {
@@ -83,9 +83,9 @@ class CityLevelDefinitionLoaderTest {
         assertEquals(2, definition.items().size());
         CityLevelDefinition.ItemRequirement tag = definition.items().getFirst();
         assertTrue(tag.isTag());
-        assertEquals(ResourceLocation.parse("minecraft:logs"), tag.itemTag());
+        assertEquals(Identifier.parse("minecraft:logs"), tag.itemTag());
         assertEquals(12, tag.count());
-        assertEquals(ResourceLocation.parse("minecraft:oak_log"), tag.displayIcon());
+        assertEquals(Identifier.parse("minecraft:oak_log"), tag.displayIcon());
         assertEquals("Logs", tag.displayName());
         assertFalse(definition.items().get(1).isTag());
     }

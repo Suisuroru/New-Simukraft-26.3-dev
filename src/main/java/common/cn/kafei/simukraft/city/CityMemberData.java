@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.city;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.Objects;
@@ -19,15 +20,15 @@ public final class CityMemberData {
 
     public static CityMemberData fromTag(CompoundTag tag) {
         return new CityMemberData(
-                tag.getUUID("PlayerId"),
-                tag.getString("PlayerName"),
-                CityPermissionLevel.fromName(tag.getString("PermissionLevel"))
+                NbtUuid.readOrNull(tag, "PlayerId"),
+                tag.getString("PlayerName").get(),
+                CityPermissionLevel.fromName(tag.getString("PermissionLevel").get())
         );
     }
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("PlayerId", playerId);
+        NbtUuid.put(tag, "PlayerId", playerId);
         tag.putString("PlayerName", playerName);
         tag.putString("PermissionLevel", permissionLevel.name());
         return tag;

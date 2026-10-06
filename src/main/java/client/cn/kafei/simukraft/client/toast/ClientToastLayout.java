@@ -5,13 +5,13 @@ import java.util.List;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 
 /** ClientToastLayout: 计算并渲染单个通知的缩放布局。 */
 final class ClientToastLayout {
-    private static final ResourceLocation LOGO_TEXTURE = ResourceLocation.fromNamespaceAndPath(
+    private static final Identifier LOGO_TEXTURE = Identifier.fromNamespaceAndPath(
             SimuKraft.MOD_ID, "textures/gui/logo.png");
     private static final int DEFAULT_WIDTH = 184;
     private static final int DEFAULT_HEIGHT = 48;

@@ -4,12 +4,12 @@ import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkBridge;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record BuildingCacheReloadPacket() implements CustomPacketPayload {
-    public static final Type<BuildingCacheReloadPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("simukraft", "building_cache_reload"));
+    public static final Type<BuildingCacheReloadPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath("simukraft", "building_cache_reload"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BuildingCacheReloadPacket> STREAM_CODEC = StreamCodec.unit(new BuildingCacheReloadPacket());
 
     @Override

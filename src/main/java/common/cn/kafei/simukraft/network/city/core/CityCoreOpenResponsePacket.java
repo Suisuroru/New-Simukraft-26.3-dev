@@ -19,7 +19,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +36,7 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
     private static final int MAX_POI_STATS = 64;
     private static final int MAX_JOB_STATS = 128;
     public static final int MAX_UPGRADE_TARGETS = 32;
-    public static final Type<CityCoreOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_open_response"));
+    public static final Type<CityCoreOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreOpenResponsePacket> STREAM_CODEC = StreamCodec.of(CityCoreOpenResponsePacket::encode, CityCoreOpenResponsePacket::decode);
     public static final UUID EMPTY_CITY_ID = new UUID(0L, 0L);
 
@@ -255,9 +255,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         List<UpgradeItem> items = new ArrayList<>(itemSize);
         for (int i = 0; i < itemSize; i++) {
             boolean tag = buffer.readBoolean();
-            ResourceLocation id = ResourceLocation.parse(buffer.readUtf(256));
+            Identifier id = Identifier.parse(buffer.readUtf(256));
             int count = buffer.readVarInt();
-            ResourceLocation displayIcon = buffer.readBoolean() ? ResourceLocation.parse(buffer.readUtf(256)) : null;
+            Identifier displayIcon = buffer.readBoolean() ? Identifier.parse(buffer.readUtf(256)) : null;
             String displayItemName = buffer.readUtf(CityLevelDefinition.MAX_DISPLAY_NAME_LENGTH);
             items.add(new UpgradeItem(tag ? null : id, tag ? id : null, count, displayIcon, displayItemName));
         }
@@ -421,22 +421,22 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
     }
 
     /** UpgradeItem: 升级快照中的精确物品或物品标签材料与可选显示信息。 */
-    public record UpgradeItem(ResourceLocation itemId,
-                              ResourceLocation itemTag,
+    public record UpgradeItem(Identifier itemId,
+                              Identifier itemTag,
                               int count,
-                              ResourceLocation displayIcon,
+                              Identifier displayIcon,
                               String displayName) {
-        public UpgradeItem(ResourceLocation itemId, int count) {
+        public UpgradeItem(Identifier itemId, int count) {
             this(itemId, null, count, null, "");
         }
 
         /** UpgradeItem: 兼容未携带展示图标和名称的旧网络快照调用。 */
-        public UpgradeItem(ResourceLocation itemId, ResourceLocation itemTag, int count) {
+        public UpgradeItem(Identifier itemId, Identifier itemTag, int count) {
             this(itemId, itemTag, count, null, "");
         }
 
         /** tag: 创建一个按物品标签匹配的网络升级材料。 */
-        public static UpgradeItem tag(ResourceLocation itemTag, int count) {
+        public static UpgradeItem tag(Identifier itemTag, int count) {
             return new UpgradeItem(null, itemTag, count, null, "");
         }
 

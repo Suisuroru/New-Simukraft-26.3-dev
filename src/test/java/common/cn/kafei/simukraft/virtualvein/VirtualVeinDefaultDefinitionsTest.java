@@ -3,7 +3,7 @@ package common.cn.kafei.simukraft.virtualvein;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
 import org.junit.jupiter.api.Test;
@@ -59,13 +59,13 @@ class VirtualVeinDefaultDefinitionsTest {
     @Test
     void loaderRejectsInvalidRangeItemAndProductionIndependently() {
         assertThrows(IllegalArgumentException.class, () -> VirtualVeinDefinitionLoader.parse(
-                net.minecraft.resources.ResourceLocation.parse("simukraft:invalid_range"), definitionJson("[0.4, -0.4]", "minecraft:coal", 1, 1, 20)
+                net.minecraft.resources.Identifier.parse("simukraft:invalid_range"), definitionJson("[0.4, -0.4]", "minecraft:coal", 1, 1, 20)
         ));
         assertThrows(IllegalArgumentException.class, () -> VirtualVeinDefinitionLoader.parse(
-                net.minecraft.resources.ResourceLocation.parse("simukraft:invalid_item"), definitionJson("[-1.0, 1.0]", "minecraft:not_a_real_item", 1, 1, 20)
+                net.minecraft.resources.Identifier.parse("simukraft:invalid_item"), definitionJson("[-1.0, 1.0]", "minecraft:not_a_real_item", 1, 1, 20)
         ));
         assertThrows(IllegalArgumentException.class, () -> VirtualVeinDefinitionLoader.parse(
-                net.minecraft.resources.ResourceLocation.parse("simukraft:invalid_production"), definitionJson("[-1.0, 1.0]", "minecraft:coal", 0, 1, 20)
+                net.minecraft.resources.Identifier.parse("simukraft:invalid_production"), definitionJson("[-1.0, 1.0]", "minecraft:coal", 0, 1, 20)
         ));
     }
 
@@ -77,7 +77,7 @@ class VirtualVeinDefaultDefinitionsTest {
             try (InputStream input = VirtualVeinDefaultDefinitionsTest.class.getResourceAsStream(resourcePath)) {
                 assertNotNull(input, resourcePath);
                 definitions.add(VirtualVeinDefinitionLoader.parse(
-                        ResourceLocation.parse("simukraft:virtual_veins/" + fileName),
+                        Identifier.parse("simukraft:virtual_veins/" + fileName),
                         JsonParser.parseReader(new InputStreamReader(input, StandardCharsets.UTF_8)).getAsJsonObject()
                 ));
             }

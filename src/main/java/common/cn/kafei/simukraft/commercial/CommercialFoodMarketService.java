@@ -6,7 +6,8 @@ import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.economy.EconomyService;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.food.FoodProperties;
@@ -61,7 +62,7 @@ public final class CommercialFoodMarketService {
         }
         CommercialDefinitionLoader.LoadResult loadResult = CommercialDefinitionLoader.loadForBuilding(building);
         CommercialDefinition definition = loadResult.definition();
-        if (!loadResult.valid() || definition == null || !definition.workTime().openAt(level.getDayTime())) {
+        if (!loadResult.valid() || definition == null || !definition.workTime().openAt(level.getDefaultClockTime())) {
             return PurchaseResult.fail("message.simukraft.commercial.invalid_definition");
         }
         CommercialOffer offer = definition.offerById(plan.offerId());
@@ -88,7 +89,7 @@ public final class CommercialFoodMarketService {
         if (plan == null || plan.itemId().isBlank()) {
             return "";
         }
-        ResourceLocation location = ResourceLocation.tryParse(plan.itemId());
+        Identifier location = Identifier.tryParse(plan.itemId());
         return location != null ? "item." + location.getNamespace() + "." + location.getPath().replace('/', '.') : "";
     }
 
@@ -127,7 +128,7 @@ public final class CommercialFoodMarketService {
         }
         CommercialDefinitionLoader.LoadResult loadResult = CommercialDefinitionLoader.loadForBuilding(building);
         CommercialDefinition definition = loadResult.definition();
-        if (!loadResult.valid() || definition == null || !definition.workTime().openAt(level.getDayTime())) {
+        if (!loadResult.valid() || definition == null || !definition.workTime().openAt(level.getDefaultClockTime())) {
             return List.of();
         }
         CommercialStockService.restock(level, data.boxPos(), definition);
@@ -147,7 +148,7 @@ public final class CommercialFoodMarketService {
             return null;
         }
         ItemStack foodStack = foodResource.stack(1);
-        FoodProperties properties = foodStack.getFoodProperties(null);
+        FoodProperties properties = foodStack.get(DataComponents.FOOD);
         if (properties == null || properties.nutrition() <= 0) {
             return null;
         }
@@ -179,7 +180,7 @@ public final class CommercialFoodMarketService {
                 continue;
             }
             ItemStack stack = resource.stack(1);
-            if (!stack.isEmpty() && stack.getFoodProperties(entity) != null) {
+            if (!stack.isEmpty() && stack.get(DataComponents.FOOD) != null) {
                 return resource;
             }
         }

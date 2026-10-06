@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 class PathResultRebindingTest {
-    private static final ResourceLocation DIMENSION = ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
+    private static final Identifier DIMENSION = Identifier.fromNamespaceAndPath("minecraft", "overworld");
 
     @Test
     void cachedResultIsBoundToTheConsumingRequest() {

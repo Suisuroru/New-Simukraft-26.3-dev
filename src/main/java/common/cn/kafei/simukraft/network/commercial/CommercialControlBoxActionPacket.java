@@ -12,7 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -22,7 +22,7 @@ import java.util.Locale;
 
 
 public record CommercialControlBoxActionPacket(BlockPos pos, Action action) implements CustomPacketPayload {
-    public static final Type<CommercialControlBoxActionPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "commercial_control_box_action"));
+    public static final Type<CommercialControlBoxActionPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "commercial_control_box_action"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CommercialControlBoxActionPacket> STREAM_CODEC = StreamCodec.of(CommercialControlBoxActionPacket::encode, CommercialControlBoxActionPacket::decode);
 
     @Override

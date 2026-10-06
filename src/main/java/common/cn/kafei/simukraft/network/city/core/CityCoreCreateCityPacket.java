@@ -15,7 +15,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
@@ -24,7 +24,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record CityCoreCreateCityPacket(BlockPos pos, String cityName) implements CustomPacketPayload {
-    public static final Type<CityCoreCreateCityPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_create_city"));
+    public static final Type<CityCoreCreateCityPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_create_city"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreCreateCityPacket> STREAM_CODEC = StreamCodec.of(CityCoreCreateCityPacket::encode, CityCoreCreateCityPacket::decode);
 
     @Override

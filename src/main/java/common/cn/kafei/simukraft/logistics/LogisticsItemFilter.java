@@ -3,6 +3,8 @@ package common.cn.kafei.simukraft.logistics;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.industrial.IndustrialItemStackSpec;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.world.item.ItemStack;
 
@@ -30,9 +32,7 @@ public record LogisticsItemFilter(String itemId, String stackTag) {
             return false;
         }
         if (!exact()) {
-            return itemId.equals(stack.getItemHolder().unwrapKey()
-                    .map(key -> key.location().toString())
-                    .orElse(""));
+            return itemId.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
         }
         ItemStack filterStack = displayStack(registries);
         return !filterStack.isEmpty() && ItemStack.isSameItemSameComponents(stack, filterStack);
@@ -44,7 +44,10 @@ public record LogisticsItemFilter(String itemId, String stackTag) {
         }
         if (!stackTag.isBlank() && registries != null) {
             try {
-                return ItemStack.parseOptional(registries, TagParser.parseTag(stackTag));
+                return ItemStack.OPTIONAL_CODEC
+                        .parse(registries.createSerializationContext(NbtOps.INSTANCE), TagParser.parseCompoundFully(stackTag))
+                        .result()
+                        .orElse(ItemStack.EMPTY);
             } catch (Exception exception) {
                 SimuKraft.LOGGER.warn("Simukraft: Invalid logistics item filter '{}'", stackTag, exception);
             }

@@ -67,14 +67,14 @@ public final class FarmlandBoxData {
     }
 
     public static FarmlandBoxData fromTag(CompoundTag tag) {
-        FarmlandBoxData data = new FarmlandBoxData(BlockPos.of(tag.getLong("BoxPos")));
+        FarmlandBoxData data = new FarmlandBoxData(BlockPos.of(tag.getLong("BoxPos").get()));
         if (tag.contains("Crop")) {
-            data.crop = FarmCrop.fromId(tag.getString("Crop"));
+            data.crop = FarmCrop.fromId(tag.getString("Crop").get());
         }
         if (tag.contains("Plot")) {
-            data.plot = FarmlandPlot.fromTag(tag.getCompound("Plot"));
+            data.plot = FarmlandPlot.fromTag(tag.getCompound("Plot").get());
         }
-        data.running = tag.getBoolean("Running");
+        data.running = tag.getBoolean("Running").get();
         return data;
     }
 }

@@ -14,7 +14,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -24,7 +24,7 @@ import java.util.Locale;
 
 
 public record ResidentialControlBoxOccupancyPacket(BlockPos pos, Action action) implements CustomPacketPayload {
-    public static final Type<ResidentialControlBoxOccupancyPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_occupancy"));
+    public static final Type<ResidentialControlBoxOccupancyPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_occupancy"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ResidentialControlBoxOccupancyPacket> STREAM_CODEC = StreamCodec.of(ResidentialControlBoxOccupancyPacket::encode, ResidentialControlBoxOccupancyPacket::decode);
 
     @Override

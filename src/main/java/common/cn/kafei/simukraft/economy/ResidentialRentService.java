@@ -222,7 +222,7 @@ public final class ResidentialRentService {
 
     /** rentDay: 使用原版 dayTime 推导自然日编号，日号变化才会触发收租。 */
     private static long rentDay(ServerLevel level) {
-        return Math.max(1L, level.getDayTime() / TICKS_PER_DAY + 1L);
+        return Math.max(1L, level.getDefaultClockTime() / TICKS_PER_DAY + 1L);
     }
 
     private static boolean isResidential(PlacedBuildingRecord building) {

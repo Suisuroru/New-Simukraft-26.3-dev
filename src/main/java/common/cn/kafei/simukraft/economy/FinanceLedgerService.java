@@ -23,7 +23,7 @@ public final class FinanceLedgerService {
         FinanceTransactionData transaction = new FinanceTransactionData(
                 level.getGameTime(),
                 actor != null ? actor.getUUID() : null,
-                actor != null ? actor.getGameProfile().getName() : "",
+                actor != null ? actor.getGameProfile().name() : "",
                 amount,
                 balanceAfter,
                 type,

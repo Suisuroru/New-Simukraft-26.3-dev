@@ -20,10 +20,10 @@ public final class ModItems {
     public static final DeferredHolder<Item, Item> COPPER_COIN = ITEMS.register("copper_coin", () -> new Item(new Item.Properties())); // 铜币
     public static final DeferredHolder<Item, Item> SILVER_COIN = ITEMS.register("silver_coin", () -> new Item(new Item.Properties())); // 银币
     public static final DeferredHolder<Item, Item> GOLD_COIN = ITEMS.register("gold_coin", () -> new Item(new Item.Properties())); // 金币
-    public static final DeferredHolder<Item, Item> HAMBURGER = ITEMS.register("hamburger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.HAMBURGER)));
-    public static final DeferredHolder<Item, Item> FRENCH_FRIES = ITEMS.register("french_fries", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.FRENCH_FRIES)));
-    public static final DeferredHolder<Item, Item> CHEESE_CHUNK = ITEMS.register("cheese_chunk", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_CHUNK)));
-    public static final DeferredHolder<Item, Item> CHEESE_BURGER = ITEMS.register("cheese_burger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_BURGER)));
+    public static final DeferredHolder<Item, Item> HAMBURGER = ITEMS.register("hamburger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.HAMBURGER.food(), ModFoods.HAMBURGER.consumable())));
+    public static final DeferredHolder<Item, Item> FRENCH_FRIES = ITEMS.register("french_fries", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.FRENCH_FRIES.food(), ModFoods.FRENCH_FRIES.consumable())));
+    public static final DeferredHolder<Item, Item> CHEESE_CHUNK = ITEMS.register("cheese_chunk", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_CHUNK.food(), ModFoods.CHEESE_CHUNK.consumable())));
+    public static final DeferredHolder<Item, Item> CHEESE_BURGER = ITEMS.register("cheese_burger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_BURGER.food(), ModFoods.CHEESE_BURGER.consumable())));
     // 矿物钻井用具
     public static final DeferredHolder<Item, Item> GEOLOGICAL_HAMMER = ITEMS.register("geological_hammer", GeologicalHammerItem::new);
     public static final DeferredHolder<Item, Item> DRILL_ROD_SEGMENT = ITEMS.register("drill_rod_segment", () -> new Item(new Item.Properties()));

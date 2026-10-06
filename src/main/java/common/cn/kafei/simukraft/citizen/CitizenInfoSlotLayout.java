@@ -3,9 +3,8 @@ package common.cn.kafei.simukraft.citizen;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
-import com.mojang.datafixers.util.Pair;
 import dev.vfyjxf.taffy.style.TaffyPosition;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -82,7 +81,7 @@ public final class CitizenInfoSlotLayout {
                                          EquipmentSlot equipmentSlot,
                                          int x,
                                          int y,
-                                         ResourceLocation emptyIcon) {
+                                         Identifier emptyIcon) {
         Slot slot = new Slot(inventory, inventorySlot, 0, 0) {
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -96,8 +95,8 @@ public final class CitizenInfoSlotLayout {
 
             /** getNoItemIcon：复用原版玩家物品栏的装备空槽图标。 */
             @Override
-            public Pair<ResourceLocation, ResourceLocation> getNoItemIcon() {
-                return Pair.of(InventoryMenu.BLOCK_ATLAS, emptyIcon);
+            public Identifier getNoItemIcon() {
+                return emptyIcon;
             }
         };
         parent.addChild(itemSlot(slot, x, y));
@@ -109,11 +108,11 @@ public final class CitizenInfoSlotLayout {
                                          int inventorySlot,
                                          int x,
                                          int y,
-                                         ResourceLocation emptyIcon) {
+                                         Identifier emptyIcon) {
         Slot slot = new Slot(inventory, inventorySlot, 0, 0) {
             @Override
-            public Pair<ResourceLocation, ResourceLocation> getNoItemIcon() {
-                return Pair.of(InventoryMenu.BLOCK_ATLAS, emptyIcon);
+            public Identifier getNoItemIcon() {
+                return emptyIcon;
             }
         };
         parent.addChild(itemSlot(slot, x, y));

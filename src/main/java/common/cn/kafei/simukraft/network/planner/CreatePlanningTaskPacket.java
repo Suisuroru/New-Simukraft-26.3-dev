@@ -22,7 +22,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -42,7 +42,7 @@ public record CreatePlanningTaskPacket(BlockPos buildBoxPos,
                                        String sourceBlockId,
                                        @Nullable BlockPos materialChestPos,
                                        Map<String, String> replacementMap) implements CustomPacketPayload {
-    public static final Type<CreatePlanningTaskPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "create_planning_task"));
+    public static final Type<CreatePlanningTaskPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "create_planning_task"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CreatePlanningTaskPacket> STREAM_CODEC = StreamCodec.of(CreatePlanningTaskPacket::encode, CreatePlanningTaskPacket::decode);
     private static final int MAX_BLOCK_ID_LENGTH = 128;
     private static final int MAX_REPLACEMENT_MAPPINGS = 256;
@@ -217,7 +217,7 @@ public record CreatePlanningTaskPacket(BlockPos buildBoxPos,
         if (blockId == null || blockId.isBlank()) {
             return true;
         }
-        ResourceLocation id = ResourceLocation.tryParse(blockId);
+        Identifier id = Identifier.tryParse(blockId);
         return id == null || !BuiltInRegistries.BLOCK.containsKey(id);
     }
 

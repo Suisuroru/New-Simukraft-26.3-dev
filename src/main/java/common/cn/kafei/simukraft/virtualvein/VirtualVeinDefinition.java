@@ -1,6 +1,6 @@
 package common.cn.kafei.simukraft.virtualvein;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Climate;
 
 import java.util.Objects;
@@ -16,7 +16,7 @@ public record VirtualVeinDefinition(String id,
                                     VirtualVeinRange weirdness,
                                     int minY,
                                     int maxY,
-                                    ResourceLocation productId,
+                                    Identifier productId,
                                     int minAmount,
                                     int maxAmount,
                                     int periodTicks) {

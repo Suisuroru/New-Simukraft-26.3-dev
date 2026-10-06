@@ -14,9 +14,11 @@ import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import common.cn.kafei.simukraft.path.MovementIntent;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
@@ -326,8 +328,8 @@ public final class IndustrialBlockClusterHarvestService {
         return clusterPositions.stream()
                 .filter(pos -> isUsableStump(level, step, pos))
                 .min(Comparator.comparingInt((BlockPos pos) -> pos.getY())
-                        .thenComparingInt(pos -> pos.getX())
-                        .thenComparingInt(pos -> pos.getZ()))
+                        .thenComparingInt(Vec3i::getX)
+                        .thenComparingInt(Vec3i::getZ))
                 .map(BlockPos::immutable)
                 .orElse(null);
     }
@@ -854,12 +856,12 @@ public final class IndustrialBlockClusterHarvestService {
         }
         try {
             if (tagOrId.startsWith("#")) {
-                TagKey<Block> key = TagKey.create(Registries.BLOCK, ResourceLocation.parse(tagOrId.substring(1)));
+                TagKey<Block> key = TagKey.create(Registries.BLOCK, Identifier.parse(tagOrId.substring(1)));
                 return state -> state.is(key);
             }
-            ResourceLocation rl = ResourceLocation.parse(tagOrId);
-            Block block = BuiltInRegistries.BLOCK.get(rl);
-            if (block == null || block == Blocks.AIR && !tagOrId.equals("minecraft:air")) {
+            Identifier rl = Identifier.parse(tagOrId);
+            Holder.Reference<Block> block = BuiltInRegistries.BLOCK.get(rl).orElse(null);
+            if (block == null || block.value() == Blocks.AIR && !tagOrId.equals("minecraft:air")) {
                 return null;
             }
             return state -> state.is(block);
@@ -956,8 +958,8 @@ public final class IndustrialBlockClusterHarvestService {
             AABB bounds = IndustrialWorkAreaService.workAreaBounds(building, safeArea);
             int minX = (int) Math.floor(bounds.minX);
             int maxX = (int) Math.floor(bounds.maxX) - 1;
-            int minY = Math.max(level.getMinBuildHeight(), (int) Math.floor(bounds.minY));
-            int maxY = Math.min(level.getMaxBuildHeight() - 1, (int) Math.floor(bounds.maxY) - 1);
+            int minY = Math.max(level.getMinY(), (int) Math.floor(bounds.minY));
+            int maxY = Math.min(level.getMaxY() - 1, (int) Math.floor(bounds.maxY) - 1);
             int minZ = (int) Math.floor(bounds.minZ);
             int maxZ = (int) Math.floor(bounds.maxZ) - 1;
             return new HarvestConfig(

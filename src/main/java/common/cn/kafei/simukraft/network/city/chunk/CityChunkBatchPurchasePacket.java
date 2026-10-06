@@ -13,7 +13,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 
 public record CityChunkBatchPurchasePacket(BlockPos pos, List<ChunkEntry> chunks) implements CustomPacketPayload {
     private static final int MAX_CHUNKS = 256;
-    public static final Type<CityChunkBatchPurchasePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_chunk_batch_purchase"));
+    public static final Type<CityChunkBatchPurchasePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_chunk_batch_purchase"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityChunkBatchPurchasePacket> STREAM_CODEC = StreamCodec.of(CityChunkBatchPurchasePacket::encode, CityChunkBatchPurchasePacket::decode);
 
     public CityChunkBatchPurchasePacket {

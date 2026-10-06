@@ -15,15 +15,16 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record ResidentialControlBoxDemolishPacket(BlockPos pos) implements CustomPacketPayload {
-    public static final Type<ResidentialControlBoxDemolishPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_demolish"));
+    public static final Type<ResidentialControlBoxDemolishPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "residential_control_box_demolish"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ResidentialControlBoxDemolishPacket> STREAM_CODEC = StreamCodec.of(ResidentialControlBoxDemolishPacket::encode, ResidentialControlBoxDemolishPacket::decode);
 
     @Override
@@ -60,7 +61,7 @@ public record ResidentialControlBoxDemolishPacket(BlockPos pos) implements Custo
             return;
         }
         // 鉴权：OP 或城市官员及以上权限
-        if (!player.hasPermissions(2)) {
+        if (!player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             if (building.cityId() == null) {
                 InfoToastService.warning(player, Component.translatable("message.simukraft.no_permission"));
                 return;

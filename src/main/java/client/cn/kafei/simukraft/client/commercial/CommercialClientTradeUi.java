@@ -5,7 +5,7 @@ import common.cn.kafei.simukraft.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -120,7 +120,7 @@ final class CommercialClientTradeUi {
             return Items.BARRIER;
         }
         try {
-            return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(itemId)).orElse(Items.BARRIER);
+            return BuiltInRegistries.ITEM.getOptional(Identifier.parse(itemId)).orElse(Items.BARRIER);
         } catch (Exception exception) {
             return Items.BARRIER;
         }

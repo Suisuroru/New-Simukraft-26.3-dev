@@ -85,7 +85,7 @@ public final class MedicalBedPoiService {
         if (isWhiteBedHead(state)) {
             return pos.immutable();
         }
-        if (!state.is(Blocks.WHITE_BED)
+        if (!state.is(Blocks.BED.white())
                 || !state.hasProperty(BlockStateProperties.BED_PART)
                 || !state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                 || state.getValue(BlockStateProperties.BED_PART) != BedPart.FOOT) {
@@ -96,7 +96,7 @@ public final class MedicalBedPoiService {
 
     /** isWhiteBedHead：判断方块是否为白床床头。 */
     public static boolean isWhiteBedHead(BlockState state) {
-        return state != null && state.is(Blocks.WHITE_BED)
+        return state != null && state.is(Blocks.BED.white())
                 && (!state.hasProperty(BlockStateProperties.BED_PART)
                 || state.getValue(BlockStateProperties.BED_PART) == BedPart.HEAD);
     }

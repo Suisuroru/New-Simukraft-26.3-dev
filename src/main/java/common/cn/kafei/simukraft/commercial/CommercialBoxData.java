@@ -90,13 +90,13 @@ public final class CommercialBoxData {
 
     /** fromTag: 从 NBT 读取商业箱状态。 */
     public static CommercialBoxData fromTag(CompoundTag tag) {
-        CommercialBoxData data = new CommercialBoxData(BlockPos.of(tag.getLong("BoxPos")));
-        data.buildingId = tag.getString("BuildingId");
-        data.definitionId = tag.getString("DefinitionId");
-        data.running = !tag.contains("Running") || tag.getBoolean("Running");
-        data.statusKey = tag.getString("StatusKey");
-        data.statusText = tag.getString("StatusText");
-        data.updatedAt = tag.getLong("UpdatedAt");
+        CommercialBoxData data = new CommercialBoxData(BlockPos.of(tag.getLong("BoxPos").get()));
+        data.buildingId = tag.getString("BuildingId").get();
+        data.definitionId = tag.getString("DefinitionId").get();
+        data.running = !tag.contains("Running") || tag.getBoolean("Running").get();
+        data.statusKey = tag.getString("StatusKey").get();
+        data.statusText = tag.getString("StatusText").get();
+        data.updatedAt = tag.getLong("UpdatedAt").get();
         return data;
     }
 }

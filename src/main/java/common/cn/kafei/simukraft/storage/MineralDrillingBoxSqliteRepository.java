@@ -158,7 +158,7 @@ public final class MineralDrillingBoxSqliteRepository {
             return;
         }
         try {
-            box.put("Inventory", TagParser.parseTag(serialized));
+            box.put("Inventory", TagParser.parseCompoundFully(serialized));
         } catch (CommandSyntaxException | RuntimeException exception) {
             // 单个控制箱的损坏槽位不应阻止同一维度其他控制箱加载。
             SimuKraft.LOGGER.warn("Invalid mineral drilling inventory NBT; loading empty inventory", exception);

@@ -96,8 +96,8 @@ public final class ExchangeControlBoxScreenOpener {
             return;
         }
         refreshTicks++;
-        long day = ExchangeMarketClock.dayIndex(minecraft.level.getDayTime());
-        int hour = ExchangeMarketClock.hourIndex(minecraft.level.getDayTime());
+        long day = ExchangeMarketClock.dayIndex(minecraft.level.getDefaultClockTime());
+        int hour = ExchangeMarketClock.hourIndex(minecraft.level.getDefaultClockTime());
         if (refreshTicks < 5 && day == polledDay && hour == polledHour) {
             return;
         }
@@ -486,8 +486,8 @@ public final class ExchangeControlBoxScreenOpener {
         if (minecraft.level == null) {
             return;
         }
-        polledDay = ExchangeMarketClock.dayIndex(minecraft.level.getDayTime());
-        polledHour = ExchangeMarketClock.hourIndex(minecraft.level.getDayTime());
+        polledDay = ExchangeMarketClock.dayIndex(minecraft.level.getDefaultClockTime());
+        polledHour = ExchangeMarketClock.hourIndex(minecraft.level.getDefaultClockTime());
     }
 
     private static ModularUI currentUi() {

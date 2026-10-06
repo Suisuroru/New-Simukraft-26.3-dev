@@ -2,7 +2,7 @@ package client.cn.kafei.simukraft.client.config;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -44,7 +44,7 @@ final class SimuKraftMaterialConfigItems {
         List<String> blocks = new ArrayList<>();
         BuiltInRegistries.BLOCK.forEach(block -> {
             if (block != Blocks.AIR) {
-                ResourceLocation id = BuiltInRegistries.BLOCK.getKey(Objects.requireNonNull(block));
+                Identifier id = BuiltInRegistries.BLOCK.getKey(Objects.requireNonNull(block));
                 if (id != null) {
                     blocks.add(id.toString());
                 }
@@ -65,7 +65,7 @@ final class SimuKraftMaterialConfigItems {
 
     /** isValid: 检查 ID 是否指向已注册物品或方块。 */
     static boolean isValid(String itemId) {
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null) {
             return false;
         }
@@ -75,7 +75,7 @@ final class SimuKraftMaterialConfigItems {
 
     /** stack: 获取列表图标使用的物品堆。 */
     static ItemStack stack(String itemId) {
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null) {
             return new ItemStack(Items.BARRIER);
         }
@@ -90,7 +90,7 @@ final class SimuKraftMaterialConfigItems {
 
     /** displayName: 获取配置 ID 的本地化显示名。 */
     static Component displayName(String itemId) {
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null) {
             return Component.literal(itemId);
         }

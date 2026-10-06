@@ -81,7 +81,7 @@ public final class CitizenBedSleepService {
             entity.stopSleeping();
         }
         if (target != null) {
-            entity.moveTo(target.x, target.y, target.z);
+            entity.snapTo(target.x, target.y, target.z);
             entity.setDeltaMovement(Vec3.ZERO);
         }
         release(level, uuid);
@@ -132,6 +132,6 @@ public final class CitizenBedSleepService {
     }
 
     private static boolean isSupportedBed(BlockState state) {
-        return state.is(Blocks.RED_BED) || state.is(Blocks.WHITE_BED);
+        return state.is(Blocks.BED.red()) || state.is(Blocks.BED.white());
     }
 }

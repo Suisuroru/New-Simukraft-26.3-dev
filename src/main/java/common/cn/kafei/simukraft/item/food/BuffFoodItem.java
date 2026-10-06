@@ -3,6 +3,8 @@ package common.cn.kafei.simukraft.item.food;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -14,7 +16,7 @@ public class BuffFoodItem extends Item {
         super(properties);
     }
 
-    public static FoodProperties.Builder createFoodBuilder(
+    public static FoodDefinition createFood(
             int nutrition,
             float saturation,
             @NotNull List<EffectEntry> effects) {
@@ -22,11 +24,16 @@ public class BuffFoodItem extends Item {
                 .nutrition(nutrition)
                 .saturationModifier(saturation);
 
+        Consumable.Builder consumable = Consumable.builder();
         for (EffectEntry entry : effects) {
-            builder.effect(Objects.requireNonNull(entry.effectSupplier()), entry.probability());
+            consumable.onConsume(new ApplyStatusEffectsConsumeEffect(
+                    Objects.requireNonNull(entry.effectSupplier().get()), entry.probability()));
         }
 
-        return builder;
+        return new FoodDefinition(builder.build(), consumable.build());
+    }
+
+    public record FoodDefinition(FoodProperties food, Consumable consumable) {
     }
 
     public record EffectEntry(@NotNull Supplier<MobEffectInstance> effectSupplier, float probability) {

@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public record IndustrialControlBoxOpenResponsePacket(BlockPos boxPos,
                                                      double integrityRepairCost,
                                                      List<PointMarkerEntry> pointMarkers,
                                                      List<RecipeEntry> recipes) implements CustomPacketPayload {
-    public static final Type<IndustrialControlBoxOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "industrial_control_box_open_response"));
+    public static final Type<IndustrialControlBoxOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "industrial_control_box_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, IndustrialControlBoxOpenResponsePacket> STREAM_CODEC = StreamCodec.of(IndustrialControlBoxOpenResponsePacket::encode, IndustrialControlBoxOpenResponsePacket::decode);
 
     public static IndustrialControlBoxOpenResponsePacket from(IndustrialControlBoxView view) {

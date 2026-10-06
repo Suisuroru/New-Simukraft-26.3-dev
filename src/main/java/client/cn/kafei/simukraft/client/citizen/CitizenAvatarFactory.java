@@ -10,7 +10,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 
 @OnlyIn(Dist.CLIENT)
@@ -50,7 +50,7 @@ public final class CitizenAvatarFactory {
             return new ColorRectTexture(0xFF8A9298).scale(0.78f);
         }
         try {
-            ResourceLocation textureLocation = resolveSkinTexture(skinPath);
+            Identifier textureLocation = resolveSkinTexture(skinPath);
             return (graphics, mouseX, mouseY, x, y, width, height, partialTicks) -> drawAvatar(graphics, textureLocation, x, y, width, height);
         } catch (Exception exception) {
             SimuKraft.LOGGER.error("Simukraft: Failed to create custom-draw avatar texture for skinPath={}", skinPath, exception);
@@ -58,7 +58,7 @@ public final class CitizenAvatarFactory {
         }
     }
 
-    private static ResourceLocation resolveSkinTexture(String skinPath) {
+    private static Identifier resolveSkinTexture(String skinPath) {
         String normalized = skinPath.replace('\\', '/').trim();
         if (normalized.startsWith(MOD_ID + ":")) {
             normalized = normalized.substring((MOD_ID + ":").length());
@@ -72,7 +72,7 @@ public final class CitizenAvatarFactory {
         if (!normalized.startsWith("textures/")) {
             normalized = normalized.startsWith("entity/") ? "textures/" + normalized : "textures/entity/" + normalized;
         }
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, normalized + ".png");
+        return Identifier.fromNamespaceAndPath(MOD_ID, normalized + ".png");
     }
 
     /** blitHead：在画布上绘制头像，已故市民使用灰阶着色。 */
@@ -93,11 +93,11 @@ public final class CitizenAvatarFactory {
         }
     }
 
-    private static void drawAvatar(GuiGraphics graphics, ResourceLocation textureLocation, float x, float y, float width, float height) {
+    private static void drawAvatar(GuiGraphics graphics, Identifier textureLocation, float x, float y, float width, float height) {
         drawAvatar(graphics, textureLocation, x, y, width, height, false);
     }
 
-    private static void drawAvatar(GuiGraphics graphics, ResourceLocation textureLocation, float x, float y,
+    private static void drawAvatar(GuiGraphics graphics, Identifier textureLocation, float x, float y,
                                    float width, float height, boolean grayscale) {
         try {
             float insetX = width * 0.04f;
@@ -116,7 +116,7 @@ public final class CitizenAvatarFactory {
         }
     }
 
-    private static void drawFaceLayer(GuiGraphics graphics, ResourceLocation textureLocation, float x, float y, float width, float height,
+    private static void drawFaceLayer(GuiGraphics graphics, Identifier textureLocation, float x, float y, float width, float height,
                                       int u, int v, int regionWidth, int regionHeight, int color) {
         var matrix = graphics.pose().last().pose();
         var buffer = graphics.bufferSource().getBuffer(LDLibRenderTypes.guiTexture(textureLocation));

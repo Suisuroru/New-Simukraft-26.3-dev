@@ -92,7 +92,7 @@ public final class ResidentialBedPoiService {
         if (isRedBedHead(state)) {
             return pos.immutable();
         }
-        if (!state.is(Blocks.RED_BED)
+        if (!state.is(Blocks.BED.red())
                 || !state.hasProperty(BlockStateProperties.BED_PART)
                 || !state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                 || state.getValue(BlockStateProperties.BED_PART) != BedPart.FOOT) {
@@ -165,7 +165,7 @@ public final class ResidentialBedPoiService {
     }
 
     private static boolean isRedBedHead(BlockState state) {
-        return state.is(Blocks.RED_BED)
+        return state.is(Blocks.BED.red())
                 && (!state.hasProperty(BlockStateProperties.BED_PART)
                 || state.getValue(BlockStateProperties.BED_PART) == BedPart.HEAD);
     }

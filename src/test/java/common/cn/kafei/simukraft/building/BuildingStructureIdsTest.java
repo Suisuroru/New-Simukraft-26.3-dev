@@ -1,6 +1,6 @@
 package common.cn.kafei.simukraft.building;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BuildingStructureIdsTest {
     @Test
     void buildingFileBecomesStructureId() {
-        ResourceLocation id = BuildingStructureIds.location("residential", "lumberjacks_house.sk");
+        Identifier id = BuildingStructureIds.location("residential", "lumberjacks_house.sk");
 
-        assertEquals(ResourceLocation.fromNamespaceAndPath("simukraft", "residential/lumberjacks_house"), id);
+        assertEquals(Identifier.fromNamespaceAndPath("simukraft", "residential/lumberjacks_house"), id);
         assertTrue(BuildingStructureIds.matches("residential", "lumberjacks_house.sk", "lumberjacks_house.nbt", id));
     }
 
@@ -26,16 +26,16 @@ class BuildingStructureIdsTest {
 
     @Test
     void differentCategoryOrNamespaceDoesNotMatch() {
-        ResourceLocation house = BuildingStructureIds.location("residential", "house.sk");
+        Identifier house = BuildingStructureIds.location("residential", "house.sk");
 
         assertFalse(BuildingStructureIds.matches("commercial", "house.sk", "house.nbt", house));
         assertFalse(BuildingStructureIds.matches("residential", "house.sk", "house.nbt",
-                ResourceLocation.fromNamespaceAndPath("minecraft", "residential/house")));
+                Identifier.fromNamespaceAndPath("minecraft", "residential/house")));
     }
 
     @Test
     void structureFileStemMatchesWhenBlueprintNameDiffers() {
-        ResourceLocation blueprint = BuildingStructureIds.location("industry", "mill_alt.nbt");
+        Identifier blueprint = BuildingStructureIds.location("industry", "mill_alt.nbt");
 
         assertTrue(BuildingStructureIds.matches("industry", "mill.sk", "mill_alt.nbt", blueprint));
     }

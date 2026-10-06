@@ -12,7 +12,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemUtil;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -21,7 +25,7 @@ import java.util.function.Predicate;
 
 
 /**
- * 通用容器访问：优先支持 NeoForge IItemHandler，回退原版 Container。
+ * 通用容器访问：优先支持 NeoForge Transfer API 的物品处理器，回退原版 Container。
  */
 public final class GenericContainerAccess {
     private GenericContainerAccess() {
@@ -103,7 +107,7 @@ public final class GenericContainerAccess {
     }
 
     /**
-     * 向容器插入物品，优先 IItemHandler，回退原版 Container。返回未能放入的剩余物（调用方负责掉落兜底）。
+     * 向容器插入物品，优先物品处理器，回退原版 Container。返回未能放入的剩余物（调用方负责掉落兜底）。
      */
     public static ItemStack insert(ServerLevel level, BlockPos pos, ItemStack stack) {
         if (level == null || pos == null || stack == null || stack.isEmpty() || !level.isLoaded(pos)) {
@@ -112,7 +116,7 @@ public final class GenericContainerAccess {
         try {
             ItemHandlerAccess handlerAccess = resolveItemHandler(level, pos);
             if (handlerAccess != null) {
-                return net.neoforged.neoforge.items.ItemHandlerHelper.insertItem(handlerAccess.handler(), stack.copy(), false);
+                return ItemUtil.insertItemReturnRemaining(handlerAccess.handler(), stack.copy(), false, null);
             }
             Container container = resolveContainer(level, pos);
             if (container != null) {
@@ -151,7 +155,7 @@ public final class GenericContainerAccess {
         try {
             ItemHandlerAccess handlerAccess = resolveItemHandler(level, pos);
             if (handlerAccess != null) {
-                ItemStack remaining = net.neoforged.neoforge.items.ItemHandlerHelper.insertItem(handlerAccess.handler(), stack.copy(), true);
+                ItemStack remaining = ItemUtil.insertItemReturnRemaining(handlerAccess.handler(), stack.copy(), true, null);
                 return stack.getCount() - remaining.getCount();
             }
             Container container = resolveContainer(level, pos);
@@ -177,50 +181,22 @@ public final class GenericContainerAccess {
         return List.copyOf(result);
     }
 
-    private static List<ItemStack> simulateInsertIntoItemHandler(IItemHandler handler, List<ItemStack> stacks) {
-        if (handler == null || handler.getSlots() <= 0) {
+    private static List<ItemStack> simulateInsertIntoItemHandler(ResourceHandler<ItemResource> handler, List<ItemStack> stacks) {
+        if (handler.size() <= 0) {
             return stacks;
         }
-        List<ItemStack> virtualSlots = new ArrayList<>();
-        for (int slot = 0; slot < handler.getSlots(); slot++) {
-            virtualSlots.add(handler.getStackInSlot(slot).copy());
-        }
         List<ItemStack> remainingStacks = new ArrayList<>();
-        for (ItemStack stack : stacks) {
-            ItemStack remaining = stack.copy();
-            mergeIntoVirtualItemHandler(handler, virtualSlots, remaining, false);
-            mergeIntoVirtualItemHandler(handler, virtualSlots, remaining, true);
-            if (!remaining.isEmpty()) {
-                remainingStacks.add(remaining);
+        // 在不提交的事务内逐项真实插入，后续物品因此能看到前面物品占用的槽位；退出事务自动回滚，实现整批模拟。
+        try (Transaction transaction = Transaction.openRoot()) {
+            for (ItemStack stack : stacks) {
+                int inserted = ResourceHandlerUtil.insertStacking(handler, ItemResource.of(stack), stack.getCount(), transaction);
+                int leftover = stack.getCount() - inserted;
+                if (leftover > 0) {
+                    remainingStacks.add(stack.copyWithCount(leftover));
+                }
             }
         }
         return List.copyOf(remainingStacks);
-    }
-
-    private static void mergeIntoVirtualItemHandler(IItemHandler handler, List<ItemStack> virtualSlots, ItemStack remaining, boolean emptySlots) {
-        for (int slot = 0; slot < virtualSlots.size() && !remaining.isEmpty(); slot++) {
-            ItemStack existing = virtualSlots.get(slot);
-            if (emptySlots != existing.isEmpty() || !handler.isItemValid(slot, remaining)) {
-                continue;
-            }
-            if (existing.isEmpty()) {
-                int movable = Math.min(remaining.getCount(), Math.min(handler.getSlotLimit(slot), remaining.getMaxStackSize()));
-                if (movable > 0) {
-                    virtualSlots.set(slot, remaining.copyWithCount(movable));
-                    remaining.shrink(movable);
-                }
-                continue;
-            }
-            if (!ItemStack.isSameItemSameComponents(existing, remaining)) {
-                continue;
-            }
-            int maxStack = Math.min(handler.getSlotLimit(slot), existing.getMaxStackSize());
-            int movable = Math.min(remaining.getCount(), maxStack - existing.getCount());
-            if (movable > 0) {
-                existing.grow(movable);
-                remaining.shrink(movable);
-            }
-        }
     }
 
     private static List<ItemStack> simulateInsertIntoContainer(Container container, List<ItemStack> stacks) {
@@ -352,9 +328,9 @@ public final class GenericContainerAccess {
 
     private static List<SlotSnapshot> snapshotItemHandler(ItemHandlerAccess handlerAccess) {
         List<SlotSnapshot> snapshots = new ArrayList<>();
-        IItemHandler handler = handlerAccess.handler();
-        for (int slot = 0; slot < handler.getSlots(); slot++) {
-            ItemStack stack = handler.getStackInSlot(slot);
+        ResourceHandler<ItemResource> handler = handlerAccess.handler();
+        for (int slot = 0; slot < handler.size(); slot++) {
+            ItemStack stack = ItemUtil.getStack(handler, slot);
             if (!stack.isEmpty()) {
                 snapshots.add(new SlotSnapshot(slot, SlotAccess.ITEM_HANDLER, handlerAccess.side(), stack.copy()));
             }
@@ -375,12 +351,12 @@ public final class GenericContainerAccess {
 
     @Nullable
     private static ItemHandlerAccess resolveItemHandler(ServerLevel level, BlockPos pos) {
-        IItemHandler unsided = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        ResourceHandler<ItemResource> unsided = level.getCapability(Capabilities.Item.BLOCK, pos, null);
         if (hasSlots(unsided)) {
             return new ItemHandlerAccess(unsided, null);
         }
         for (Direction side : Direction.values()) {
-            IItemHandler sided = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
+            ResourceHandler<ItemResource> sided = level.getCapability(Capabilities.Item.BLOCK, pos, side);
             if (hasSlots(sided)) {
                 return new ItemHandlerAccess(sided, side);
             }
@@ -407,42 +383,54 @@ public final class GenericContainerAccess {
         return null;
     }
 
-    private static boolean hasSlots(@Nullable IItemHandler handler) {
-        return handler != null && handler.getSlots() > 0;
+    private static boolean hasSlots(@Nullable ResourceHandler<ItemResource> handler) {
+        return handler != null && handler.size() > 0;
     }
 
     private static boolean consumeFromItemHandler(ServerLevel level, BlockPos pos, @Nullable Direction side, int slot, Predicate<ItemStack> matcher) {
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
-        if (handler == null || slot < 0 || slot >= handler.getSlots()) {
+        ResourceHandler<ItemResource> handler = level.getCapability(Capabilities.Item.BLOCK, pos, side);
+        if (handler == null || slot < 0 || slot >= handler.size()) {
             return false;
         }
-        ItemStack current = handler.getStackInSlot(slot);
+        ItemStack current = ItemUtil.getStack(handler, slot);
         if (current.isEmpty() || !matcher.test(current)) {
             return false;
         }
-        ItemStack extracted = handler.extractItem(slot, 1, false);
-        return !extracted.isEmpty() && matcher.test(extracted);
+        try (Transaction transaction = Transaction.openRoot()) {
+            if (handler.extract(slot, ItemResource.of(current), 1, transaction) <= 0) {
+                return false;
+            }
+            transaction.commit();
+            return true;
+        }
     }
 
     private static ItemStack stackFromItemHandler(ServerLevel level, BlockPos pos, @Nullable Direction side, int slot) {
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
-        if (handler == null || slot < 0 || slot >= handler.getSlots()) {
+        ResourceHandler<ItemResource> handler = level.getCapability(Capabilities.Item.BLOCK, pos, side);
+        if (handler == null || slot < 0 || slot >= handler.size()) {
             return ItemStack.EMPTY;
         }
-        return handler.getStackInSlot(slot).copy();
+        return ItemUtil.getStack(handler, slot);
     }
 
     private static ItemStack extractFromItemHandler(ServerLevel level, BlockPos pos, @Nullable Direction side, int slot, int maxCount, Predicate<ItemStack> matcher) {
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
-        if (handler == null || slot < 0 || slot >= handler.getSlots()) {
+        ResourceHandler<ItemResource> handler = level.getCapability(Capabilities.Item.BLOCK, pos, side);
+        if (handler == null || slot < 0 || slot >= handler.size()) {
             return ItemStack.EMPTY;
         }
-        ItemStack current = handler.getStackInSlot(slot);
+        ItemStack current = ItemUtil.getStack(handler, slot);
         if (current.isEmpty() || !matcher.test(current)) {
             return ItemStack.EMPTY;
         }
-        ItemStack extracted = handler.extractItem(slot, Math.min(maxCount, current.getCount()), false);
-        return !extracted.isEmpty() && matcher.test(extracted) ? extracted : ItemStack.EMPTY;
+        ItemResource resource = ItemResource.of(current);
+        try (Transaction transaction = Transaction.openRoot()) {
+            int extracted = handler.extract(slot, resource, Math.min(maxCount, current.getCount()), transaction);
+            if (extracted <= 0) {
+                return ItemStack.EMPTY;
+            }
+            transaction.commit();
+            return resource.toStack(extracted);
+        }
     }
 
     private static boolean consumeFromContainer(ServerLevel level, BlockPos pos, int slot, Predicate<ItemStack> matcher) {
@@ -515,6 +503,6 @@ public final class GenericContainerAccess {
     public record SlotSnapshot(int slot, SlotAccess access, @Nullable Direction side, ItemStack stack) {
     }
 
-    private record ItemHandlerAccess(IItemHandler handler, @Nullable Direction side) {
+    private record ItemHandlerAccess(ResourceHandler<ItemResource> handler, @Nullable Direction side) {
     }
 }

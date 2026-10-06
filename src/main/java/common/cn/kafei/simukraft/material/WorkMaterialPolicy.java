@@ -3,7 +3,7 @@ package common.cn.kafei.simukraft.material;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -197,7 +197,7 @@ public final class WorkMaterialPolicy {
     }
 
     private static java.util.Optional<Item> resolveItem(String materialId) {
-        ResourceLocation id = ResourceLocation.tryParse(materialId);
+        Identifier id = Identifier.tryParse(materialId);
         if (id == null) {
             return java.util.Optional.empty();
         }
@@ -244,7 +244,7 @@ public final class WorkMaterialPolicy {
     }
 
     private static String blockId(Block block) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+        Identifier id = BuiltInRegistries.BLOCK.getKey(block);
         return id == null ? "" : id.toString().toLowerCase(Locale.ROOT);
     }
 

@@ -23,7 +23,7 @@ public final class LogisticsWarehouseGridMenuProvider implements MenuProvider {
 
     public static boolean open(ServerPlayer player, BlockPos boxPos) {
         if (player == null || boxPos == null) return false;
-        ServerLevel level = (ServerLevel) player.level();
+        ServerLevel level = player.level();
         LogisticsServerBoxOpenResponsePacket snapshot = LogisticsServerBoxOpenResponsePacket.from(
                 LogisticsControlBoxService.buildServerView(level, boxPos));
         return player.openMenu(new LogisticsWarehouseGridMenuProvider(boxPos, snapshot), buffer -> {

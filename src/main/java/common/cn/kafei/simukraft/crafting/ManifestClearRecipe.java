@@ -1,21 +1,26 @@
 package common.cn.kafei.simukraft.crafting;
 
 import common.cn.kafei.simukraft.registry.ModItems;
-import common.cn.kafei.simukraft.registry.ModRecipeSerializers;
-import net.minecraft.core.HolderLookup;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 
 public final class ManifestClearRecipe extends CustomRecipe {
-    public ManifestClearRecipe(CraftingBookCategory category) {
-        super(category);
+    public static final ManifestClearRecipe INSTANCE = new ManifestClearRecipe();
+    public static final MapCodec<ManifestClearRecipe> MAP_CODEC = MapCodec.unit(INSTANCE);
+    public static final StreamCodec<RegistryFriendlyByteBuf, ManifestClearRecipe> STREAM_CODEC = StreamCodec.unit(INSTANCE);
+    public static final RecipeSerializer<ManifestClearRecipe> SERIALIZER = new RecipeSerializer<>(MAP_CODEC, STREAM_CODEC);
+
+    public ManifestClearRecipe() {
+        super();
     }
 
     @Override
@@ -37,22 +42,12 @@ public final class ManifestClearRecipe extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    public ItemStack assemble(CraftingInput input) {
         return new ItemStack(ModItems.MANIFEST.get());
     }
 
     @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 1;
-    }
-
-    @Override
-    public RecipeSerializer<?> getSerializer() {
-        return ModRecipeSerializers.MANIFEST_CLEAR.get();
-    }
-
-    @Override
-    public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider registries) {
-        return new ItemStack(ModItems.MANIFEST.get());
+    public RecipeSerializer<? extends CustomRecipe> getSerializer() {
+        return SERIALIZER;
     }
 }

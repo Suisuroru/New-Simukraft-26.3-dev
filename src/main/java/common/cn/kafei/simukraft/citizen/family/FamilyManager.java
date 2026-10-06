@@ -2,10 +2,12 @@ package common.cn.kafei.simukraft.citizen.family;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import net.minecraft.core.HolderLookup;
+import com.mojang.serialization.Codec;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,16 +15,25 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class FamilyManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_families";
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "families");
     private static final int MAX_GENERATION = 10;
-    private static final Factory<FamilyManager> FACTORY = new Factory<>(FamilyManager::new, FamilyManager::load, null);
+    private static final SavedDataType<FamilyManager> TYPE = createType();
+
+    private static SavedDataType<FamilyManager> createType() {
+        Codec<FamilyManager> codec = CompoundTag.CODEC.xmap(FamilyManager::load, FamilyManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, FamilyManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<UUID, FamilyData> families = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, UUID> citizenFamilyIndex = new ConcurrentHashMap<>();
     private volatile boolean sqliteLoaded;
     public static FamilyManager get(ServerLevel level) {
         ServerLevel storageLevel = storageLevel(level);
-        FamilyManager manager = storageLevel.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        FamilyManager manager = storageLevel.getDataStorage().computeIfAbsent(TYPE);
         manager.loadFromSqlite(storageLevel);
         return manager;
     }
@@ -34,12 +45,12 @@ public final class FamilyManager extends SavedData {
         return level;
     }
 
-    private static FamilyManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static FamilyManager load(CompoundTag tag) {
+        // 家庭数据本体存于 SQLite，.dat 仅占位，无需从 NBT 恢复字段。
         return new FamilyManager();
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         return tag;
     }
 

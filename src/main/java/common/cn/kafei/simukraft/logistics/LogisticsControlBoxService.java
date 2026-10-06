@@ -9,6 +9,7 @@ import common.cn.kafei.simukraft.economy.EconomyService;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.material.GenericContainerAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -314,7 +315,7 @@ public final class LogisticsControlBoxService {
 
     /** cityIdFor: 按物流盒所在区块解析城市归属。 */
     public static UUID cityIdFor(ServerLevel level, BlockPos pos) {
-        return level != null && pos != null ? CityChunkManager.get(level).getChunkOwner(new ChunkPos(pos).toLong()) : null;
+        return level != null && pos != null ? CityChunkManager.get(level).getChunkOwner(ChunkPos.containing(pos).pack()) : null;
     }
 
     /** canManage: 校验玩家是否可以管理物流盒所在城市。 */
@@ -330,7 +331,7 @@ public final class LogisticsControlBoxService {
     }
 
     public static String dimensionId(ServerLevel level) {
-        return level.dimension().location().toString();
+        return level.dimension().registry().toString();
     }
 
     private static List<LogisticsClientData> allClients(ServerLevel level, UUID cityId, String dimensionId) {
@@ -397,9 +398,7 @@ public final class LogisticsControlBoxService {
     }
 
     private static String itemId(ItemStack stack) {
-        return stack == null || stack.isEmpty() ? "" : stack.getItemHolder().unwrapKey()
-                .map(key -> key.location().toString())
-                .orElse("");
+        return stack == null || stack.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
     }
 
     private static ClientEntry clientEntry(LogisticsClientData client) {

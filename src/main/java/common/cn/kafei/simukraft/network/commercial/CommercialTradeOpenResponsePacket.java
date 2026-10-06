@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public record CommercialTradeOpenResponsePacket(BlockPos boxPos,
                                                 double cityBalance,
                                                 boolean running,
                                                 List<OfferEntry> offers) implements CustomPacketPayload {
-    public static final Type<CommercialTradeOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "commercial_trade_open_response"));
+    public static final Type<CommercialTradeOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "commercial_trade_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CommercialTradeOpenResponsePacket> STREAM_CODEC = StreamCodec.of(CommercialTradeOpenResponsePacket::encode, CommercialTradeOpenResponsePacket::decode);
 
     public static CommercialTradeOpenResponsePacket from(CommercialTradeView view) {

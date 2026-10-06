@@ -8,7 +8,7 @@ import client.cn.kafei.simukraft.client.city.map.SimuMapRegionData;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.Vec3;
@@ -29,7 +29,7 @@ final class RtsMiniMapTexture {
     private static final int CURRENT_TERRITORY_BORDER_COLOR = 0xCC00DD00;
     private static final int OTHER_TERRITORY_BORDER_COLOR = 0xCCFF8800;
     private static DynamicTexture texture;
-    private static ResourceLocation textureLocation;
+    private static Identifier textureLocation;
     private static boolean mapConsumerAcquired;
 
     private RtsMiniMapTexture() {
@@ -52,7 +52,7 @@ final class RtsMiniMapTexture {
     }
 
     /** refresh: 按 RTS 相机中心和显示范围刷新动态纹理。 */
-    static ResourceLocation refresh(Vec3 focus, int worldSpan) {
+    static Identifier refresh(Vec3 focus, int worldSpan) {
         ensureTexture();
         if (texture == null) {
             return null;
@@ -82,7 +82,7 @@ final class RtsMiniMapTexture {
     }
 
     /** location: 返回当前动态纹理资源位置。 */
-    static ResourceLocation location() {
+    static Identifier location() {
         return textureLocation;
     }
 

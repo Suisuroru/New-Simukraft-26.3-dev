@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.network.building;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.building.BuildingBlockData;
 import common.cn.kafei.simukraft.building.BuildingCatalog;
@@ -29,8 +31,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
@@ -47,7 +50,7 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
                                               BlockPos origin,
                                               int rotationDegrees,
                                               boolean replaceWithAir) implements CustomPacketPayload {
-    public static final Type<BuildBoxStartConstructionPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "build_box_start_construction"));
+    public static final Type<BuildBoxStartConstructionPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "build_box_start_construction"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BuildBoxStartConstructionPacket> STREAM_CODEC = StreamCodec.of(BuildBoxStartConstructionPacket::encode, BuildBoxStartConstructionPacket::decode);
 
     @Override
@@ -153,9 +156,12 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
         );
         BuilderConstructionService.startTask(level, task);
         NeoForge.EVENT_BUS.post(new BuildingConstructionEvent.Start(level, task, citizen));
-        String statusLabel = Component.Serializer.toJson(
-                Component.translatable("status.simukraft.builder.building", structure.displayName()),
-                level.registryAccess());
+        String statusLabel = ComponentSerialization.CODEC
+                .encodeStart(level.registryAccess().createSerializationContext(JsonOps.INSTANCE),
+                        Component.translatable("status.simukraft.builder.building", structure.displayName()))
+                .result()
+                .map(JsonElement::toString)
+                .orElse("");
         CitizenEmploymentService.assign(level, citizen.uuid(), CityJobType.BUILDER, CitizenEmploymentService.workplaceId("build_box", "builder", packet.buildBoxPos()), packet.buildBoxPos(), CitizenWorkStatus.WORKING, statusLabel);
         BuilderConstructionMobilityService.prepareForConstruction(level, citizen.uuid(), packet.buildBoxPos());
         citizen.setWorkNeedDetail("build:" + task.taskId());

@@ -72,7 +72,7 @@ public final class LogisticsWorkService {
             CitizenData worker = warehouse != null
                     ? LogisticsControlBoxService.findAssignedStorageWorker(level, warehouse.boxPos()) : null;
             if (!validRoute(warehouse, client) || worker == null
-                    || MedicalService.isOnMedicalLeave(worker, level.getDayTime() / 24_000L)) {
+                    || MedicalService.isOnMedicalLeave(worker, level.getDefaultClockTime() / 24_000L)) {
                 return false;
             }
             List<BlockPos> sourcePositions;

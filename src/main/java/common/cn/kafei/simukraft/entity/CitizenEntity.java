@@ -17,6 +17,9 @@ import common.cn.kafei.simukraft.commercial.CommercialControlBoxService;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import common.cn.kafei.simukraft.medical.MedicalService;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.component.SwingAnimation;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -44,6 +47,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -113,32 +117,35 @@ public class CitizenEntity extends PathfinderMob {
         if (hand != InteractionHand.MAIN_HAND) {
             return InteractionResult.PASS;
         }
-        if (level() instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer && player.distanceToSqr(this) <= 64.0D) {
+        // 26.3：Level 为 AutoCloseable，先把 level() 存入局部变量再复用，避免对工厂结果直接链式调用。
+        Level level = level();
+        if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer && player.distanceToSqr(this) <= 64.0D) {
             CitizenData data = CitizenService.ensureCitizen(serverLevel, this);
             if (data != null) {
                 if (!player.isShiftKeyDown() && CommercialControlBoxService.openForWorker(serverLevel, serverPlayer, data)) {
-                    return InteractionResult.sidedSuccess(level().isClientSide());
+                    return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
                 }
                 CitizenInfoMenuProvider.open(serverLevel, serverPlayer, this, data);
             }
         }
-        return InteractionResult.sidedSuccess(level().isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
+    // 26.3：Entity.hurt 已变为 final void，伤害管线覆盖点改为 hurtServer(ServerLevel, DamageSource, float)。
     @Override
-    public boolean hurt(DamageSource source, float amount) {
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
         if (isSuffocationDamage(source)) {
             rescueFromWall(true);
             return false;
         }
-        boolean result = super.hurt(source, amount);
-        if (result && !level().isClientSide()) {
+        boolean result = super.hurtServer(level, source, amount);
+        if (result) {
             addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0, false, false));
-            if (level() instanceof ServerLevel serverLevel && isAlive()) {
-                CitizenData data = CitizenManager.get(serverLevel).getCitizen(getUUID()).orElse(null);
+            if (isAlive()) {
+                CitizenData data = CitizenManager.get(level).getCitizen(getUUID()).orElse(null);
                 if (data != null) {
                     data.setHealth(getHealth());
-                    CitizenService.save(serverLevel, getUUID());
+                    CitizenService.save(level, getUUID());
                 }
                 citizenInventory.setChanged();
             }
@@ -224,7 +231,7 @@ public class CitizenEntity extends PathfinderMob {
             rescueFromWall(false);
             // 实体每 tick 确保自己有 CitizenData，数据缺失时会自动补全。
             CitizenData data = CitizenService.ensureCitizen(serverLevel, this);
-            if (!serverLevel.dimension().location().toString().equals(data.dimensionId())) {
+            if (!serverLevel.dimension().identifier().toString().equals(data.dimensionId())) {
                 discard();
                 return;
             }
@@ -289,8 +296,8 @@ public class CitizenEntity extends PathfinderMob {
 
     private void startClientWorkSwing() {
         workSwingStartTick = tickCount;
-        if (!swinging) {
-            swing(InteractionHand.MAIN_HAND);
+        if (!isSwinging()) {
+            swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         }
     }
 
@@ -329,8 +336,8 @@ public class CitizenEntity extends PathfinderMob {
     }
 
     @Override
-    public float getAttackAnim(float partialTick) {
-        return Math.max(super.getAttackAnim(partialTick), workSwingProgress(partialTick));
+    public float getSwingAnimation(float partialTick) {
+        return Math.max(super.getSwingAnimation(partialTick), workSwingProgress(partialTick));
     }
 
     private float workSwingProgress(float partialTick) {
@@ -346,46 +353,42 @@ public class CitizenEntity extends PathfinderMob {
         return citizenDisplayName(getCitizenName());
     }
 
+    // 26.3：实体存档 API 改为 ValueOutput/ValueInput；CompoundTag 取值器返回 Optional，统一用 getXxxOr；背包用 CompoundTag.CODEC 存取；UUID 以字符串持久化。
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
-        compound.putString("CitizenName", getCitizenName());
-        compound.putString("SkinPath", getSkinPath());
-        compound.putString("StatusLabel", getStatusLabel());
-        compound.putDouble(TAG_HUNGER, getHungerValue());
-        compound.putInt("Age", getAge());
-        compound.putInt("Lifespan", getLifespan());
-        compound.putBoolean("IsSick", isSick());
-        compound.putBoolean("IsChildNpc", isChildNpc());
-        compound.put(TAG_INVENTORY, citizenInventory.saveToTag(registryAccess()));
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putString("CitizenName", getCitizenName());
+        output.putString("SkinPath", getSkinPath());
+        output.putString("StatusLabel", getStatusLabel());
+        output.putDouble(TAG_HUNGER, getHungerValue());
+        output.putInt("Age", getAge());
+        output.putInt("Lifespan", getLifespan());
+        output.putBoolean("IsSick", isSick());
+        output.putBoolean("IsChildNpc", isChildNpc());
+        output.store(TAG_INVENTORY, CompoundTag.CODEC, citizenInventory.saveToTag(registryAccess()));
         if (followPlayerId != null) {
-            compound.putUUID(TAG_FOLLOW_PLAYER, followPlayerId);
+            output.putString(TAG_FOLLOW_PLAYER, followPlayerId.toString());
         }
-        compound.putBoolean(TAG_STAY_IN_PLACE, stayInPlace);
+        output.putBoolean(TAG_STAY_IN_PLACE, stayInPlace);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
-        setCitizenName(compound.getString("CitizenName"));
-        setSkinPath(compound.getString("SkinPath"));
-        setStatusLabel(compound.getString("StatusLabel"));
-        if (compound.contains(TAG_HUNGER)) {
-            setHungerInternal(compound.getDouble(TAG_HUNGER));
-        } else {
-            setHungerInternal(DEFAULT_HUNGER);
-        }
-        setAge(compound.contains("Age") ? compound.getInt("Age") : -1);
-        setLifespan(compound.contains("Lifespan") ? compound.getInt("Lifespan") : -1);
-        setSick(compound.getBoolean("IsSick"));
-        setChildNpc(compound.getBoolean("IsChildNpc"));
-        nativeInventoryTagPresent = compound.contains(TAG_INVENTORY, CompoundTag.TAG_COMPOUND);
-        citizenInventory.loadFromTag(
-                nativeInventoryTagPresent ? compound.getCompound(TAG_INVENTORY) : new CompoundTag(),
-                registryAccess());
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        setCitizenName(input.getStringOr("CitizenName", ""));
+        setSkinPath(input.getStringOr("SkinPath", ""));
+        setStatusLabel(input.getStringOr("StatusLabel", ""));
+        setHungerInternal(input.getDoubleOr(TAG_HUNGER, DEFAULT_HUNGER));
+        setAge(input.getIntOr("Age", -1));
+        setLifespan(input.getIntOr("Lifespan", -1));
+        setSick(input.getBooleanOr("IsSick", false));
+        setChildNpc(input.getBooleanOr("IsChildNpc", false));
+        Optional<CompoundTag> inventoryTag = input.read(TAG_INVENTORY, CompoundTag.CODEC);
+        nativeInventoryTagPresent = inventoryTag.isPresent();
+        citizenInventory.loadFromTag(inventoryTag.orElseGet(CompoundTag::new), registryAccess());
         inventoryReconciled = false;
-        followPlayerId = compound.hasUUID(TAG_FOLLOW_PLAYER) ? compound.getUUID(TAG_FOLLOW_PLAYER) : null;
-        stayInPlace = compound.getBoolean(TAG_STAY_IN_PLACE);
+        followPlayerId = input.getString(TAG_FOLLOW_PLAYER).map(UUID::fromString).orElse(null);
+        stayInPlace = input.getBooleanOr(TAG_STAY_IN_PLACE, false);
     }
 
     /** getFollowPlayerId：返回当前手动跟随的玩家 UUID。 */
@@ -610,10 +613,10 @@ public class CitizenEntity extends PathfinderMob {
     public void triggerWorkSwing(InteractionHand hand) {
         InteractionHand normalizedHand = hand != null ? hand : InteractionHand.MAIN_HAND;
         if (level().isClientSide()) {
-            swing(normalizedHand);
+            swing(normalizedHand, SwingAnimation.DEFAULT, false);
             return;
         }
-        swing(normalizedHand, true);
+        swing(normalizedHand, SwingAnimation.DEFAULT, true);
         this.entityData.set(DATA_WORK_SWING_PULSE, this.entityData.get(DATA_WORK_SWING_PULSE) + 1);
     }
 

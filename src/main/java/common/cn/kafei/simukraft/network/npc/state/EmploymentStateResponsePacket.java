@@ -15,7 +15,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -31,7 +31,7 @@ public record EmploymentStateResponsePacket(BlockPos sourcePos, String sourceTyp
         implements CustomPacketPayload {
     private static final String BUILD_BOX_SOURCE_TYPE = "build_box";
     public static final Type<EmploymentStateResponsePacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "employment_state_response"));
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "employment_state_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, EmploymentStateResponsePacket> STREAM_CODEC =
             StreamCodec.of(EmploymentStateResponsePacket::encode, EmploymentStateResponsePacket::decode);
 

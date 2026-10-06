@@ -165,13 +165,13 @@ public final class MedicalService {
         List<MedicalControlBoxView.PatientEntry> patients = CitizenManager.get(level).allCitizens().stream()
                 .filter(citizen -> containsMedicalBed(bedIds, citizen.medical().medicalBedPoiId()))
                 .sorted(Comparator.comparing(CitizenData::name, String.CASE_INSENSITIVE_ORDER))
-                .map(citizen -> new MedicalControlBoxView.PatientEntry(citizen.uuid(), citizen.name(), conditionKey(citizen, level.getDayTime() / 24_000L), citizen.health()))
+                .map(citizen -> new MedicalControlBoxView.PatientEntry(citizen.uuid(), citizen.name(), conditionKey(citizen, level.getDefaultClockTime() / 24_000L), citizen.health()))
                 .toList();
         return new BuildingSnapshot(bedIds.size(), patients.size(), patients);
     }
 
     private static void runTick(ServerLevel level) {
-        long currentDay = level.getDayTime() / 24_000L;
+        long currentDay = level.getDefaultClockTime() / 24_000L;
         List<Hospital> hospitals = findOperationalHospitals(level);
         Map<UUID, Hospital> hospitalByBed = new ConcurrentHashMap<>();
         for (Hospital hospital : hospitals) {
@@ -352,7 +352,7 @@ public final class MedicalService {
      * advanceHospitalStay：住院治疗按世界 dayTime 推进，睡觉跳过的夜晚会计入治疗和回血。
      */
     private static void advanceHospitalStay(ServerLevel level, CitizenData citizen, CitizenEntity entity, long currentDay) {
-        long now = level.getDayTime();
+        long now = level.getDefaultClockTime();
         long last = citizen.medical().lastHospitalProgressDayTime();
         if (last <= 0L || last > now) {
             citizen.medical().setLastHospitalProgressDayTime(now);

@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public record MedicalControlBoxOpenResponsePacket(BlockPos boxPos,
                                                   int bedCount,
                                                   int occupiedBedCount,
                                                   List<MedicalControlBoxView.PatientEntry> patients) implements CustomPacketPayload {
-    public static final Type<MedicalControlBoxOpenResponsePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "medical_control_box_open_response"));
+    public static final Type<MedicalControlBoxOpenResponsePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "medical_control_box_open_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, MedicalControlBoxOpenResponsePacket> STREAM_CODEC = StreamCodec.of(MedicalControlBoxOpenResponsePacket::encode, MedicalControlBoxOpenResponsePacket::decode);
 
     public MedicalControlBoxOpenResponsePacket {

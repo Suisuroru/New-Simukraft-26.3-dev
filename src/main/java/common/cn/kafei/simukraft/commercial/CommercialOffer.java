@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.commercial;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -110,7 +110,7 @@ public record CommercialOffer(String id,
                 return Items.AIR;
             }
             try {
-                return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(itemId)).orElse(Items.AIR);
+                return BuiltInRegistries.ITEM.getOptional(Identifier.parse(itemId)).orElse(Items.AIR);
             } catch (Exception exception) {
                 return Items.AIR;
             }

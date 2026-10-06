@@ -346,9 +346,9 @@ public final class CommercialTradeService {
     private static void giveItem(ServerPlayer player, ItemStack stack) {
         if (stack.isEmpty()) return;
         if (!player.addItem(stack) && !stack.isEmpty()) {
-            ItemEntity drop = new ItemEntity(player.serverLevel(), player.getX(), player.getY(), player.getZ(), stack, 0, 0, 0);
+            ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getY(), player.getZ(), stack, 0, 0, 0);
             drop.setNoPickUpDelay();
-            player.serverLevel().addFreshEntity(drop);
+            player.level().addFreshEntity(drop);
         }
     }
 

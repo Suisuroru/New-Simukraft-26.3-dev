@@ -1,15 +1,13 @@
 package common.cn.kafei.simukraft.fluid;
 
 import common.cn.kafei.simukraft.registry.ModFluids;
-import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
@@ -32,29 +30,26 @@ public final class MilkBucketPlacementService {
     private MilkBucketPlacementService() {
     }
 
-    public static InteractionResultHolder<ItemStack> tryPourMilk(Level level, Player player, InteractionHand hand) {
+    public static InteractionResult tryPourMilk(Level level, Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
         BlockHitResult hit = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.NONE);
         if (hit.getType() == HitResult.Type.MISS) {
             return null;
         }
         if (hit.getType() != HitResult.Type.BLOCK) {
-            return InteractionResultHolder.pass(itemStack);
+            return InteractionResult.PASS;
         }
         BlockPos clickedPos = hit.getBlockPos();
         BlockPos targetPos = targetPos(level, player, hit);
         if (!level.mayInteract(player, clickedPos) || !player.mayUseItemAt(targetPos, hit.getDirection(), itemStack)) {
-            return InteractionResultHolder.fail(itemStack);
+            return InteractionResult.FAIL;
         }
         if (!emptyMilkContents(player, level, targetPos, hit)) {
-            return InteractionResultHolder.fail(itemStack);
-        }
-        if (player instanceof ServerPlayer serverPlayer) {
-            CriteriaTriggers.PLACED_BLOCK.trigger(serverPlayer, targetPos, itemStack);
+            return InteractionResult.FAIL;
         }
         player.awardStat(Stats.ITEM_USED.get(Items.MILK_BUCKET));
         ItemStack resultStack = BucketItem.getEmptySuccessItem(itemStack, player);
-        return InteractionResultHolder.sidedSuccess(resultStack, level.isClientSide());
+        return InteractionResult.SUCCESS.heldItemTransformedTo(resultStack);
     }
 
     private static BlockPos targetPos(Level level, Player player, BlockHitResult hit) {
@@ -84,7 +79,7 @@ public final class MilkBucketPlacementService {
             playEmptySound(player, level, pos, fluid);
             return true;
         }
-        if (!level.isClientSide && replaceable && state.getFluidState().isEmpty()) {
+        if (!level.isClientSide() && replaceable && state.getFluidState().isEmpty()) {
             level.destroyBlock(pos, true);
         }
         if (!level.setBlock(pos, fluid.defaultFluidState().createLegacyBlock(), 11) && !state.getFluidState().isSource()) {

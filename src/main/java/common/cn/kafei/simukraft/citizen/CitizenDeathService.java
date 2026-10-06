@@ -46,7 +46,7 @@ public final class CitizenDeathService {
         CitizenEmploymentService.fire(level, data.uuid(), null, null, data.workplacePos(), "citizen_died");
         CitizenNavigationService.stop(level, data.uuid());
         dropInventory(level, entity);
-        CitizenManager.get(level).markCitizenDead(data.uuid(), level.getDayTime() / 24000L + 1L);
+        CitizenManager.get(level).markCitizenDead(data.uuid(), level.getDefaultClockTime() / 24000L + 1L);
         if (data.familyId() != null) {
             FamilyManager.get(level).handleMemberDeath(level, data.familyId(), data.uuid());
         }

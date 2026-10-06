@@ -18,6 +18,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -140,8 +141,8 @@ public final class PlacedBuildingMoveService {
             }
             BlockPos oldPos = resolveWorldPos(building, recorded.relativePos());
             BlockPos newPos = transform.apply(oldPos);
-            if (oldPos == null || newPos.getY() < level.getMinBuildHeight()
-                    || newPos.getY() >= level.getMaxBuildHeight() || !level.isAreaLoaded(oldPos, 1)
+            if (oldPos == null || newPos.getY() < level.getMinY()
+                    || newPos.getY() >= level.getMinY() || !level.isAreaLoaded(oldPos, 1)
                     || !level.isAreaLoaded(newPos, 1) || !level.getWorldBorder().isWithinBounds(newPos)) {
                 return MoveStatus.INVALID;
             }
@@ -325,7 +326,7 @@ public final class PlacedBuildingMoveService {
 
     /** canManageBuilding: 复用城市官方权限规则保护整体建筑移动。 */
     private static boolean canManageBuilding(ServerLevel level, ServerPlayer player, PlacedBuildingRecord building) {
-        if (player.hasPermissions(2)) {
+        if (player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             return true;
         }
         if (building.cityId() == null) {
@@ -351,7 +352,7 @@ public final class PlacedBuildingMoveService {
         if (width <= 0L || length <= 0L || width * length > MAX_SURFACE_SCAN_COLUMNS) {
             return destination;
         }
-        int highestSurfaceY = level.getMinBuildHeight();
+        int highestSurfaceY = level.getMinY();
         for (int relativeX = footprint.minX(); relativeX <= footprint.maxX(); relativeX++) {
             int targetX = destination.getX() + relativeX;
             for (int relativeZ = footprint.minZ(); relativeZ <= footprint.maxZ(); relativeZ++) {

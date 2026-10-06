@@ -6,11 +6,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -72,24 +71,22 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
     }
 
     @Override
-    public CompletableFuture<Void> reload(PreparationBarrier barrier,
-                                          ResourceManager resourceManager,
-                                          ProfilerFiller preparationsProfiler,
-                                          ProfilerFiller reloadProfiler,
+    public CompletableFuture<Void> reload(SharedState sharedState,
                                           Executor backgroundExecutor,
-                                          Executor gameExecutor) {
-        return CompletableFuture.supplyAsync(() -> load(resourceManager), backgroundExecutor)
+                                          PreparationBarrier barrier,
+                                          Executor targetExecutor) {
+        return CompletableFuture.supplyAsync(() -> load(sharedState.resourceManager()), backgroundExecutor)
                 .thenCompose(barrier::wait)
-                .thenAcceptAsync(definitions::set, gameExecutor);
+                .thenAcceptAsync(definitions::set, targetExecutor);
     }
 
     private List<CityLevelDefinition> load(ResourceManager resourceManager) {
         Map<Integer, CityLevelDefinition> byLevel = new LinkedHashMap<>();
         AtomicInteger definitionCount = new AtomicInteger();
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources(
+        Map<Identifier, Resource> resources = resourceManager.listResources(
                 DIRECTORY, path -> path.getPath().endsWith(".json"));
         resources.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(Identifier::toString)))
                 .forEach(entry -> {
                     try (Reader reader = new InputStreamReader(entry.getValue().open(), StandardCharsets.UTF_8)) {
                         List<CityLevelDefinition> parsed = parseDefinitions(entry.getKey(), JsonParser.parseReader(reader));
@@ -114,7 +111,7 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
     }
 
     /** parseDefinitions: 解析单对象、根数组或 levels 包装格式的等级 JSON。 */
-    static List<CityLevelDefinition> parseDefinitions(ResourceLocation resourceId, JsonElement root) {
+    static List<CityLevelDefinition> parseDefinitions(Identifier resourceId, JsonElement root) {
         if (root == null || root.isJsonNull()) {
             throw new IllegalArgumentException("City level root must not be null");
         }
@@ -158,7 +155,7 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
     }
 
     /** parse: 校验并解析单个城市等级 JSON。 */
-    static CityLevelDefinition parse(ResourceLocation resourceId, JsonObject root) {
+    static CityLevelDefinition parse(Identifier resourceId, JsonObject root) {
         if (root == null) {
             throw new IllegalArgumentException("City level root must be an object");
         }
@@ -186,7 +183,7 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
         return new CityLevelDefinition(level, displayName, funds, population, chunks, enclaves, items, durationTicks);
     }
 
-    private static List<CityLevelDefinition.ItemRequirement> parseItems(JsonObject requirements, ResourceLocation resourceId) {
+    private static List<CityLevelDefinition.ItemRequirement> parseItems(JsonObject requirements, Identifier resourceId) {
         JsonElement value = requirements == null ? null : requirements.get("items");
         if (value == null) {
             return List.of();
@@ -211,7 +208,7 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
             if (serializedId.startsWith("#")) {
                 serializedId = serializedId.substring(1);
             }
-            ResourceLocation resource = ResourceLocation.parse(serializedId);
+            Identifier resource = Identifier.parse(serializedId);
             if (!tag && !BuiltInRegistries.ITEM.containsKey(resource)) {
                 throw new IllegalArgumentException("Unknown item " + resource + " in " + resourceId);
             }
@@ -220,9 +217,9 @@ public final class CityLevelDefinitionLoader implements PreparableReloadListener
                 throw new IllegalArgumentException("Invalid item count for " + resource + " in " + resourceId);
             }
             String displayIconValue = text(itemObject, "display_icon", "");
-            ResourceLocation displayIcon = null;
+            Identifier displayIcon = null;
             if (!displayIconValue.isBlank()) {
-                displayIcon = ResourceLocation.parse(displayIconValue);
+                displayIcon = Identifier.parse(displayIconValue);
                 if (!BuiltInRegistries.ITEM.containsKey(displayIcon)) {
                     throw new IllegalArgumentException("Unknown display icon " + displayIcon + " in " + resourceId);
                 }

@@ -6,11 +6,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -46,8 +51,8 @@ public final class BuildingBlockPlacementService {
         if (blockEntity == null) {
             return;
         }
-        try {
-            blockEntity.loadWithComponents(data.copy(), level.registryAccess());
+        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(blockEntity.problemPath(), SimuKraft.LOGGER)) {
+            blockEntity.loadWithComponents(TagValueInput.create(reporter, level.registryAccess(), data.copy()));
             blockEntity.setChanged();
             level.sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), 3);
         } catch (RuntimeException exception) {
@@ -68,9 +73,10 @@ public final class BuildingBlockPlacementService {
             data.putInt("TileZ", entityData.blockPos().getZ());
             data.remove("UUID");
             try {
-                EntityType.create(data, level).ifPresent(entity -> {
+                ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data);
+                EntityType.create(input, level, new EntitySpawnRequest(EntitySpawnReason.LOAD, true)).ifPresent(entity -> {
                     float yRot = entity.rotate(BuildingTransform.rotation(rotationDegrees));
-                    entity.moveTo(pos.x, pos.y, pos.z, yRot, entity.getXRot());
+                    entity.snapTo(pos.x, pos.y, pos.z, yRot, entity.getXRot());
                     level.addFreshEntity(entity);
                 });
             } catch (RuntimeException exception) {

@@ -4,6 +4,7 @@ import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.medical.DiseaseType;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -36,8 +37,7 @@ public final class CitizenFoodConsumptionService {
         if (entity == null || entity.getHungerValue() >= FULL_HUNGER) {
             return false;
         }
-        FoodProperties properties = foodProperties(entity, stack);
-        return properties != null && properties.nutrition() > 0;
+        return isFoodStack(entity, stack);
     }
 
     /** isFoodStack：判断物品是否为可供 NPC 食用的有效食物，不受当前饱食度影响。 */
@@ -70,7 +70,7 @@ public final class CitizenFoodConsumptionService {
             return null;
         }
         try {
-            return stack.getFoodProperties(entity);
+            return stack.get(DataComponents.FOOD);
         } catch (RuntimeException exception) {
             Item item = stack.getItem();
             if (FAILED_FOOD_LOOKUPS.add(item)) {
@@ -98,12 +98,12 @@ public final class CitizenFoodConsumptionService {
         }
         // 食用蜘蛛眼或腐肉触发食物中毒
         if (!data.disease().isActive() && isFoodPoisoningItem(visualStack)) {
-            long currentDay = level.getDayTime() / 24_000L;
+            long currentDay = level.getDefaultClockTime() / 24_000L;
             data.setDisease(DiseaseType.FOOD_POISONING, currentDay);
             CitizenService.save(level, data.uuid());
         }
         CitizenManager.get(level).syncEntity(entity);
-        level.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EAT, SoundSource.NEUTRAL, 0.8F, 1.0F);
+        level.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EAT.value(), SoundSource.NEUTRAL, 0.8F, 1.0F);
         entity.triggerWorkSwing(InteractionHand.MAIN_HAND);
         return true;
     }

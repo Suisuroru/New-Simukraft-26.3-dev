@@ -34,7 +34,7 @@ public final class CitizenManualControlService {
             return;
         }
         ServerPlayer target = level.getServer().getPlayerList().getPlayer(citizen.getFollowPlayerId());
-        if (target == null || target.serverLevel() != level) {
+        if (target == null || target.level() != level) {
             return;
         }
         double distanceSqr = citizen.distanceToSqr(target);

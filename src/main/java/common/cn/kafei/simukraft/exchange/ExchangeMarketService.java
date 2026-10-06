@@ -38,7 +38,7 @@ public final class ExchangeMarketService {
             return;
         }
         MarketState state = state(level);
-        long dayTime = level.getDayTime();
+        long dayTime = level.getDefaultClockTime();
         pruneFutureCandles(level, state, dayTime);
         long targetDay = ExchangeMarketClock.dayIndex(dayTime);
         int targetHour = ExchangeMarketClock.hourIndex(dayTime);
@@ -63,7 +63,7 @@ public final class ExchangeMarketService {
         if (state == null) {
             return;
         }
-        pruneFutureCandles(level, state, level.getDayTime());
+        pruneFutureCandles(level, state, level.getDefaultClockTime());
         persistAll(level, state);
     }
 
@@ -91,7 +91,7 @@ public final class ExchangeMarketService {
 
     /** buy: 用城市虚拟资金买入。 */
     public static TradeResult buy(ServerLevel level, ServerPlayer player, UUID cityId, String companyId, int shares) {
-        if (!ExchangeMarketClock.isOpen(level.getDayTime())) {
+        if (!ExchangeMarketClock.isOpen(level.getDefaultClockTime())) {
             return new TradeResult(false, "message.simukraft.exchange.closed");
         }
         if (!CityService.canManageCity(level, cityId, player.getUUID())) {
@@ -123,7 +123,7 @@ public final class ExchangeMarketService {
 
     /** sell: 卖出持仓回到城市资金。 */
     public static TradeResult sell(ServerLevel level, ServerPlayer player, UUID cityId, String companyId, int shares) {
-        if (!ExchangeMarketClock.isOpen(level.getDayTime())) {
+        if (!ExchangeMarketClock.isOpen(level.getDefaultClockTime())) {
             return new TradeResult(false, "message.simukraft.exchange.closed");
         }
         if (!CityService.canManageCity(level, cityId, player.getUUID())) {
@@ -253,7 +253,7 @@ public final class ExchangeMarketService {
     private static MarketState load(ServerLevel level) {
         MarketState state = new MarketState();
         ExchangeSqliteRepository.MarketRow market = SimuSqliteStorage.loadExchangeMarket(level);
-        long today = ExchangeMarketClock.dayIndex(level.getDayTime());
+        long today = ExchangeMarketClock.dayIndex(level.getDefaultClockTime());
         if (market != null) {
             state.day = market.day();
             state.regime = ExchangeMarketRegime.fromName(market.regime());
@@ -278,7 +278,7 @@ public final class ExchangeMarketService {
             quote.candles.addAll(SimuSqliteStorage.loadExchangeCandles(level, companyId));
             trimHistory(quote);
         }
-        pruneFutureCandles(level, state, level.getDayTime());
+        pruneFutureCandles(level, state, level.getDefaultClockTime());
         int savedHour = latestHour(state, today);
         if (savedHour >= 0) {
             state.lastHour = savedHour;

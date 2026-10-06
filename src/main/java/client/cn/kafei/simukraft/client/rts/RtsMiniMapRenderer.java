@@ -6,7 +6,7 @@ import client.cn.kafei.simukraft.client.input.SimuKraftKeyMappings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -78,7 +78,7 @@ public final class RtsMiniMapRenderer {
         if (!isVisible() || !RtsSelectionManager.canUseRtsCameraControls()) {
             return;
         }
-        ResourceLocation texture = RtsMiniMapTexture.location();
+        Identifier texture = RtsMiniMapTexture.location();
         if (textureRefreshRequested) {
             texture = RtsMiniMapTexture.refresh(FreeCameraManager.rtsFocus(), worldSpan());
             textureRefreshRequested = texture == null;

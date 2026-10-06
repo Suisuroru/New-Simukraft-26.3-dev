@@ -39,13 +39,13 @@ public record CitizenInfoResponsePacket(UUID citizenId, String name, String gend
         String homeName = poiName(poiManager, data.homeId());
         String workplaceName = poiName(poiManager, data.workplaceId());
         CitizenSkillSnapshot skill = CitizenLevelService.snapshot(data, data.jobType());
-        long currentDay = level.getDayTime() / 24_000L;
+        long currentDay = level.getDefaultClockTime() / 24_000L;
         int pregnancyDuration = ServerConfig.familyPregnancyDurationDays();
         PregnancyStage stage = data.pregnant()
                 ? PregnancyStage.resolve(currentDay - data.pregnantSince(), pregnancyDuration)
                 : PregnancyStage.NONE;
         double pregnancyProgress = data.pregnant()
-                ? Math.clamp((level.getDayTime() - data.pregnantSince() * 24_000.0D) / (pregnancyDuration * 24_000.0D), 0.0D, 1.0D)
+                ? Math.clamp((level.getDefaultClockTime() - data.pregnantSince() * 24_000.0D) / (pregnancyDuration * 24_000.0D), 0.0D, 1.0D)
                 : 0.0D;
         return new CitizenInfoResponsePacket(
                 data.uuid(),

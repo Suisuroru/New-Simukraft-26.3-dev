@@ -26,7 +26,7 @@ public final class CityClaimService {
             return ClaimResult.failed(Component.translatable("message.simukraft.city_chunk.no_permission"));
         }
         CityChunkManager chunkManager = CityChunkManager.get(level);
-        long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+        long chunkLong = ChunkPos.pack(chunkX, chunkZ);
         if (chunkManager.getChunkOwner(chunkLong) != null) {
             return ClaimResult.failed(Component.translatable("message.simukraft.city_chunk.already_claimed"));
         }
@@ -38,13 +38,13 @@ public final class CityClaimService {
         boolean adjacentToCity = chunkManager.isAdjacentToCity(city.cityId(), chunkLong);
         int enclaveLimit = levelDefinition == null ? MAX_CITY_ENCLAVES : levelDefinition.unlockedEnclaves();
         if (!adjacentToCity && enclaveLimit >= 0
-                && chunkManager.countEnclaves(city.cityId(), new ChunkPos(city.cityCorePos()).toLong()) >= enclaveLimit) {
+                && chunkManager.countEnclaves(city.cityId(), ChunkPos.containing(city.cityCorePos()).pack()) >= enclaveLimit) {
             return ClaimResult.failed(Component.translatable("message.simukraft.city_chunk.enclave_limit", enclaveLimit));
         }
         if (!adjacentToCity && chunkManager.getCityChunks(city.cityId()).isEmpty()) {
             return ClaimResult.failed(Component.translatable("message.simukraft.city_chunk.not_adjacent"));
         }
-        long coreChunkLong = new ChunkPos(city.cityCorePos()).toLong();
+        long coreChunkLong = ChunkPos.containing(city.cityCorePos()).pack();
         boolean connectedToMainTerritory = chunkManager.isConnectedToCore(city.cityId(), chunkLong, coreChunkLong);
         double chunkPrice = connectedToMainTerritory ? ServerConfig.cityChunkPrice() : ENCLAVE_CHUNK_PRICE;
         if (chunkPrice > 0) {

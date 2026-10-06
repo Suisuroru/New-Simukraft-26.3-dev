@@ -24,6 +24,7 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -126,7 +127,7 @@ public final class ResidentialControlBoxScreenOpener {
         panel.addChild(managementRow);
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null && mc.player.hasPermissions(2)) {
+        if (mc.player != null && mc.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             UIElement occupancyRow = new UIElement().layout(layout -> {
                 layout.widthPercent(100);
                 layout.flexDirection(FlexDirection.ROW);

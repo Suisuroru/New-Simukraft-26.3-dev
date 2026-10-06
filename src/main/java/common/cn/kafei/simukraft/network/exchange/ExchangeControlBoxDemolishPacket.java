@@ -12,7 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -20,7 +20,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 /** ExchangeControlBoxDemolishPacket: 拆除交易所建筑。 */
 public record ExchangeControlBoxDemolishPacket(BlockPos pos) implements CustomPacketPayload {
     public static final Type<ExchangeControlBoxDemolishPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_demolish"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "exchange_control_box_demolish"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ExchangeControlBoxDemolishPacket> STREAM_CODEC =
             StreamCodec.of(ExchangeControlBoxDemolishPacket::encode, ExchangeControlBoxDemolishPacket::decode);
 

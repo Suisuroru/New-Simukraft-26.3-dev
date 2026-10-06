@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public record CityCitizenFamilyGraphResponsePacket(BlockPos pos, CitizenFamilyGraphSnapshot snapshot)
         implements CustomPacketPayload {
     public static final Type<CityCitizenFamilyGraphResponsePacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_family_graph_response"));
+            new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_citizen_family_graph_response"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCitizenFamilyGraphResponsePacket> STREAM_CODEC =
             StreamCodec.of(CityCitizenFamilyGraphResponsePacket::encode, CityCitizenFamilyGraphResponsePacket::decode);
 

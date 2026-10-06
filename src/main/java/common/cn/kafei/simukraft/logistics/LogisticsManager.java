@@ -2,26 +2,33 @@ package common.cn.kafei.simukraft.logistics;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 
 public final class LogisticsManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_logistics";
-    private static final Factory<LogisticsManager> FACTORY = new Factory<>(LogisticsManager::new, LogisticsManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "logistics");
+    private static final SavedDataType<LogisticsManager> TYPE = createType();
+
+    @SuppressWarnings("unchecked")
+    private static SavedDataType<LogisticsManager> createType() {
+        Codec<LogisticsManager> codec = CompoundTag.CODEC.xmap(LogisticsManager::load, LogisticsManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, LogisticsManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<UUID, LogisticsWarehouseData> warehouses = new ConcurrentHashMap<>();
     private final ConcurrentMap<BlockPos, UUID> warehouseByPos = new ConcurrentHashMap<>();
@@ -35,31 +42,30 @@ public final class LogisticsManager extends SavedData {
     private volatile ServerLevel level;
 
     public static LogisticsManager get(ServerLevel level) {
-        LogisticsManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        LogisticsManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static LogisticsManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static LogisticsManager load(CompoundTag tag) {
         LogisticsManager manager = new LogisticsManager();
-        ListTag warehouseTags = tag.getList("Warehouses", CompoundTag.TAG_COMPOUND);
+        ListTag warehouseTags = tag.getList("Warehouses").orElse(new ListTag());
         for (int i = 0; i < warehouseTags.size(); i++) {
-            manager.putLoadedWarehouse(LogisticsWarehouseData.fromTag(warehouseTags.getCompound(i)));
+            manager.putLoadedWarehouse(LogisticsWarehouseData.fromTag(warehouseTags.getCompound(i).orElse(new CompoundTag())));
         }
-        ListTag clientTags = tag.getList("Clients", CompoundTag.TAG_COMPOUND);
+        ListTag clientTags = tag.getList("Clients").orElse(new ListTag());
         for (int i = 0; i < clientTags.size(); i++) {
-            manager.putLoadedClient(LogisticsClientData.fromTag(clientTags.getCompound(i)));
+            manager.putLoadedClient(LogisticsClientData.fromTag(clientTags.getCompound(i).orElse(new CompoundTag())));
         }
-        ListTag channelTags = tag.getList("Channels", CompoundTag.TAG_COMPOUND);
+        ListTag channelTags = tag.getList("Channels").orElse(new ListTag());
         for (int i = 0; i < channelTags.size(); i++) {
-            manager.putLoadedChannel(LogisticsChannelData.fromTag(channelTags.getCompound(i)));
+            manager.putLoadedChannel(LogisticsChannelData.fromTag(channelTags.getCompound(i).orElse(new CompoundTag())));
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag warehouseTags = new ListTag();
         warehouses.values().stream()
                 .sorted(Comparator.comparing(data -> data.boxPos().asLong()))
@@ -81,7 +87,7 @@ public final class LogisticsManager extends SavedData {
 
     public synchronized void saveToSqlite(ServerLevel level) {
         if (level != null) {
-            SimuSqliteStorage.saveLogistics(level, save(new CompoundTag(), level.registryAccess()));
+            SimuSqliteStorage.saveLogistics(level, save(new CompoundTag()));
         }
     }
 
@@ -100,7 +106,7 @@ public final class LogisticsManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        LogisticsManager loaded = load(sqliteTag, level.registryAccess());
+        LogisticsManager loaded = load(sqliteTag);
         clearIndexes();
         loaded.warehouses.values().forEach(this::putLoadedWarehouse);
         loaded.clients.values().forEach(this::putLoadedClient);
@@ -163,7 +169,7 @@ public final class LogisticsManager extends SavedData {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        return ids.stream().map(warehouses::get).filter(data -> data != null).toList();
+        return ids.stream().map(warehouses::get).filter(Objects::nonNull).toList();
     }
 
     public List<LogisticsClientData> manualClients(UUID cityId) {
@@ -179,7 +185,7 @@ public final class LogisticsManager extends SavedData {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        return ids.stream().map(channels::get).filter(data -> data != null).toList();
+        return ids.stream().map(channels::get).filter(Objects::nonNull).toList();
     }
 
     public List<LogisticsChannelData> allChannels() {
@@ -248,7 +254,7 @@ public final class LogisticsManager extends SavedData {
         List.copyOf(warehouses(cityId)).forEach(w -> updateWarehouse(w.withNoCityId()));
         Set<UUID> cids = clientsByCity.get(cityId);
         if (cids != null) {
-            Set.copyOf(cids).stream().map(clients::get).filter(c -> c != null)
+            Set.copyOf(cids).stream().map(clients::get).filter(Objects::nonNull)
                     .forEach(c -> updateClient(c.withNoCityId()));
         }
     }

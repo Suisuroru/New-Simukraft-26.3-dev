@@ -10,7 +10,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public final class PlayerWelcomeService {
-    private static final ResourceLocation FIRST_DREAM_ADVANCEMENT_ID =
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "story/first_dream");
+    private static final Identifier FIRST_DREAM_ADVANCEMENT_ID =
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "story/first_dream");
     private static final String FIRST_DREAM_CRITERION = "first_join";
     private static final String FIRST_DREAM_PLAYED_TAG = "simukraft_first_dream_played";
     private static final int FIRST_DREAM_START_DELAY_TICKS = 40;
@@ -62,7 +62,7 @@ public final class PlayerWelcomeService {
             }
 
             if (state.stage() == FirstDreamStage.WAITING_TO_PLAY_SOUND) {
-                player.playNotifySound(ModSoundEvents.FIRST_DREAM.get(), SoundSource.RECORDS, 1.0F, 1.0F);
+                player.playSound(ModSoundEvents.FIRST_DREAM.get(), 1.0F, 1.0F);
                 PENDING_FIRST_DREAM.put(entry.getKey(),
                         new FirstDreamPendingState(FirstDreamStage.WAITING_TO_GRANT_ADVANCEMENT,
                                 FIRST_DREAM_GRANT_DELAY_TICKS));
@@ -114,8 +114,8 @@ public final class PlayerWelcomeService {
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.YELLOW)
                                 .withUnderlined(true)
-                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd))
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                .withClickEvent(new ClickEvent.RunCommand(cmd))
+                                .withHoverEvent(new HoverEvent.ShowText(
                                         Component.literal(cmd))))));
     }
 
@@ -123,7 +123,7 @@ public final class PlayerWelcomeService {
         if (hasPlayedFirstDream(player) || PENDING_FIRST_DREAM.containsKey(player.getUUID())) {
             return;
         }
-        AdvancementHolder advancement = player.getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
+        AdvancementHolder advancement = player.level().getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
         if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
             markFirstDreamPlayed(player);
             return;
@@ -133,7 +133,7 @@ public final class PlayerWelcomeService {
     }
 
     private static void grantFirstDreamAdvancement(ServerPlayer player) {
-        AdvancementHolder advancement = player.getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
+        AdvancementHolder advancement = player.level().getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
         if (advancement == null) {
             SimuKraft.LOGGER.warn("Missing advancement: {}", FIRST_DREAM_ADVANCEMENT_ID);
             return;
@@ -150,12 +150,12 @@ public final class PlayerWelcomeService {
 
     private static boolean hasPlayedFirstDream(ServerPlayer player) {
         return player.getPersistentData()
-                .getCompound(Player.PERSISTED_NBT_TAG)
-                .getBoolean(FIRST_DREAM_PLAYED_TAG);
+                .getCompound(Player.PERSISTED_NBT_TAG).get()
+                .getBoolean(FIRST_DREAM_PLAYED_TAG).get();
     }
 
     private static void markFirstDreamPlayed(ServerPlayer player) {
-        CompoundTag persistedData = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+        CompoundTag persistedData = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG).get();
         persistedData.putBoolean(FIRST_DREAM_PLAYED_TAG, true);
         player.getPersistentData().put(Player.PERSISTED_NBT_TAG, persistedData);
     }

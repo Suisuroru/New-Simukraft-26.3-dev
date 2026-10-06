@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
@@ -18,14 +18,14 @@ import java.util.Objects;
 public final class AnimatedIconButton extends Button {
 
     // 主图标：模组 logo（居中显示）
-    private static final ResourceLocation MAIN_ICON =
-            Objects.requireNonNull(ResourceLocation.fromNamespaceAndPath("simukraft", "textures/gui/logo.png"));
+    private static final Identifier MAIN_ICON =
+            Objects.requireNonNull(Identifier.fromNamespaceAndPath("simukraft", "textures/gui/logo.png"));
     // 角标图标：齿轮（右下角旋转）
-    private static final ResourceLocation CORNER_ICON =
-            Objects.requireNonNull(ResourceLocation.fromNamespaceAndPath("simukraft", "textures/gui/setting_icon.png"));
+    private static final Identifier CORNER_ICON =
+            Objects.requireNonNull(Identifier.fromNamespaceAndPath("simukraft", "textures/gui/setting_icon.png"));
     // 按钮背景纹理
-    private static final ResourceLocation WIDGETS_TEXTURE =
-            Objects.requireNonNull(ResourceLocation.fromNamespaceAndPath("simukraft", "textures/gui/widgets.png"));
+    private static final Identifier WIDGETS_TEXTURE =
+            Objects.requireNonNull(Identifier.fromNamespaceAndPath("simukraft", "textures/gui/widgets.png"));
 
     private float rotationAngle = 0.0f;
     private static final float ROTATION_SPEED = 3.0f; // 悬停旋转速度（度/帧）

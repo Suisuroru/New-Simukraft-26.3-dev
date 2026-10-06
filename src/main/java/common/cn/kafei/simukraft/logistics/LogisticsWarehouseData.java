@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.logistics;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -35,10 +36,10 @@ public record LogisticsWarehouseData(UUID warehouseId,
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("WarehouseId", warehouseId);
+        NbtUuid.put(tag, "WarehouseId", warehouseId);
         tag.putLong("BoxPos", boxPos.asLong());
         if (cityId != null) {
-            tag.putUUID("CityId", cityId);
+            NbtUuid.put(tag, "CityId", cityId);
         }
         tag.putString("DimensionId", dimensionId);
         tag.putLong("UpdatedAt", updatedAt);
@@ -54,16 +55,16 @@ public record LogisticsWarehouseData(UUID warehouseId,
 
     public static LogisticsWarehouseData fromTag(CompoundTag tag) {
         List<BlockPos> containers = new ArrayList<>();
-        ListTag containerTags = tag.getList("Containers", CompoundTag.TAG_COMPOUND);
+        ListTag containerTags = tag.getList("Containers").get();
         for (int i = 0; i < containerTags.size(); i++) {
-            containers.add(BlockPos.of(containerTags.getCompound(i).getLong("Pos")));
+            containers.add(BlockPos.of(containerTags.getCompound(i).get().getLong("Pos").get()));
         }
         return new LogisticsWarehouseData(
-                tag.hasUUID("WarehouseId") ? tag.getUUID("WarehouseId") : UUID.randomUUID(),
-                BlockPos.of(tag.getLong("BoxPos")),
-                tag.hasUUID("CityId") ? tag.getUUID("CityId") : null,
-                tag.getString("DimensionId"),
+                tag.contains("WarehouseId") ? NbtUuid.readOrNull(tag, "WarehouseId") : UUID.randomUUID(),
+                BlockPos.of(tag.getLong("BoxPos").get()),
+                tag.contains("CityId") ? NbtUuid.readOrNull(tag, "CityId") : null,
+                tag.getString("DimensionId").get(),
                 containers,
-                tag.getLong("UpdatedAt"));
+                tag.getLong("UpdatedAt").get());
     }
 }

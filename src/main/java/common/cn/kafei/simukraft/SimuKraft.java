@@ -71,6 +71,7 @@ import common.cn.kafei.simukraft.registry.ModMenuTypes;
 import common.cn.kafei.simukraft.registry.ModRecipeSerializers;
 import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import common.cn.kafei.simukraft.registry.ModStructures;
+import common.cn.kafei.simukraft.registry.ModTicketTypes;
 import common.cn.kafei.simukraft.event.PlayerWelcomeService;
 import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import common.cn.kafei.simukraft.network.rts.RtsRemoteCitizenAccess;
@@ -82,6 +83,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.level.PistonEvent;
@@ -119,6 +121,7 @@ public final class SimuKraft {
         ModEntityAttributes.register(modEventBus);
         ModSoundEvents.register(modEventBus);
         ModStructures.register(modEventBus);
+        ModTicketTypes.register(modEventBus);
         modEventBus.addListener(BuildingStructureDataPack::onAddPackFinders);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
@@ -189,7 +192,7 @@ public final class SimuKraft {
         }
     }
 
-    private void onBlockBreak(BlockEvent.BreakEvent event) {
+    private void onBlockBreak(BreakBlockEvent event) {
         if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel level) {
             CitizenNavigationService.invalidate(level, event.getPos());
         }

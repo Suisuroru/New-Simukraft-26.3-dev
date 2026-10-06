@@ -11,7 +11,7 @@ import common.cn.kafei.simukraft.medical.MedicalService;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
@@ -97,7 +97,7 @@ public final class CommercialWorkService {
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
-        if (MedicalService.isOnMedicalLeave(worker, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(worker, level.getDefaultClockTime() / 24_000L)) {
             CitizenJobVisualService.clearMainHandOverride(worker.uuid());
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
@@ -108,7 +108,7 @@ public final class CommercialWorkService {
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
-        if (!definition.workTime().openAt(level.getDayTime())) {
+        if (!definition.workTime().openAt(level.getDefaultClockTime())) {
             CitizenJobVisualService.clearMainHandOverride(worker.uuid());
             setStatus(manager, data, "gui.simukraft.commercial.status.closed", "");
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
@@ -160,7 +160,7 @@ public final class CommercialWorkService {
             return Items.AIR;
         }
         try {
-            return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(itemId)).orElse(Items.AIR);
+            return BuiltInRegistries.ITEM.getOptional(Identifier.parse(itemId)).orElse(Items.AIR);
         } catch (Exception exception) {
             return Items.AIR;
         }

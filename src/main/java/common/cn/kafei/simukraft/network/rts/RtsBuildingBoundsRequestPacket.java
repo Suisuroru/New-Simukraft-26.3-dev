@@ -6,7 +6,7 @@ import common.cn.kafei.simukraft.building.PlacedBuildingService;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -20,7 +20,7 @@ public record RtsBuildingBoundsRequestPacket() implements CustomPacketPayload {
     private static final double MAX_DISTANCE_SQR = 192.0D * 192.0D;
     
     public static final Type<RtsBuildingBoundsRequestPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_building_bounds_request"));
+            Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_building_bounds_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, RtsBuildingBoundsRequestPacket> STREAM_CODEC =
             StreamCodec.unit(new RtsBuildingBoundsRequestPacket());
 

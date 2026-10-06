@@ -5,6 +5,7 @@ import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
@@ -189,7 +190,7 @@ public final class CitizenService {
         if (level == null) {
             return List.of();
         }
-        String dimensionId = level.dimension().location().toString();
+        String dimensionId = level.dimension().registry().toString();
         return CitizenManager.get(level).allCitizens().stream()
                 .filter(data -> dimensionId.equals(data.dimensionId()))
                 .filter(CitizenService::isHireable)
@@ -241,11 +242,11 @@ public final class CitizenService {
         if (!ignoreHousingCapacity && !canAddCitizen(level, cityId)) {
             return Optional.empty();
         }
-        CitizenEntity entity = ModEntities.CITIZEN.get().create(level);
+        CitizenEntity entity = ModEntities.CITIZEN.get().create(level, EntitySpawnReason.NATURAL);
         if (entity == null) {
             return Optional.empty();
         }
-        entity.moveTo(target.x, target.y, target.z, level.random.nextFloat() * 360.0F, 0.0F);
+        entity.snapTo(target.x, target.y, target.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
         entity.setPersistenceRequired();
         if (!level.addFreshEntity(entity)) {
             return Optional.empty();
@@ -253,7 +254,7 @@ public final class CitizenService {
         CitizenData data = ensureCitizen(level, entity);
         if (data != null) {
             data.setCityId(cityId);
-            data.setDimensionId(level.dimension().location().toString());
+            data.setDimensionId(level.dimension().registry().toString());
             CitizenManager manager = CitizenManager.get(level);
             manager.saveCitizenNow(data.uuid());
             manager.syncEntity(entity);

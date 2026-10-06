@@ -2,14 +2,18 @@ package common.cn.kafei.simukraft.citizen;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /** NPC 的真实物品栏；普通背包为 7x2，装备与双手使用独立槽位。 */
@@ -27,16 +31,25 @@ public final class CitizenInventory extends SimpleContainer {
     public static final int TOTAL_SIZE = OFF_HAND_SLOT + 1;
 
     private boolean loading;
+    // changeListeners：槽位内容经 setChanged 提交后回调，用于职业外观同步与 NBT 灾备。
+    private final List<Consumer<CitizenInventory>> changeListeners = new ArrayList<>();
 
     public CitizenInventory() {
         super(TOTAL_SIZE);
     }
 
+    /** addListener：注册背包变更回调；同一实例可注册多个，回调在 setChanged 提交后触发。 */
+    public synchronized void addListener(Consumer<CitizenInventory> listener) {
+        if (listener != null) {
+            changeListeners.add(listener);
+        }
+    }
+
     /** saveToTag：使用原版 ItemStack NBT 编解码保存全部槽位。 */
     public synchronized CompoundTag saveToTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        ContainerHelper.saveAllItems(tag, getItems(), registries);
-        return tag;
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        ContainerHelper.saveAllItems(output, getItems());
+        return output.buildResult();
     }
 
     /** loadFromTag：从原版 NBT 恢复槽位，并在完成后只发送一次变更通知。 */
@@ -45,7 +58,7 @@ public final class CitizenInventory extends SimpleContainer {
         try {
             getItems().clear();
             if (tag != null) {
-                ContainerHelper.loadAllItems(tag, getItems(), registries);
+                ContainerHelper.loadAllItems(TagValueInput.create(ProblemReporter.DISCARDING, registries, tag), getItems());
             }
         } finally {
             loading = false;
@@ -170,6 +183,14 @@ public final class CitizenInventory extends SimpleContainer {
     public synchronized void setChanged() {
         if (!loading) {
             super.setChanged();
+            notifyChangeListeners();
+        }
+    }
+
+    // notifyChangeListeners：以快照遍历，避免回调内注册新监听导致的并发修改。
+    private void notifyChangeListeners() {
+        for (Consumer<CitizenInventory> listener : List.copyOf(changeListeners)) {
+            listener.accept(this);
         }
     }
 

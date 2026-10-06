@@ -1,13 +1,13 @@
 package common.cn.kafei.simukraft.building;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Locale;
 
 /**
  * 已建成建筑在原版结构注册表中的 ID。
- * FTB Quests 的“寻找结构”任务只认 {@code ResourceLocation}，这里把建筑包文件名收成稳定路径。
+ * FTB Quests 的“寻找结构”任务只认 {@code Identifier}，这里把建筑包文件名收成稳定路径。
  */
 public final class BuildingStructureIds {
     public static final String ALL_TAG = "placed_buildings";
@@ -18,12 +18,12 @@ public final class BuildingStructureIds {
     /**
      * location: {@code simukraft:<分类>/<文件名>}。文件名不合法时返回 null。
      */
-    public static ResourceLocation location(String category, String fileName) {
+    public static Identifier location(String category, String fileName) {
         String path = path(category, fileName);
         if (path == null) {
             return null;
         }
-        return ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, path);
+        return Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, path);
     }
 
     /**
@@ -41,7 +41,7 @@ public final class BuildingStructureIds {
      * matches: 任务选中的结构 ID 是否就是这座已建成建筑。
      * 建筑元数据和结构文件主干都可以对上，方便 .sk 与 .nbt 不同名的建筑包。
      */
-    public static boolean matches(String category, String buildingFileName, String structureFileName, ResourceLocation structureId) {
+    public static boolean matches(String category, String buildingFileName, String structureFileName, Identifier structureId) {
         if (structureId == null || !SimuKraft.MOD_ID.equals(structureId.getNamespace())) {
             return false;
         }

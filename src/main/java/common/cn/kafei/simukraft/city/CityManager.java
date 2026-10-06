@@ -5,12 +5,14 @@ import common.cn.kafei.simukraft.citizen.CitizenManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.logistics.LogisticsManager;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -18,12 +20,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.annotation.Nonnull;
 
 
 public final class CityManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_cities";
-    private static final Factory<CityManager> FACTORY = new Factory<>(CityManager::new, CityManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "cities");
+    private static final SavedDataType<CityManager> TYPE = createType();
+
+    private static SavedDataType<CityManager> createType() {
+        Codec<CityManager> codec = CompoundTag.CODEC.xmap(CityManager::load, CityManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, CityManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<UUID, CityData> cities = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, UUID> playerCityIndex = new ConcurrentHashMap<>();
@@ -32,7 +42,7 @@ public final class CityManager extends SavedData {
     private volatile ServerLevel level;
 
     public static CityManager get(ServerLevel level) {
-        CityManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        CityManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
@@ -42,11 +52,11 @@ public final class CityManager extends SavedData {
      * storageLevel: 城市数据是服务器全局数据，统一挂在主世界，避免多维度副本互相覆盖 SQLite。
      */
     // load：恢复当前维度的城市索引，城市数据不再挂到主世界统一副本。
-    private static CityManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static CityManager load(CompoundTag tag) {
         CityManager manager = new CityManager();
-        ListTag cityTags = tag.getList("Cities", CompoundTag.TAG_COMPOUND);
+        ListTag cityTags = tag.getList("Cities").orElse(new ListTag());
         for (int i = 0; i < cityTags.size(); i++) {
-            CityData city = CityData.fromTag(cityTags.getCompound(i));
+            CityData city = CityData.fromTag(cityTags.getCompound(i).orElse(new CompoundTag()));
             manager.cities.put(city.cityId(), city);
             manager.corePosIndex.put(coreKey(city.dimensionId(), city.cityCorePos()), city.cityId());
             city.members().forEach(member -> manager.playerCityIndex.put(member.playerId(), city.cityId()));
@@ -54,8 +64,7 @@ public final class CityManager extends SavedData {
         return manager;
     }
 
-    @Override
-    public @Nonnull CompoundTag save(@Nonnull CompoundTag tag, @Nonnull HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag cityTags = new ListTag();
         cities.values().forEach(city -> cityTags.add(city.toTag()));
         tag.put("Cities", cityTags);
@@ -66,7 +75,7 @@ public final class CityManager extends SavedData {
         if (level == null) {
             return;
         }
-        SimuSqliteStorage.saveCities(level, save(new CompoundTag(), level.registryAccess()));
+        SimuSqliteStorage.saveCities(level, save(new CompoundTag()));
     }
 
     public synchronized void reloadFromSqlite(ServerLevel level) {
@@ -88,7 +97,7 @@ public final class CityManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        CityManager loaded = load(sqliteTag, level.registryAccess());
+        CityManager loaded = load(sqliteTag);
         cities.clear();
         playerCityIndex.clear();
         corePosIndex.clear();

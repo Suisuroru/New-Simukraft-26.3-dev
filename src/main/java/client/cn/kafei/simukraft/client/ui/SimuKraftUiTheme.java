@@ -9,14 +9,14 @@ import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 
 @OnlyIn(Dist.CLIENT)
 public final class SimuKraftUiTheme {
-    public static final ResourceLocation DEFAULT_STYLESHEET = StylesheetManager.ORE;
+    public static final Identifier DEFAULT_STYLESHEET = StylesheetManager.ORE;
     public static final int CITY_CORE_BACKGROUND_COLOR = 0xFF444444;
     public static final int TEXT_PRIMARY_COLOR = 0xFFFFFFFF;
     public static final int TEXT_SECONDARY_COLOR = 0xFFE6E6E6;
@@ -35,7 +35,7 @@ public final class SimuKraftUiTheme {
         return UI.of(root, stylesheets(DEFAULT_STYLESHEET));
     }
 
-    public static UI createUi(UIElement root, ResourceLocation stylesheet) {
+    public static UI createUi(UIElement root, Identifier stylesheet) {
         return UI.of(root, stylesheets(stylesheet));
     }
 
@@ -44,7 +44,7 @@ public final class SimuKraftUiTheme {
         return stylesheet(DEFAULT_STYLESHEET);
     }
 
-    public static Stylesheet stylesheet(ResourceLocation stylesheet) {
+    public static Stylesheet stylesheet(Identifier stylesheet) {
         return StylesheetManager.INSTANCE.getStylesheetSafe(normalize(stylesheet));
     }
 
@@ -108,20 +108,20 @@ public final class SimuKraftUiTheme {
                 .style(style -> style.backgroundTexture(new ColorBorderTexture(-1, 0xFFFFFFFF)));
     }
 
-    private static List<Stylesheet> stylesheets(ResourceLocation stylesheet) {
-        ResourceLocation baseLocation = normalize(stylesheet);
-        ResourceLocation extensionLocation = ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, baseLocation.getPath());
+    private static List<Stylesheet> stylesheets(Identifier stylesheet) {
+        Identifier baseLocation = normalize(stylesheet);
+        Identifier extensionLocation = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, baseLocation.getPath());
         if (baseLocation.equals(extensionLocation)) {
             return List.of(stylesheet(baseLocation));
         }
         return List.of(stylesheet(baseLocation), stylesheet(extensionLocation));
     }
 
-    private static ResourceLocation normalize(ResourceLocation stylesheet) {
+    private static Identifier normalize(Identifier stylesheet) {
         String path = stylesheet.getPath();
         if (path.endsWith(".lss")) {
             return stylesheet;
         }
-        return ResourceLocation.fromNamespaceAndPath(stylesheet.getNamespace(), path + ".lss");
+        return Identifier.fromNamespaceAndPath(stylesheet.getNamespace(), path + ".lss");
     }
 }

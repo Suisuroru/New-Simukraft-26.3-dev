@@ -16,13 +16,13 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 
 
 @OnlyIn(Dist.CLIENT)
 public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenModel> {
-    private static final ResourceLocation DEFAULT_TEXTURE = ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "textures/entity/male/custom_male_entity_0.png");
+    private static final Identifier DEFAULT_TEXTURE = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "textures/entity/male/custom_male_entity_0.png");
     private static final ThreadLocal<Boolean> HIDE_OVERHEAD_TEXT = ThreadLocal.withInitial(() -> false);
     private final CitizenModel slimModel;
     private final CitizenModel defaultModel;
@@ -42,7 +42,7 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenModel> {
     }
 
     @Override
-    public ResourceLocation getTextureLocation(CitizenEntity entity) {
+    public Identifier getTextureLocation(CitizenEntity entity) {
         return textureFromPath(entity.getSkinPath());
     }
 
@@ -113,11 +113,11 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenModel> {
         }
     }
 
-    private static ResourceLocation textureFromPath(String skinPath) {
+    private static Identifier textureFromPath(String skinPath) {
         if (skinPath == null || skinPath.isBlank()) {
             return DEFAULT_TEXTURE;
         }
-        ResourceLocation parsed = ResourceLocation.tryParse(skinPath);
+        Identifier parsed = Identifier.tryParse(skinPath);
         return parsed != null ? parsed : DEFAULT_TEXTURE;
     }
 

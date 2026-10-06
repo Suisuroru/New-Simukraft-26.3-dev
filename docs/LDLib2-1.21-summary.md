@@ -245,13 +245,13 @@ new Button()
 ```java
 new UIElement()
         .addEventListener(UIEvents.MOUSE_DOWN, e -> {
-            // 鼠标按下
+        // 鼠标按下
         })
         .addEventListener(UIEvents.MOUSE_ENTER, e -> {
-            // 鼠标进入
+        // 鼠标进入
         }, true)
         .addEventListener(UIEvents.MOUSE_LEAVE, e -> {
-            // 鼠标离开
+        // 鼠标离开
         }, true);
 ```
 
@@ -415,7 +415,7 @@ public class MyObject implements IPersistedSerializable {
     public final static Codec<MyObject> CODEC = PersistedParser.createCodec(MyObject::new);
 
     @Persisted(key = "rl")
-    private ResourceLocation resourceLocation = LDLib2.id("test");
+    private Identifier Identifier = LDLib2.id("test");
 
     @Persisted(key = "enum")
     private Direction enumValue = Direction.NORTH;

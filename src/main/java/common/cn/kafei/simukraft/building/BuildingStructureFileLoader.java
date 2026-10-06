@@ -63,21 +63,21 @@ public final class BuildingStructureFileLoader {
     }
 
     private static ParsedStructureInfo parseStructureInfo(CompoundTag rootTag, StructureFormat fallbackFormat) {
-        if (rootTag.contains("Schematic", Tag.TAG_COMPOUND)) {
-            CompoundTag schematicTag = rootTag.getCompound("Schematic");
+        if (rootTag.contains("Schematic")) {
+            CompoundTag schematicTag = rootTag.getCompound("Schematic").get();
             return parseStructureInfo(schematicTag, StructureFormat.SCHEMATIC);
         }
 
         if (isLitematic(rootTag)) {
-            CompoundTag metadataTag = rootTag.getCompound("Metadata");
+            CompoundTag metadataTag = rootTag.getCompound("Metadata").get();
             BlockPos size = extractLitematicSize(metadataTag);
-            int blockCount = Math.max(0, metadataTag.getInt("TotalBlocks"));
+            int blockCount = Math.max(0, metadataTag.getInt("TotalBlocks").get());
             return new ParsedStructureInfo(StructureFormat.LITEMATIC, blockCount, size);
         }
 
         if (isSchematica(rootTag)) {
             BlockPos size = extractClassicSchematicSize(rootTag);
-            int blockCount = rootTag.getByteArray("Blocks").length;
+            int blockCount = rootTag.getByteArray("Blocks").get().length;
             return new ParsedStructureInfo(StructureFormat.SCHEMATIC, blockCount, size);
         }
 
@@ -88,7 +88,7 @@ public final class BuildingStructureFileLoader {
         }
 
         if (isVanillaStructure(rootTag)) {
-            ListTag blocks = rootTag.getList("blocks", Tag.TAG_COMPOUND);
+            ListTag blocks = rootTag.getList("blocks").get();
             BlockPos size = extractStructureBlockBounds(blocks);
             return new ParsedStructureInfo(StructureFormat.NBT, blocks.size(), size);
         }
@@ -97,43 +97,43 @@ public final class BuildingStructureFileLoader {
     }
 
     private static boolean isLitematic(CompoundTag rootTag) {
-        return rootTag.contains("Metadata", Tag.TAG_COMPOUND) && rootTag.contains("Regions", Tag.TAG_COMPOUND);
+        return rootTag.contains("Metadata") && rootTag.contains("Regions");
     }
 
     private static boolean isSchematica(CompoundTag rootTag) {
-        return rootTag.contains("Blocks", Tag.TAG_BYTE_ARRAY)
+        return rootTag.contains("Blocks")
                 && hasClassicDimensions(rootTag)
-                && rootTag.contains("Materials", Tag.TAG_STRING);
+                && rootTag.contains("Materials");
     }
 
     private static boolean isSpongeSchem(CompoundTag rootTag) {
-        return rootTag.contains("Palette", Tag.TAG_COMPOUND)
-                && rootTag.contains("BlockData", Tag.TAG_BYTE_ARRAY)
+        return rootTag.contains("Palette")
+                && rootTag.contains("BlockData")
                 && hasClassicDimensions(rootTag);
     }
 
     private static boolean isVanillaStructure(CompoundTag rootTag) {
-        return rootTag.contains("blocks", Tag.TAG_LIST) && rootTag.contains("palette", Tag.TAG_LIST);
+        return rootTag.contains("blocks") && rootTag.contains("palette");
     }
 
     private static boolean hasClassicDimensions(CompoundTag rootTag) {
-        return (rootTag.contains("Width", Tag.TAG_SHORT) || rootTag.contains("Width", Tag.TAG_INT))
-                && (rootTag.contains("Height", Tag.TAG_SHORT) || rootTag.contains("Height", Tag.TAG_INT))
-                && (rootTag.contains("Length", Tag.TAG_SHORT) || rootTag.contains("Length", Tag.TAG_INT));
+        return (rootTag.contains("Width") || rootTag.contains("Width"))
+                && (rootTag.contains("Height") || rootTag.contains("Height"))
+                && (rootTag.contains("Length") || rootTag.contains("Length"));
     }
 
     private static BlockPos extractLitematicSize(CompoundTag metadataTag) {
-        if (metadataTag.contains("EnclosingSize", Tag.TAG_COMPOUND)) {
-            CompoundTag sizeTag = metadataTag.getCompound("EnclosingSize");
-            return new BlockPos(sizeTag.getInt("x"), sizeTag.getInt("y"), sizeTag.getInt("z"));
+        if (metadataTag.contains("EnclosingSize")) {
+            CompoundTag sizeTag = metadataTag.getCompound("EnclosingSize").get();
+            return new BlockPos(sizeTag.getInt("x").get(), sizeTag.getInt("y").get(), sizeTag.getInt("z").get());
         }
         return BlockPos.ZERO;
     }
 
     private static BlockPos extractClassicSchematicSize(CompoundTag rootTag) {
-        int width = rootTag.contains("Width", Tag.TAG_SHORT) ? rootTag.getShort("Width") : rootTag.getInt("Width");
-        int height = rootTag.contains("Height", Tag.TAG_SHORT) ? rootTag.getShort("Height") : rootTag.getInt("Height");
-        int length = rootTag.contains("Length", Tag.TAG_SHORT) ? rootTag.getShort("Length") : rootTag.getInt("Length");
+        int width = rootTag.contains("Width") ? rootTag.getShort("Width").get() : rootTag.getInt("Width").get();
+        int height = rootTag.contains("Height") ? rootTag.getShort("Height").get() : rootTag.getInt("Height").get();
+        int length = rootTag.contains("Length") ? rootTag.getShort("Length").get() : rootTag.getInt("Length").get();
         return new BlockPos(width, height, length);
     }
 
@@ -142,17 +142,17 @@ public final class BuildingStructureFileLoader {
         int maxY = 0;
         int maxZ = 0;
         for (int i = 0; i < blocks.size(); i++) {
-            CompoundTag blockTag = blocks.getCompound(i);
-            if (!blockTag.contains("pos", Tag.TAG_LIST)) {
+            CompoundTag blockTag = blocks.getCompound(i).get();
+            if (!blockTag.contains("pos")) {
                 continue;
             }
-            ListTag posList = blockTag.getList("pos", Tag.TAG_INT);
+            ListTag posList = blockTag.getList("pos").get();
             if (posList.size() < 3) {
                 continue;
             }
-            maxX = Math.max(maxX, posList.getInt(0));
-            maxY = Math.max(maxY, posList.getInt(1));
-            maxZ = Math.max(maxZ, posList.getInt(2));
+            maxX = Math.max(maxX, posList.getInt(0).get());
+            maxY = Math.max(maxY, posList.getInt(1).get());
+            maxZ = Math.max(maxZ, posList.getInt(2).get());
         }
         return new BlockPos(maxX + 1, maxY + 1, maxZ + 1);
     }

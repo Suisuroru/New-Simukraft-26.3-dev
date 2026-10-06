@@ -5,14 +5,14 @@ import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record NpcPathDebugRequestPacket(boolean visible) implements CustomPacketPayload {
-    public static final Type<NpcPathDebugRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "npc_path_debug_request"));
+    public static final Type<NpcPathDebugRequestPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "npc_path_debug_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NpcPathDebugRequestPacket> STREAM_CODEC = StreamCodec.of(NpcPathDebugRequestPacket::encode, NpcPathDebugRequestPacket::decode);
 
     @Override

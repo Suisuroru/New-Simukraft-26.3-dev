@@ -3,6 +3,7 @@ package common.cn.kafei.simukraft.citizen;
 import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.medical.DiseaseType;
 import common.cn.kafei.simukraft.medical.MedicalPatientData;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
@@ -74,47 +75,48 @@ public final class CitizenData {
     }
 
     public static CitizenData fromTag(CompoundTag tag) {
-        CitizenData data = new CitizenData(tag.getUUID("Uuid"));
-        data.name = tag.getString("Name");
-        data.gender = tag.getString("Gender");
-        data.age = tag.getInt("Age");
-        data.lifespan = tag.getInt("Lifespan");
-        data.jobType = tag.contains("JobType") ? CityJobType.fromName(tag.getString("JobType")) : CityJobType.fromName(tag.getString("JobId"));
-        data.jobId = tag.contains("JobId") ? tag.getString("JobId") : data.jobType.name();
-        data.status = tag.getString("Status");
-        data.workStatus = tag.contains("WorkStatus") ? CitizenWorkStatus.fromName(tag.getString("WorkStatus")) : CitizenWorkStatus.fromName(data.status);
+        // 缺失 Uuid 时交由构造器的 requireNonNull 拦截，与旧版 getUUID 返回 null 的行为一致。
+        CitizenData data = new CitizenData(NbtUuid.readOrNull(tag, "Uuid"));
+        data.name = tag.getStringOr("Name", "");
+        data.gender = tag.getStringOr("Gender", "");
+        data.age = tag.getIntOr("Age", 0);
+        data.lifespan = tag.getIntOr("Lifespan", 0);
+        data.jobType = tag.contains("JobType") ? CityJobType.fromName(tag.getStringOr("JobType", "")) : CityJobType.fromName(tag.getStringOr("JobId", ""));
+        data.jobId = tag.contains("JobId") ? tag.getStringOr("JobId", "") : data.jobType.name();
+        data.status = tag.getStringOr("Status", "");
+        data.workStatus = tag.contains("WorkStatus") ? CitizenWorkStatus.fromName(tag.getStringOr("WorkStatus", "")) : CitizenWorkStatus.fromName(data.status);
         if (data.workStatus == CitizenWorkStatus.IDLE && tag.contains("WorkSubState")) {
-            data.workStatus = CitizenWorkStatus.fromName(tag.getString("WorkSubState"));
+            data.workStatus = CitizenWorkStatus.fromName(tag.getStringOr("WorkSubState", ""));
         }
-        data.workNeedDetail = tag.getString("WorkNeedDetail");
-        data.statusLabel = tag.getString("StatusLabel");
-        data.working = tag.getBoolean("IsWorking");
-        data.npcId = tag.contains("NpcId") ? tag.getInt("NpcId") : -1;
-        data.skinPath = tag.getString("SkinPath");
-        data.cityId = tag.hasUUID("CityId") ? tag.getUUID("CityId") : null;
-        data.homeId = tag.hasUUID("HomeId") ? tag.getUUID("HomeId") : null;
-        data.workplaceId = tag.hasUUID("WorkplaceId") ? tag.getUUID("WorkplaceId") : null;
-        data.workplacePos = tag.contains("WorkplacePos") ? BlockPos.of(tag.getLong("WorkplacePos")) : null;
-        data.health = tag.getDouble("Health");
-        data.happiness = tag.getDouble("Happiness");
-        data.sick = tag.getBoolean("Sick");
-        data.child = tag.getBoolean("Child");
-        data.childGrowthDueDay = tag.getLong("ChildGrowthDueDay");
-        data.bornDay = tag.getLong("BornDay");
-        data.dead = tag.getBoolean("Dead");
-        data.deathDay = tag.getLong("DeathDay");
-        data.dimensionId = tag.contains("DimensionId") ? tag.getString("DimensionId") : "minecraft:overworld";
-        data.lastKnownChunk = tag.contains("LastKnownChunk") ? tag.getLong("LastKnownChunk") : Long.MIN_VALUE;
-        data.familyId = tag.hasUUID("FamilyId") ? tag.getUUID("FamilyId") : null;
-        data.originFamilyId = tag.hasUUID("OriginFamilyId") ? tag.getUUID("OriginFamilyId") : null;
-        data.pregnant = tag.getBoolean("Pregnant");
-        data.pregnantSince = tag.getLong("PregnantSince");
-        data.reservedBabyBedPoiId = tag.hasUUID("ReservedBabyBedPoiId") ? tag.getUUID("ReservedBabyBedPoiId") : null;
-        data.lastAgeGrowthDay = tag.contains("LastAgeGrowthDay") ? Math.max(-1L, tag.getLong("LastAgeGrowthDay")) : -1L;
+        data.workNeedDetail = tag.getStringOr("WorkNeedDetail", "");
+        data.statusLabel = tag.getStringOr("StatusLabel", "");
+        data.working = tag.getBooleanOr("IsWorking", false);
+        data.npcId = tag.contains("NpcId") ? tag.getIntOr("NpcId", 0) : -1;
+        data.skinPath = tag.getStringOr("SkinPath", "");
+        data.cityId = NbtUuid.readOrNull(tag, "CityId");
+        data.homeId = NbtUuid.readOrNull(tag, "HomeId");
+        data.workplaceId = NbtUuid.readOrNull(tag, "WorkplaceId");
+        data.workplacePos = tag.contains("WorkplacePos") ? BlockPos.of(tag.getLongOr("WorkplacePos", 0L)) : null;
+        data.health = tag.getDoubleOr("Health", 0.0D);
+        data.happiness = tag.getDoubleOr("Happiness", 0.0D);
+        data.sick = tag.getBooleanOr("Sick", false);
+        data.child = tag.getBooleanOr("Child", false);
+        data.childGrowthDueDay = tag.getLongOr("ChildGrowthDueDay", 0L);
+        data.bornDay = tag.getLongOr("BornDay", 0L);
+        data.dead = tag.getBooleanOr("Dead", false);
+        data.deathDay = tag.getLongOr("DeathDay", 0L);
+        data.dimensionId = tag.contains("DimensionId") ? tag.getStringOr("DimensionId", "") : "minecraft:overworld";
+        data.lastKnownChunk = tag.contains("LastKnownChunk") ? tag.getLongOr("LastKnownChunk", 0L) : Long.MIN_VALUE;
+        data.familyId = NbtUuid.readOrNull(tag, "FamilyId");
+        data.originFamilyId = NbtUuid.readOrNull(tag, "OriginFamilyId");
+        data.pregnant = tag.getBooleanOr("Pregnant", false);
+        data.pregnantSince = tag.getLongOr("PregnantSince", 0L);
+        data.reservedBabyBedPoiId = NbtUuid.readOrNull(tag, "ReservedBabyBedPoiId");
+        data.lastAgeGrowthDay = tag.contains("LastAgeGrowthDay") ? Math.max(-1L, tag.getLongOr("LastAgeGrowthDay", 0L)) : -1L;
         data.medical.fromTag(tag);
-        CompoundTag skillTag = tag.getCompound("Skills");
-        for (String key : skillTag.getAllKeys()) {
-            data.skills.put(key, skillTag.getInt(key));
+        CompoundTag skillTag = tag.getCompoundOrEmpty("Skills");
+        for (String key : skillTag.keySet()) {
+            data.skills.put(key, skillTag.getIntOr(key, 0));
         }
         data.normalizeDefaults();
         return data;
@@ -122,7 +124,7 @@ public final class CitizenData {
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("Uuid", uuid);
+        NbtUuid.put(tag, "Uuid", uuid);
         tag.putString("Name", name);
         tag.putString("Gender", gender);
         tag.putInt("Age", age);
@@ -137,13 +139,13 @@ public final class CitizenData {
         tag.putInt("NpcId", npcId);
         tag.putString("SkinPath", skinPath);
         if (cityId != null) {
-            tag.putUUID("CityId", cityId);
+            NbtUuid.put(tag, "CityId", cityId);
         }
         if (homeId != null) {
-            tag.putUUID("HomeId", homeId);
+            NbtUuid.put(tag, "HomeId", homeId);
         }
         if (workplaceId != null) {
-            tag.putUUID("WorkplaceId", workplaceId);
+            NbtUuid.put(tag, "WorkplaceId", workplaceId);
         }
         if (workplacePos != null) {
             tag.putLong("WorkplacePos", workplacePos.asLong());
@@ -158,11 +160,11 @@ public final class CitizenData {
         tag.putLong("DeathDay", deathDay);
         tag.putString("DimensionId", dimensionId);
         if (lastKnownChunk != Long.MIN_VALUE) tag.putLong("LastKnownChunk", lastKnownChunk);
-        if (familyId != null) tag.putUUID("FamilyId", familyId);
-        if (originFamilyId != null) tag.putUUID("OriginFamilyId", originFamilyId);
+        if (familyId != null) NbtUuid.put(tag, "FamilyId", familyId);
+        if (originFamilyId != null) NbtUuid.put(tag, "OriginFamilyId", originFamilyId);
         tag.putBoolean("Pregnant", pregnant);
         tag.putLong("PregnantSince", pregnantSince);
-        if (reservedBabyBedPoiId != null) tag.putUUID("ReservedBabyBedPoiId", reservedBabyBedPoiId);
+        if (reservedBabyBedPoiId != null) NbtUuid.put(tag, "ReservedBabyBedPoiId", reservedBabyBedPoiId);
         tag.putLong("LastAgeGrowthDay", lastAgeGrowthDay);
         medical.toTag(tag);
         CompoundTag skillTag = new CompoundTag();
@@ -457,15 +459,15 @@ public final class CitizenData {
 
     /** lastKnownChunk：返回居民最后一次由服务端确认的实体区块。 */
     public Optional<ChunkPos> lastKnownChunk() {
-        return lastKnownChunk != Long.MIN_VALUE ? Optional.of(new ChunkPos(lastKnownChunk)) : Optional.empty();
+        return lastKnownChunk != Long.MIN_VALUE ? Optional.of(ChunkPos.unpack(lastKnownChunk)) : Optional.empty();
     }
 
     /** updateLastKnownChunk：实体跨区块时更新恢复定位信息。 */
     public boolean updateLastKnownChunk(ChunkPos chunkPos) {
-        if (chunkPos == null || lastKnownChunk == chunkPos.toLong()) {
+        if (chunkPos == null || lastKnownChunk == chunkPos.pack()) {
             return false;
         }
-        lastKnownChunk = chunkPos.toLong();
+        lastKnownChunk = chunkPos.pack();
         return true;
     }
 

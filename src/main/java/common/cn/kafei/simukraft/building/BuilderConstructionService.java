@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.building;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
@@ -30,6 +32,7 @@ import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -210,7 +213,7 @@ public final class BuilderConstructionService {
             interruptTask(level, citizen.uuid(), "builder_not_assigned");
             return;
         }
-        if (MedicalService.isOnMedicalLeave(citizen, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(citizen, level.getDefaultClockTime() / 24_000L)) {
             pauseForMedicalLeave(level, citizen, taskRuntime);
             return;
         }
@@ -437,7 +440,7 @@ public final class BuilderConstructionService {
             });
             runtime.hydrated = true;
         } catch (CompletionException exception) {
-            SimuKraft.LOGGER.error("Simukraft: Failed to hydrate building tasks for {}", level.dimension().location(), exception);
+            SimuKraft.LOGGER.error("Simukraft: Failed to hydrate building tasks for {}", level.dimension().identifier(), exception);
             runtime.loadFuture = null;
         }
     }
@@ -706,8 +709,14 @@ public final class BuilderConstructionService {
     }
 
     // translatedStatusLabel: 服务端只保存翻译组件 JSON，客户端按当前语言渲染。
+    // MC 26.x 移除了 Component.Serializer，改用 ComponentSerialization.CODEC 序列化为 JSON 字符串。
     private static String translatedStatusLabel(ServerLevel level, String translationKey, Object... args) {
-        return Component.Serializer.toJson(Component.translatable(translationKey, args), level.registryAccess());
+        return ComponentSerialization.CODEC
+                .encodeStart(level.registryAccess().createSerializationContext(JsonOps.INSTANCE),
+                        Component.translatable(translationKey, args))
+                .result()
+                .map(JsonElement::toString)
+                .orElse("");
     }
 
     private static void markWaitingForMaterials(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, BuildingTaskData task, WorkMaterialResult materialResult) {

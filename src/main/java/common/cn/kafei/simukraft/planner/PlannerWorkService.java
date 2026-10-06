@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.planner;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
@@ -28,8 +30,9 @@ import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
@@ -203,7 +206,7 @@ public final class PlannerWorkService {
             interruptTask(level, citizen.uuid(), "planner_not_assigned");
             return;
         }
-        if (MedicalService.isOnMedicalLeave(citizen, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(citizen, level.getDefaultClockTime() / 24_000L)) {
             pauseForMedicalLeave(level, citizen, taskRuntime);
             return;
         }
@@ -272,7 +275,7 @@ public final class PlannerWorkService {
             taskRuntime.task = updated;
             persistTask(level, updated);
             setStatus(level, citizen, taskRuntime,
-                    Component.Serializer.toJson(Component.translatable("status.simukraft.planner.waiting_materials", progressSuffix(updated)), level.registryAccess()),
+                    componentJson(level, Component.translatable("status.simukraft.planner.waiting_materials", progressSuffix(updated))),
                     CitizenWorkStatus.WORKING, PlanningTaskStatus.WAITING_MATERIALS);
             return;
         }
@@ -283,7 +286,7 @@ public final class PlannerWorkService {
         PlanningTaskData updated = task.withProgress(index, completed, PlanningTaskStatus.PLANNING.id(), now);
         taskRuntime.task = updated;
         setStatus(level, citizen, taskRuntime,
-                Component.Serializer.toJson(Component.translatable("status.simukraft.planner.working", Component.translatable(task.operation().translationKey()), progressSuffix(updated)), level.registryAccess()),
+                componentJson(level, Component.translatable("status.simukraft.planner.working", Component.translatable(task.operation().translationKey()), progressSuffix(updated))),
                 CitizenWorkStatus.WORKING, PlanningTaskStatus.PLANNING);
         if (index - taskRuntime.lastSavedIndex >= SAVE_BLOCK_INTERVAL) {
             taskRuntime.lastSavedIndex = index;
@@ -436,6 +439,15 @@ public final class PlannerWorkService {
         CitizenService.save(level, citizen.uuid());
     }
 
+    // componentJson：MC 26.x 移除了 Component.Serializer，改用 ComponentSerialization.CODEC 序列化翻译组件 JSON。
+    private static String componentJson(ServerLevel level, Component component) {
+        return ComponentSerialization.CODEC
+                .encodeStart(level.registryAccess().createSerializationContext(JsonOps.INSTANCE), component)
+                .result()
+                .map(JsonElement::toString)
+                .orElse("");
+    }
+
     /** pauseForMedicalLeave：医疗休假期间暂停规划任务并保留职业绑定。 */
     private static void pauseForMedicalLeave(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime) {
         PlanningTaskData task = taskRuntime.task;
@@ -516,7 +528,7 @@ public final class PlannerWorkService {
         if (blockId == null || blockId.isBlank()) {
             return null;
         }
-        ResourceLocation id = ResourceLocation.tryParse(blockId);
+        Identifier id = Identifier.tryParse(blockId);
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return null;
         }

@@ -3,9 +3,10 @@ package common.cn.kafei.simukraft.industrial;
 import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
 
@@ -51,7 +52,7 @@ public final class IndustrialEntitySpawnService {
             if (!isClear(level, pos)) {
                 continue;
             }
-            Entity entity = type.create(level);
+            Entity entity = type.create(level, EntitySpawnReason.NATURAL);
             if (entity == null) {
                 return;
             }
@@ -73,8 +74,8 @@ public final class IndustrialEntitySpawnService {
         int spanX = Math.max(1, Math.abs(building.maxPos().getX() - building.minPos().getX()) + 1);
         int spanZ = Math.max(1, Math.abs(building.maxPos().getZ() - building.minPos().getZ()) + 1);
         int baseY = Math.min(building.minPos().getY(), building.maxPos().getY()) + 1; // 地板上方一格，动物站立位置
-        int x = minX + level.random.nextInt(spanX);
-        int z = minZ + level.random.nextInt(spanZ);
+        int x = minX + level.getRandom().nextInt(spanX);
+        int z = minZ + level.getRandom().nextInt(spanZ);
         return new BlockPos(x, baseY, z);
     }
 
@@ -102,7 +103,7 @@ public final class IndustrialEntitySpawnService {
 
     private static Optional<EntityType<?>> entityType(String id) {
         try {
-            return BuiltInRegistries.ENTITY_TYPE.getOptional(ResourceLocation.parse(id));
+            return BuiltInRegistries.ENTITY_TYPE.getOptional(Identifier.parse(id));
         } catch (Exception exception) {
             return Optional.empty();
         }

@@ -63,7 +63,7 @@ final class CommercialTradeTabStrip {
         }
 
         String label = fitText(font, Component.translatable(tab.translationKey()).getString(), Math.max(1, right - x - 6));
-        guiContext.graphics.drawString(font, label, x + (right - x - font.width(label)) / 2, y + 3, textColor, false);
+        guiContext.graphics.text(font, label, x + (right - x - font.width(label)) / 2, y + 3, textColor, false);
     }
 
     private static int tabX(int left, int index) {

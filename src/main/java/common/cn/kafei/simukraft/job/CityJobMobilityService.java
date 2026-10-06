@@ -54,7 +54,7 @@ public final class CityJobMobilityService {
             return;
         }
         CitizenData citizenData = CitizenService.findCitizen(level, citizenId).orElse(null);
-        if (MedicalService.isOnMedicalLeave(citizenData, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(citizenData, level.getDefaultClockTime() / 24_000L)) {
             return;
         }
         CitizenEntity citizenEntity = findCitizenEntity(level, citizenId);

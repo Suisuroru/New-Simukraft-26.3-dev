@@ -2,7 +2,7 @@ package common.cn.kafei.simukraft.material;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -17,7 +17,7 @@ public record WorkMaterialResult(boolean available, ItemStack requested, List<It
         acceptedItems = acceptedItems == null ? List.of() : acceptedItems.stream()
                 .filter(item -> item != null)
                 .sorted(Comparator.comparing(item -> {
-                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+                    Identifier key = BuiltInRegistries.ITEM.getKey(item);
                     return key != null ? key.toString() : "";
                 }))
                 .toList();
@@ -47,7 +47,7 @@ public record WorkMaterialResult(boolean available, ItemStack requested, List<It
         if (requested.isEmpty()) {
             return "unknown";
         }
-        ResourceLocation key = BuiltInRegistries.ITEM.getKey(requested.getItem());
+        Identifier key = BuiltInRegistries.ITEM.getKey(requested.getItem());
         return key != null ? key.toString() : "unknown";
     }
 

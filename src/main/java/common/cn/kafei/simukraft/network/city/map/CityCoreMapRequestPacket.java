@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record CityCoreMapRequestPacket(BlockPos pos) implements CustomPacketPayload {
-    public static final Type<CityCoreMapRequestPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_map_request"));
+    public static final Type<CityCoreMapRequestPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "city_core_map_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreMapRequestPacket> STREAM_CODEC = StreamCodec.of(CityCoreMapRequestPacket::encode, CityCoreMapRequestPacket::decode);
 
     @Override

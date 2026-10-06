@@ -6,11 +6,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -38,23 +37,21 @@ public final class VirtualVeinDefinitionLoader implements PreparableReloadListen
     }
 
     @Override
-    public CompletableFuture<Void> reload(PreparationBarrier barrier,
-                                          ResourceManager resourceManager,
-                                          ProfilerFiller preparationsProfiler,
-                                          ProfilerFiller reloadProfiler,
+    public CompletableFuture<Void> reload(SharedState sharedState,
                                           Executor backgroundExecutor,
-                                          Executor gameExecutor) {
-        return CompletableFuture.supplyAsync(() -> load(resourceManager), backgroundExecutor)
+                                          PreparationBarrier barrier,
+                                          Executor targetExecutor) {
+        return CompletableFuture.supplyAsync(() -> load(sharedState.resourceManager()), backgroundExecutor)
                 .thenCompose(barrier::wait)
                 .thenAcceptAsync(loaded -> {
                     definitions.set(loaded);
                     VirtualVeinService.clearCachedFields();
-                }, gameExecutor);
+                }, targetExecutor);
     }
 
     private List<VirtualVeinDefinition> load(ResourceManager resourceManager) {
         List<VirtualVeinDefinition> loaded = new ArrayList<>();
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources(DIRECTORY, path -> path.getPath().endsWith(".json"));
+        Map<Identifier, Resource> resources = resourceManager.listResources(DIRECTORY, path -> path.getPath().endsWith(".json"));
         resources.forEach((resourceId, resource) -> {
             try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
                 loaded.add(parse(resourceId, JsonParser.parseReader(reader).getAsJsonObject()));
@@ -68,13 +65,13 @@ public final class VirtualVeinDefinitionLoader implements PreparableReloadListen
     }
 
     /** parse: 校验并解析单份矿脉 JSON 定义。 */
-    static VirtualVeinDefinition parse(ResourceLocation resourceId, JsonObject root) {
+    static VirtualVeinDefinition parse(Identifier resourceId, JsonObject root) {
         String id = text(root, "id");
         String displayName = text(root, "display_name");
         int priority = integer(root, "priority");
         JsonObject conditions = requiredObject(root, "conditions");
         int[] yRange = integerRange(root, "y_range");
-        ResourceLocation productId = ResourceLocation.parse(text(root, "product"));
+        Identifier productId = Identifier.parse(text(root, "product"));
         if (!BuiltInRegistries.ITEM.containsKey(productId)) {
             throw new IllegalArgumentException("Unknown item " + productId + " in " + resourceId);
         }

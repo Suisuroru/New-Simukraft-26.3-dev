@@ -6,7 +6,7 @@ import common.cn.kafei.simukraft.registry.ModItems;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
 public record ManifestTogglePacket(InteractionHand hand, int index, boolean checked) implements CustomPacketPayload {
-    public static final Type<ManifestTogglePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "manifest_toggle"));
+    public static final Type<ManifestTogglePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "manifest_toggle"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ManifestTogglePacket> STREAM_CODEC = StreamCodec.of(ManifestTogglePacket::encode, ManifestTogglePacket::decode);
     private static final int MAX_MATERIAL_INDEX = 4096;
 

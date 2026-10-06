@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.longs.LongSets;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
  */
 
 class HybridPathfinderRegressionTest {
-    private static final ResourceLocation DIMENSION = ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
+    private static final Identifier DIMENSION = Identifier.fromNamespaceAndPath("minecraft", "overworld");
 
     /**
      * Pit: a floor with a three-wide hole in the middle lane. The citizen must detour around it and

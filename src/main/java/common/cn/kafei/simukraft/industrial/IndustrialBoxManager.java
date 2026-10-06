@@ -2,12 +2,14 @@ package common.cn.kafei.simukraft.industrial;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,32 +17,41 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public final class IndustrialBoxManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_industrial_boxes";
-    private static final Factory<IndustrialBoxManager> FACTORY = new Factory<>(IndustrialBoxManager::new, IndustrialBoxManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "industrial_boxes");
+    private static final SavedDataType<IndustrialBoxManager> TYPE = createType();
+
+    @SuppressWarnings("unchecked")
+    private static SavedDataType<IndustrialBoxManager> createType() {
+        Codec<IndustrialBoxManager> codec = CompoundTag.CODEC.xmap(IndustrialBoxManager::load, IndustrialBoxManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, IndustrialBoxManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
 
     private final ConcurrentMap<BlockPos, IndustrialBoxData> boxes = new ConcurrentHashMap<>();
     private volatile boolean sqliteLoaded;
     private volatile ServerLevel level;
 
     public static IndustrialBoxManager get(ServerLevel level) {
-        IndustrialBoxManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        IndustrialBoxManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
     }
 
-    private static IndustrialBoxManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static IndustrialBoxManager load(CompoundTag tag) {
         IndustrialBoxManager manager = new IndustrialBoxManager();
-        ListTag list = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag list = tag.getList("Boxes").orElse(new ListTag());
         for (int i = 0; i < list.size(); i++) {
-            IndustrialBoxData data = IndustrialBoxData.fromTag(list.getCompound(i));
+            IndustrialBoxData data = IndustrialBoxData.fromTag(list.getCompound(i).orElse(new CompoundTag()));
             manager.boxes.put(data.boxPos(), data);
         }
         return manager;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag list = new ListTag();
         boxes.values().forEach(data -> list.add(data.toTag()));
         tag.put("Boxes", list);
@@ -49,7 +60,7 @@ public final class IndustrialBoxManager extends SavedData {
 
     public synchronized void saveToSqlite(ServerLevel level) {
         if (level != null) {
-            SimuSqliteStorage.saveIndustrialBoxes(level, save(new CompoundTag(), level.registryAccess()));
+            SimuSqliteStorage.saveIndustrialBoxes(level, save(new CompoundTag()));
         }
     }
 
@@ -73,7 +84,7 @@ public final class IndustrialBoxManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        IndustrialBoxManager loaded = load(sqliteTag, level.registryAccess());
+        IndustrialBoxManager loaded = load(sqliteTag);
         boxes.clear();
         boxes.putAll(loaded.boxes);
     }

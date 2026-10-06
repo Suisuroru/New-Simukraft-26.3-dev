@@ -3,9 +3,12 @@ package common.cn.kafei.simukraft.mineraldrilling;
 import common.cn.kafei.simukraft.registry.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 
 /** MineralDrillingInventory: 保存钻杆与钻头两个真实槽位，并在容器层校验物品类型。 */
 
@@ -31,9 +34,9 @@ public final class MineralDrillingInventory extends SimpleContainer {
 
     /** saveToTag: 使用原版 ItemStack 编解码保存两个槽位及数据组件。 */
     public synchronized CompoundTag saveToTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        ContainerHelper.saveAllItems(tag, getItems(), registries);
-        return tag;
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        ContainerHelper.saveAllItems(output, getItems());
+        return output.buildResult();
     }
 
     /** loadFromTag: 从 NBT 恢复槽位，并丢弃不符合当前钻井槽位规则的数据。 */
@@ -42,7 +45,7 @@ public final class MineralDrillingInventory extends SimpleContainer {
         try {
             getItems().clear();
             if (tag != null && !tag.isEmpty()) {
-                ContainerHelper.loadAllItems(tag, getItems(), registries);
+                ContainerHelper.loadAllItems(TagValueInput.create(ProblemReporter.DISCARDING, registries, tag), getItems());
             }
             sanitizeLoadedItems();
         } finally {

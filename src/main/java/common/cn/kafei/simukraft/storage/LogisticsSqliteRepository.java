@@ -440,7 +440,7 @@ public final class LogisticsSqliteRepository {
                     tag.putInt("KeepQuantity", resultSet.getInt("keep_quantity"));
                     tag.putInt("KeepSourceQuantity", resultSet.getInt("keep_source"));
                     try {
-                        tag.put("Filters", net.minecraft.nbt.TagParser.parseTag("{Filters:" + resultSet.getString("filters") + "}").getList("Filters", CompoundTag.TAG_COMPOUND));
+                        tag.put("Filters", net.minecraft.nbt.TagParser.parseCompoundFully("{Filters:" + resultSet.getString("filters") + "}").getList("Filters", CompoundTag.TAG_COMPOUND));
                     } catch (Exception exception) {
                         // 过滤规则损坏时置空但必须留痕，否则通道行为变化无从排查。
                         SimuKraft.LOGGER.warn("Failed to parse filters of logistics channel {} from SQLite; falling back to empty filters", channelId, exception);

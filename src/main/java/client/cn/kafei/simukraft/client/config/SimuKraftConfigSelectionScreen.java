@@ -10,6 +10,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
 
 
 public final class SimuKraftConfigSelectionScreen {
@@ -105,7 +106,7 @@ public final class SimuKraftConfigSelectionScreen {
     private static boolean canEditServerConfig() {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft.getSingleplayerServer() != null
-                || minecraft.player != null && minecraft.player.hasPermissions(2);
+                || minecraft.player != null && minecraft.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
     }
 
     private static void open(Screen screen) {

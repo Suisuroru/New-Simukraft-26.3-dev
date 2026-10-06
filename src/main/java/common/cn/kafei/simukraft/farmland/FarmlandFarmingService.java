@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.farmland;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
 import common.cn.kafei.simukraft.citizen.CitizenService;
@@ -18,15 +20,13 @@ import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BonemealableBlock;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -104,7 +104,7 @@ public final class FarmlandFarmingService {
             clearActiveTarget(boxRuntime);
             return;
         }
-        if (MedicalService.isOnMedicalLeave(farmer, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(farmer, level.getDefaultClockTime() / 24_000L)) {
             clearActiveTarget(boxRuntime);
             boxRuntime.setVisual(ItemStack.EMPTY, false);
             idle(boxRuntime, gameTime);
@@ -317,7 +317,7 @@ public final class FarmlandFarmingService {
         if (!needsTillWork(level, data, cropPos)) {
             return FarmlandWorkResult.SKIPPED;
         }
-        level.setBlock(cropPos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, 7), 3);
+        level.setBlock(cropPos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmlandBlock.MOISTURE, 7), 3);
         return FarmlandWorkResult.PROCESSED;
     }
 
@@ -389,7 +389,7 @@ public final class FarmlandFarmingService {
         BlockState state = level.getBlockState(cropPos);
         if (!crop.isOwnPlant(state) || crop.isMatureFull(state)) return false;
         return state.getBlock() instanceof BonemealableBlock b
-                && b.isValidBonemealTarget(level, cropPos, state)
+                && b.isValidBonemealTarget(level, cropPos, state, BonemealSource.INTERACTION)
                 && hasBoneMeal(level, chestPositions);
     }
 
@@ -397,7 +397,7 @@ public final class FarmlandFarmingService {
         if (!needsBonemealWork(level, data, chestPositions, cropPos)) return FarmlandWorkResult.SKIPPED;
         if (!consumeBoneMeal(level, chestPositions)) return FarmlandWorkResult.SKIPPED;
         BlockState state = level.getBlockState(cropPos);
-        ((BonemealableBlock) state.getBlock()).performBonemeal(level, level.getRandom(), cropPos, state);
+        ((BonemealableBlock) state.getBlock()).performBonemeal(level, level.getRandom(), cropPos, state, BonemealSource.INTERACTION);
         return FarmlandWorkResult.PROCESSED;
     }
 
@@ -479,7 +479,11 @@ public final class FarmlandFarmingService {
         Component cropName = crop != null
                 ? Component.translatable(crop.translationKey())
                 : Component.translatable("gui.simukraft.farmland_box.none");
-        return Component.Serializer.toJson(Component.translatable(translationKey, cropName), level.registryAccess());
+        return ComponentSerialization.CODEC
+                .encodeStart(level.registryAccess().createSerializationContext(JsonOps.INSTANCE), Component.translatable(translationKey, cropName))
+                .result()
+                .map(JsonElement::toString)
+                .orElse("");
     }
 
     private static boolean isCropCellFree(BlockState state) {

@@ -8,6 +8,7 @@ import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
+import common.cn.kafei.simukraft.registry.ModTicketTypes;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +17,6 @@ import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
@@ -34,8 +34,7 @@ public final class CityRuntimeService {
     private static final int MAX_PENDING_RECOVERIES_PER_CITY = 8;
     private static final int MAX_LEGACY_RECOVERY_CITY_CHUNKS = 32;
     private static final int RECOVERY_TICKET_DISTANCE = 2;
-    private static final TicketType<ChunkPos> CITIZEN_RECOVERY_TICKET = TicketType.create(
-            "simukraft_citizen_recovery", Comparator.comparingLong(ChunkPos::toLong));
+    private static final TicketType CITIZEN_RECOVERY_TICKET = ModTicketTypes.CITIZEN_RECOVERY.value();
     private static final ConcurrentMap<String, LevelRuntime> RUNTIMES = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, AtomicInteger> RECOVERY_TICKET_REFS = new ConcurrentHashMap<>();
 
@@ -86,7 +85,7 @@ public final class CityRuntimeService {
     public static boolean isCitizenActive(ServerLevel level, CitizenData citizen) {
         return citizen != null && !citizen.dead()
                 && level != null
-                && level.dimension().location().toString().equals(citizen.dimensionId())
+                && level.dimension().registry().toString().equals(citizen.dimensionId())
                 && isCityActive(level, citizen.cityId());
     }
 
@@ -109,10 +108,10 @@ public final class CityRuntimeService {
         }
         PendingRecovery pending = PendingRecovery.start(sourceChunks, level.getGameTime());
         if (cityRuntime.pendingRecoveries.putIfAbsent(citizen.uuid(), pending) == null) {
-            acquireRecoveryTicket(level, new ChunkPos(pending.chunkLong()));
+            acquireRecoveryTicket(level, ChunkPos.unpack(pending.chunkLong()));
             common.cn.kafei.simukraft.SimuKraft.LOGGER.debug(
                     "Simukraft: recovery started for citizen {} at chunk {} with {} candidates",
-                    citizen.uuid(), new ChunkPos(pending.chunkLong()), pending.candidates().size());
+                    citizen.uuid(), ChunkPos.unpack(pending.chunkLong()), pending.candidates().size());
         }
     }
 
@@ -149,7 +148,7 @@ public final class CityRuntimeService {
             if (citizenEntity != null) {
                 CitizenTeleportService.refreshClientTracking(level, citizenEntity);
                 common.cn.kafei.simukraft.SimuKraft.LOGGER.debug(
-                        "Simukraft: recovery loaded citizen {} from chunk {}", citizenId, new ChunkPos(pending.chunkLong()));
+                        "Simukraft: recovery loaded citizen {} from chunk {}", citizenId, ChunkPos.unpack(pending.chunkLong()));
                 if (citizen.workStatusType() == CitizenWorkStatus.WORKING && citizen.workplaceId() != null) {
                     if (!CitizenWorkplaceMoveService.recoverToWorkplace(level, citizen)) {
                         return;
@@ -168,25 +167,25 @@ public final class CityRuntimeService {
     /** resolveRecoveryChunks：优先精确位置，并为旧存档按城市领地顺序补充候选区块。 */
     private static List<ChunkPos> resolveRecoveryChunks(ServerLevel level, CitizenData citizen) {
         LinkedHashSet<Long> chunkLongs = new LinkedHashSet<>();
-        citizen.lastKnownChunk().ifPresent(chunkPos -> chunkLongs.add(chunkPos.toLong()));
+        citizen.lastKnownChunk().ifPresent(chunkPos -> chunkLongs.add(chunkPos.pack()));
         CityPoiManager poiManager = CityPoiManager.get(level);
         if (citizen.homeId() != null) {
             CityPoiData home = poiManager.getPoi(citizen.homeId());
             if (home != null) {
-                chunkLongs.add(new ChunkPos(home.pos()).toLong());
+                chunkLongs.add(ChunkPos.containing(home.pos()).pack());
             }
         }
         if (citizen.workplacePos() != null) {
-            chunkLongs.add(new ChunkPos(citizen.workplacePos()).toLong());
+            chunkLongs.add(ChunkPos.containing(citizen.workplacePos()).pack());
         }
         CityManager.get(level).getCity(citizen.cityId())
-                .ifPresent(city -> chunkLongs.add(new ChunkPos(city.cityCorePos()).toLong()));
+                .ifPresent(city -> chunkLongs.add(ChunkPos.containing(city.cityCorePos()).pack()));
         CityChunkManager.get(level).getCityChunks(citizen.cityId()).stream()
                 .sorted()
                 .limit(MAX_LEGACY_RECOVERY_CITY_CHUNKS)
                 .forEach(chunkLongs::add);
         ArrayList<ChunkPos> chunks = new ArrayList<>(chunkLongs.size());
-        chunkLongs.forEach(chunkLong -> chunks.add(new ChunkPos(chunkLong)));
+        chunkLongs.forEach(chunkLong -> chunks.add(ChunkPos.unpack(chunkLong)));
         return List.copyOf(chunks);
     }
 
@@ -196,11 +195,11 @@ public final class CityRuntimeService {
         PendingRecovery next = pending.nextCandidate(gameTime);
         if (next != null) {
             if (cityRuntime.pendingRecoveries.replace(citizenId, pending, next)) {
-                releaseRecoveryTicket(level, new ChunkPos(pending.chunkLong()));
-                acquireRecoveryTicket(level, new ChunkPos(next.chunkLong()));
+                releaseRecoveryTicket(level, ChunkPos.unpack(pending.chunkLong()));
+                acquireRecoveryTicket(level, ChunkPos.unpack(next.chunkLong()));
                 common.cn.kafei.simukraft.SimuKraft.LOGGER.debug(
                         "Simukraft: recovery switched citizen {} from chunk {} to {}",
-                        citizenId, new ChunkPos(pending.chunkLong()), new ChunkPos(next.chunkLong()));
+                        citizenId, ChunkPos.unpack(pending.chunkLong()), ChunkPos.unpack(next.chunkLong()));
             }
             return;
         }
@@ -220,7 +219,7 @@ public final class CityRuntimeService {
 
     private static void releaseRecovery(ServerLevel level, CityRuntime cityRuntime, UUID citizenId, PendingRecovery pending) {
         if (cityRuntime.pendingRecoveries.remove(citizenId, pending)) {
-            releaseRecoveryTicket(level, new ChunkPos(pending.chunkLong()));
+            releaseRecoveryTicket(level, ChunkPos.unpack(pending.chunkLong()));
         }
     }
 
@@ -228,8 +227,7 @@ public final class CityRuntimeService {
         String key = recoveryTicketKey(level, chunkPos);
         int count = RECOVERY_TICKET_REFS.computeIfAbsent(key, ignored -> new AtomicInteger()).incrementAndGet();
         if (count == 1) {
-            level.getChunkSource().addRegionTicket(CITIZEN_RECOVERY_TICKET, chunkPos,
-                    RECOVERY_TICKET_DISTANCE, chunkPos, true);
+            level.getChunkSource().addTicketWithRadius(CITIZEN_RECOVERY_TICKET, chunkPos, RECOVERY_TICKET_DISTANCE);
         }
     }
 
@@ -240,13 +238,12 @@ public final class CityRuntimeService {
             return;
         }
         if (RECOVERY_TICKET_REFS.remove(key, counter)) {
-            level.getChunkSource().removeRegionTicket(CITIZEN_RECOVERY_TICKET, chunkPos,
-                    RECOVERY_TICKET_DISTANCE, chunkPos, true);
+            level.getChunkSource().removeTicketWithRadius(CITIZEN_RECOVERY_TICKET, chunkPos, RECOVERY_TICKET_DISTANCE);
         }
     }
 
     private static String recoveryTicketKey(ServerLevel level, ChunkPos chunkPos) {
-        return SaveScopedCacheKey.levelKey(level) + "|" + chunkPos.toLong();
+        return SaveScopedCacheKey.levelKey(level) + "|" + chunkPos.pack();
     }
 
     private static final class LevelRuntime {
@@ -262,7 +259,7 @@ public final class CityRuntimeService {
 
     private record PendingRecovery(List<Long> candidates, int candidateIndex, long requestedAt) {
         private static PendingRecovery start(List<ChunkPos> candidates, long requestedAt) {
-            List<Long> chunkLongs = candidates.stream().map(ChunkPos::toLong).toList();
+            List<Long> chunkLongs = candidates.stream().map(ChunkPos::pack).toList();
             return new PendingRecovery(chunkLongs, 0, requestedAt);
         }
 

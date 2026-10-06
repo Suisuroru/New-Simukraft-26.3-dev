@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.virtualvein;
 
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Climate;
 import org.junit.jupiter.api.Test;
 
@@ -140,7 +140,7 @@ class VirtualVeinFieldResolverTest {
         VirtualVeinRange range = new VirtualVeinRange(-1, 1);
         return new VirtualVeinDefinition(
                 id, id, priority, range, range, range, range, range, range,
-                -64, maxY, ResourceLocation.parse("minecraft:coal"), minAmount, maxAmount, 20
+                -64, maxY, Identifier.parse("minecraft:coal"), minAmount, maxAmount, 20
         );
     }
 }

@@ -42,17 +42,12 @@ public final class MineralDrillingControlBoxBlock extends Block {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             MineralDrillingMenuProvider.open(serverLevel, serverPlayer, pos);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
-    /** onRemove: 释放雇佣关系、掉落工具并删除持久化状态。 */
     @Override
-    protected void onRemove(
-            BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!level.isClientSide() && !state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            MineralDrillingControlBoxService.onRemoved(serverLevel, pos);
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        MineralDrillingControlBoxService.onRemoved(level, pos);
     }
 
     /** createBlockStateDefinition: 注册控制箱的水平朝向属性。 */

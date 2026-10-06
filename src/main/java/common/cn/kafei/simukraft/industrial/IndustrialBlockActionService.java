@@ -4,7 +4,7 @@ import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
@@ -12,6 +12,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -204,7 +205,7 @@ public final class IndustrialBlockActionService {
         if (!step.item().isBlank()) {
             return step.item();
         }
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+        Identifier id = BuiltInRegistries.BLOCK.getKey(block);
         return id != null ? id.toString() : "";
     }
 
@@ -216,7 +217,7 @@ public final class IndustrialBlockActionService {
         if (bucket == null || bucket == Items.AIR) {
             return "";
         }
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(bucket);
+        Identifier id = BuiltInRegistries.ITEM.getKey(bucket);
         return id != null ? id.toString() : "";
     }
 
@@ -247,7 +248,7 @@ public final class IndustrialBlockActionService {
             playFluidEmptySound(level, target, fluid, entity);
             return true;
         }
-        if (level.dimensionType().ultraWarm() && fluid.defaultFluidState().is(FluidTags.WATER)) {
+        if (level.environmentAttributes().getValue(EnvironmentAttributes.WATER_EVAPORATES, target) && fluid.defaultFluidState().is(FluidTags.WATER)) {
             vaporizeWater(level, target);
             return true;
         }
@@ -269,7 +270,7 @@ public final class IndustrialBlockActionService {
 
     private static void vaporizeWater(ServerLevel level, BlockPos target) {
         level.playSound(null, target, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS,
-                0.5F, 2.6F + (level.random.nextFloat() - level.random.nextFloat()) * 0.8F);
+                0.5F, 2.6F + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.8F);
         for (int index = 0; index < 8; index++) {
             level.addParticle(ParticleTypes.LARGE_SMOKE,
                     target.getX() + Math.random(),
@@ -292,12 +293,12 @@ public final class IndustrialBlockActionService {
     }
 
     private static Block resolveBlock(String blockId) {
-        ResourceLocation id = ResourceLocation.tryParse(blockId);
+        Identifier id = Identifier.tryParse(blockId);
         return id == null ? null : BuiltInRegistries.BLOCK.getOptional(id).orElse(null);
     }
 
     private static Fluid resolveFluid(String fluidId) {
-        ResourceLocation id = ResourceLocation.tryParse(fluidId);
+        Identifier id = Identifier.tryParse(fluidId);
         return id == null ? null : BuiltInRegistries.FLUID.getOptional(id).orElse(null);
     }
 

@@ -21,7 +21,7 @@ import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -162,7 +162,7 @@ public final class CitizenInfoUiRoot extends UIElement {
 
     private void addEquipmentIcon(CitizenInventory inventory,
                                   int inventorySlot,
-                                  ResourceLocation icon,
+                                  Identifier icon,
                                   int slotX,
                                   int slotY) {
         CitizenEquipmentSlotIconElement element = new CitizenEquipmentSlotIconElement(inventory, inventorySlot, icon);

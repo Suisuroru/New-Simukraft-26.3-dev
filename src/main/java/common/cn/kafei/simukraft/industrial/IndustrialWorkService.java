@@ -190,7 +190,7 @@ public final class IndustrialWorkService {
             boxRuntime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
-        if (MedicalService.isOnMedicalLeave(worker, level.getDayTime() / 24_000L)) {
+        if (MedicalService.isOnMedicalLeave(worker, level.getDefaultClockTime() / 24_000L)) {
             CitizenJobVisualService.clearMainHandOverride(worker.uuid());
             boxRuntime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
@@ -899,8 +899,8 @@ public final class IndustrialWorkService {
         double multiplier = 1.0D + Math.max(0, skill.level() - 1) * 0.05D;
         IndustrialDefinition.RecipeDefinition effectiveRecipe = stepRecipe(recipe, step);
         boolean crafted = craftAllAvailable
-                ? IndustrialInventoryService.craftAvailableRecipe(level, inputContainers, outputContainers, effectiveRecipe, multiplier, level.random)
-                : IndustrialInventoryService.craftRecipe(level, inputContainers, outputContainers, effectiveRecipe, multiplier, level.random);
+                ? IndustrialInventoryService.craftAvailableRecipe(level, inputContainers, outputContainers, effectiveRecipe, multiplier, level.getRandom())
+                : IndustrialInventoryService.craftRecipe(level, inputContainers, outputContainers, effectiveRecipe, multiplier, level.getRandom());
         if (!crafted) {
             setStatus(manager, data, "gui.simukraft.industrial.status.craft_blocked", "");
             return StepResult.WAITING_RETRY;

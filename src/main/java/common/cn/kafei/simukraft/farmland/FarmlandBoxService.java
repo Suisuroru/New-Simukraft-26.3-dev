@@ -31,7 +31,7 @@ public final class FarmlandBoxService {
     }
 
     public static UUID cityIdFor(ServerLevel level, BlockPos boxPos) {
-        return CityChunkManager.get(level).getChunkOwner(new ChunkPos(boxPos).toLong());
+        return CityChunkManager.get(level).getChunkOwner(ChunkPos.containing(boxPos).pack());
     }
 
     public static CitizenData findAssignedFarmer(ServerLevel level, BlockPos boxPos) {

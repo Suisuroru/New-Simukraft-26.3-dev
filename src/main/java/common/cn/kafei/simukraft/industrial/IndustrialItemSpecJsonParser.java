@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +80,7 @@ final class IndustrialItemSpecJsonParser {
         String baseItem = spec.displayItemId();
         if (!baseItem.isBlank() && !baseItem.startsWith("#")) {
             try {
-                boolean exists = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(baseItem)).isPresent();
+                boolean exists = BuiltInRegistries.ITEM.getOptional(Identifier.parse(baseItem)).isPresent();
                 if (!exists) {
                     errors.add("invalid_item_spec:" + context + ":" + baseItem);
                 }
@@ -90,7 +90,7 @@ final class IndustrialItemSpecJsonParser {
         }
         if (!spec.customDataText().isBlank()) {
             try {
-                TagParser.parseTag(spec.customDataText());
+                TagParser.parseCompoundFully(spec.customDataText());
             } catch (Exception exception) {
                 errors.add("invalid_item_nbt:" + context);
             }

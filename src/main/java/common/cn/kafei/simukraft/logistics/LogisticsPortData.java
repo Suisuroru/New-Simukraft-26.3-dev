@@ -23,9 +23,9 @@ public record LogisticsPortData(String id, String name, String kind, BlockPos po
 
     public static LogisticsPortData fromTag(CompoundTag tag) {
         return new LogisticsPortData(
-                tag.getString("Id"),
-                tag.getString("Name"),
-                tag.getString("Kind"),
-                BlockPos.of(tag.getLong("Pos")));
+                tag.getString("Id").get(),
+                tag.getString("Name").get(),
+                tag.getString("Kind").get(),
+                BlockPos.of(tag.getLong("Pos").get()));
     }
 }

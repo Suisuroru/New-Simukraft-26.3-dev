@@ -1,6 +1,5 @@
 package common.cn.kafei.simukraft.commercial;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.lowdragmc.lowdraglib2.gui.slot.LocalSlot;
 import net.minecraft.world.entity.player.Player;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -8,22 +7,24 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import common.cn.kafei.simukraft.network.commercial.CommercialTradeOpenResponsePacket;
 import common.cn.kafei.simukraft.network.commercial.CommercialTradePacket;
 import common.cn.kafei.simukraft.ui.RecipeBookSearchUi;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
@@ -33,14 +34,14 @@ import java.util.Objects;
 
 
 public final class CommercialTradeUiRoot extends UIElement {
-    private static final ResourceLocation VILLAGER_LOCATION = ResourceLocation.withDefaultNamespace("textures/gui/container/villager.png");
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller_disabled");
-    private static final ResourceLocation TRADE_ARROW_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/trade_arrow");
-    private static final ResourceLocation TRADE_ARROW_OUT_OF_STOCK_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/trade_arrow_out_of_stock");
-    private static final ResourceLocation OUT_OF_STOCK_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/out_of_stock");
-    private static final ResourceLocation BUTTON_SPRITE = ResourceLocation.withDefaultNamespace("widget/button");
-    private static final ResourceLocation BUTTON_HIGHLIGHTED_SPRITE = ResourceLocation.withDefaultNamespace("widget/button_highlighted");
+    private static final Identifier VILLAGER_LOCATION = Identifier.withDefaultNamespace("textures/gui/container/villager.png");
+    private static final Identifier SCROLLER_SPRITE = Identifier.withDefaultNamespace("container/villager/scroller");
+    private static final Identifier SCROLLER_DISABLED_SPRITE = Identifier.withDefaultNamespace("container/villager/scroller_disabled");
+    private static final Identifier TRADE_ARROW_SPRITE = Identifier.withDefaultNamespace("container/villager/trade_arrow");
+    private static final Identifier TRADE_ARROW_OUT_OF_STOCK_SPRITE = Identifier.withDefaultNamespace("container/villager/trade_arrow_out_of_stock");
+    private static final Identifier OUT_OF_STOCK_SPRITE = Identifier.withDefaultNamespace("container/villager/out_of_stock");
+    private static final Identifier BUTTON_SPRITE = Identifier.withDefaultNamespace("widget/button");
+    private static final Identifier BUTTON_HIGHLIGHTED_SPRITE = Identifier.withDefaultNamespace("widget/button_highlighted");
     private static final Component TRADES_LABEL = Component.translatable("merchant.trades");
     private static final Component INVENTORY_LABEL = Component.translatable("container.inventory");
     private static final int IMAGE_WIDTH = 276;
@@ -89,6 +90,7 @@ public final class CommercialTradeUiRoot extends UIElement {
         activeRoot = new WeakReference<>(this);
         layout(layout -> layout.width(ROOT_WIDTH).height(IMAGE_HEIGHT));
         resultSlot.addEventListener(UIEvents.MOUSE_DOWN, this::onResultSlotMouseDown);
+        addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
         addChild(tabHitbox());
         addChild(offerListHitbox());
         addChild(scrollerHitbox());
@@ -112,12 +114,13 @@ public final class CommercialTradeUiRoot extends UIElement {
     /** drawBackgroundAdditional: 绘制原版村民风格交易内容和左侧 Tab。 */
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void drawBackgroundAdditional(GUIContext guiContext) {
+    public void drawBackgroundAdditional(IGUIContext context) {
+        GUIContext guiContext = (GUIContext) context;
         updateDisplaySlots();
         int frameLeft = (int) getPositionX();
         int top = (int) getPositionY();
         Font font = guiContext.mc.font;
-        guiContext.graphics.blit(VILLAGER_LOCATION, frameLeft, top, 0, 0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        guiContext.graphics.blit(RenderPipelines.GUI, VILLAGER_LOCATION, frameLeft, top, 0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         renderLeftPanelBackground(guiContext, frameLeft, top);
         CommercialTradeTabStrip.render(guiContext, font, frameLeft, top, activeTab);
         renderSearchBox(guiContext, frameLeft, top);
@@ -125,7 +128,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         renderSelectedOffer(guiContext, font, frameLeft, top);
         renderOfferList(guiContext, font, frameLeft, top);
         renderScroller(guiContext, frameLeft, top);
-        renderHoveredTooltip(guiContext, font, frameLeft, top);
     }
 
     /** onTabMouseDown: 只在左侧 Tab 命中区切换交易分类。 */
@@ -208,7 +210,7 @@ public final class CommercialTradeUiRoot extends UIElement {
             return;
         }
         boolean isRetail = !offer.result().isEmpty() && offer.result().get(0).count() == 1;
-        int count = (Screen.hasShiftDown() && isRetail) ? 64 : 1;
+        int count = (event.isShiftDown() && isRetail) ? 64 : 1;
         tradeSelected(true, count);
         event.stopImmediatePropagation();
     }
@@ -217,10 +219,10 @@ public final class CommercialTradeUiRoot extends UIElement {
     private void renderLabels(GUIContext guiContext, Font font, int left, int top) {
         drawCenteredStringNoShadow(guiContext, font, CommercialTradeMenuProvider.title(packet), left + 187, top + 6, TEXT_COLOR);
         int tradesWidth = font.width(TRADES_LABEL);
-        guiContext.graphics.drawString(font, TRADES_LABEL, left + 5 - tradesWidth / 2 + 48, top + 6, TEXT_COLOR, false);
-        guiContext.graphics.drawString(font, INVENTORY_LABEL, left + 107, top + 72, TEXT_COLOR, false);
+        guiContext.graphics.text(font, TRADES_LABEL, left + 5 - tradesWidth / 2 + 48, top + 6, TEXT_COLOR, false);
+        guiContext.graphics.text(font, INVENTORY_LABEL, left + 107, top + 72, TEXT_COLOR, false);
         String balance = Component.translatable("gui.simukraft.commercial.balance", CommercialTradeUiSupport.money(packet.cityBalance())).getString();
-        guiContext.graphics.drawString(font, fitText(font, balance, 116), left + 136, top + 18, MUTED_COLOR, false);
+        guiContext.graphics.text(font, fitText(font, balance, 116), left + 136, top + 18, MUTED_COLOR, false);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -239,13 +241,13 @@ public final class CommercialTradeUiRoot extends UIElement {
         }
         boolean canTrade = canTrade(offer);
         if (!canTrade) {
-            guiContext.graphics.blitSprite(OUT_OF_STOCK_SPRITE, left + 182, top + 35, 28, 21);
+            guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, OUT_OF_STOCK_SPRITE, left + 182, top + 35, 28, 21);
         }
         String costKey = CommercialTradeUiSupport.costEnough(packet, offer, getModularUI() != null ? getModularUI().player : null, 1)
                 ? "gui.simukraft.commercial.cost_ok"
                 : "gui.simukraft.commercial.cost_missing";
-        guiContext.graphics.drawString(font, fitText(font, Component.translatable(costKey).getString(), 96), left + 136, top + 60, canTrade ? 0xFF2A602A : ERROR_COLOR, false);
-        guiContext.graphics.drawString(font, fitText(font, Component.translatable("gui.simukraft.commercial.stock", CommercialTradeUiSupport.stockText(offer)).getString(), 96),
+        guiContext.graphics.text(font, fitText(font, Component.translatable(costKey).getString(), 96), left + 136, top + 60, canTrade ? 0xFF2A602A : ERROR_COLOR, false);
+        guiContext.graphics.text(font, fitText(font, Component.translatable("gui.simukraft.commercial.stock", CommercialTradeUiSupport.stockText(offer)).getString(), 96),
                 left + 136, top + 70, CommercialTradeUiSupport.stockColor(offer, 1), false);
     }
 
@@ -253,7 +255,7 @@ public final class CommercialTradeUiRoot extends UIElement {
     private void renderOfferList(GUIContext guiContext, Font font, int left, int top) {
         List<CommercialTradeOpenResponsePacket.OfferEntry> offers = filteredOffers();
         if (offers.isEmpty()) {
-            guiContext.graphics.drawCenteredString(font, Component.translatable("gui.simukraft.commercial.no_offers"), left + 49, top + 82, ERROR_COLOR);
+            guiContext.graphics.centeredText(font, Component.translatable("gui.simukraft.commercial.no_offers"), left + 49, top + 82, ERROR_COLOR);
             return;
         }
         for (int row = 0; row < ROW_COUNT; row++) {
@@ -272,8 +274,7 @@ public final class CommercialTradeUiRoot extends UIElement {
         boolean selected = offer.id().equals(selectedOfferId);
         boolean canTrade = canTrade(offer);
         boolean hovered = inside(guiContext.mouseX, guiContext.mouseY, rowLeft, rowTop, ROW_WIDTH, ROW_HEIGHT);
-        RenderSystem.enableBlend();
-        guiContext.graphics.blitSprite(selected || hovered ? BUTTON_HIGHLIGHTED_SPRITE : BUTTON_SPRITE, rowLeft, rowTop, ROW_WIDTH, ROW_HEIGHT);
+        guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, selected || hovered ? BUTTON_HIGHLIGHTED_SPRITE : BUTTON_SPRITE, rowLeft, rowTop, ROW_WIDTH, ROW_HEIGHT);
         int itemY = rowTop + 1;
         renderResource(guiContext, first(offer.cost(), 0), left + 10, itemY);
         renderResource(guiContext, first(offer.cost(), 1), left + 40, itemY);
@@ -283,14 +284,13 @@ public final class CommercialTradeUiRoot extends UIElement {
 
     @OnlyIn(Dist.CLIENT)
     private void renderTradeArrow(GUIContext guiContext, boolean canTrade, int x, int y) {
-        RenderSystem.enableBlend();
-        guiContext.graphics.blitSprite(canTrade ? TRADE_ARROW_SPRITE : TRADE_ARROW_OUT_OF_STOCK_SPRITE, x, y, 0, 10, 9);
+        guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, canTrade ? TRADE_ARROW_SPRITE : TRADE_ARROW_OUT_OF_STOCK_SPRITE, x, y, 10, 9);
     }
 
     @OnlyIn(Dist.CLIENT)
     private void renderScroller(GUIContext guiContext, int left, int top) {
         if (!canScroll()) {
-            guiContext.graphics.blitSprite(SCROLLER_DISABLED_SPRITE, left + SCROLL_X, top + SCROLL_Y, SCROLL_WIDTH, SCROLLER_HEIGHT);
+            guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED_SPRITE, left + SCROLL_X, top + SCROLL_Y, SCROLL_WIDTH, SCROLLER_HEIGHT);
             return;
         }
         int steps = filteredOffers().size() + 1 - ROW_COUNT;
@@ -300,7 +300,7 @@ public final class CommercialTradeUiRoot extends UIElement {
         if (scrollOff == maxScroll()) {
             scrollY = SCROLL_HEIGHT - SCROLLER_HEIGHT;
         }
-        guiContext.graphics.blitSprite(SCROLLER_SPRITE, left + SCROLL_X, top + SCROLL_Y + scrollY, SCROLL_WIDTH, SCROLLER_HEIGHT);
+        guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, left + SCROLL_X, top + SCROLL_Y + scrollY, SCROLL_WIDTH, SCROLLER_HEIGHT);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -309,25 +309,32 @@ public final class CommercialTradeUiRoot extends UIElement {
             return;
         }
         ItemStack stack = CommercialTradeUiSupport.resourceStack(resource);
-        guiContext.graphics.renderFakeItem(stack, x, y);
+        guiContext.graphics.fakeItem(stack, x, y);
         if (CommercialTradeUiSupport.isMoney(resource)) {
             drawResourceCount(guiContext, CommercialTradeUiSupport.moneyShort(resource.money()), x, y);
         } else {
-            guiContext.graphics.renderItemDecorations(guiContext.mc.font, stack, x, y);
+            guiContext.graphics.itemDecorations(guiContext.mc.font, stack, x, y);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void renderHoveredTooltip(GUIContext guiContext, Font font, int left, int top) {
-        CommercialTradeOpenResponsePacket.ResourceEntry resource = hoveredResource(guiContext.mouseX, guiContext.mouseY, left, top);
-        if (resource == null || getModularUI() == null) {
+    private void onHoverTooltips(UIEvent event) {
+        int left = (int) getPositionX();
+        int top = (int) getPositionY();
+        CommercialTradeOpenResponsePacket.ResourceEntry resource = hoveredResource(event.x, event.y, left, top);
+        if (resource == null) {
             return;
         }
         ItemStack stack = CommercialTradeUiSupport.resourceStack(resource);
+        HoverTooltips tips = event.hoverTooltips == null ? HoverTooltips.empty() : event.hoverTooltips;
         if (CommercialTradeUiSupport.isMoney(resource)) {
-            getModularUI().setHoverTooltip(List.of(Component.translatable("gui.simukraft.commercial.money_resource", CommercialTradeUiSupport.money(resource.money()))), stack, font, null);
+            event.hoverTooltips = tips
+                    .tooltips(Component.translatable("gui.simukraft.commercial.money_resource", CommercialTradeUiSupport.money(resource.money())))
+                    .stack(stack);
         } else {
-            getModularUI().setHoverTooltip(List.of(stack.getHoverName(), Component.literal("x" + Math.max(1, resource.count()))), stack, font, null);
+            event.hoverTooltips = tips
+                    .tooltips(stack.getHoverName(), Component.literal("x" + Math.max(1, resource.count())))
+                    .stack(stack);
         }
     }
 
@@ -337,16 +344,13 @@ public final class CommercialTradeUiRoot extends UIElement {
             return;
         }
         Font font = guiContext.mc.font;
-        guiContext.pose.pushPose();
-        guiContext.pose.translate(0.0F, 0.0F, 200.0F);
-        guiContext.graphics.drawString(font, label, x + 19 - 2 - font.width(label), y + 9, 0xFFFFFF, true);
-        guiContext.pose.popPose();
+        guiContext.graphics.text(font, label, x + 19 - 2 - font.width(label), y + 9, 0xFFFFFF, true);
     }
 
     private void tradeSelected(boolean quickMove, int count) {
         CommercialTradeOpenResponsePacket.OfferEntry offer = selectedOffer();
         if (offer != null && canTrade(offer) && packet.workerId() != null) {
-            PacketDistributor.sendToServer(new CommercialTradePacket(packet.boxPos(), packet.workerId(), offer.id(), count, quickMove));
+            ClientPacketDistributor.sendToServer(new CommercialTradePacket(packet.boxPos(), packet.workerId(), offer.id(), count, quickMove));
         }
     }
 
@@ -559,7 +563,7 @@ public final class CommercialTradeUiRoot extends UIElement {
 
     @OnlyIn(Dist.CLIENT)
     private static void drawCenteredStringNoShadow(GUIContext guiContext, Font font, Component text, int centerX, int y, int color) {
-        guiContext.graphics.drawString(font, text, centerX - font.width(text) / 2, y, color, false);
+        guiContext.graphics.text(font, text, centerX - font.width(text) / 2, y, color, false);
     }
 
     private static void release(UIEvent event) {

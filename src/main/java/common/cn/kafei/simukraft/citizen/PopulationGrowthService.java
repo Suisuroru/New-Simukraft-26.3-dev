@@ -21,7 +21,7 @@ public final class PopulationGrowthService {
         if (level == null || level.getServer() == null) {
             return 0;
         }
-        long dayTime = level.getDayTime();
+        long dayTime = level.getDefaultClockTime();
         long currentDay = Math.floorDiv(dayTime, TICKS_PER_DAY);
         String levelKey = SaveScopedCacheKey.levelKey(level);
         long lastGrowthDay = LAST_GROWTH_DAY_BY_LEVEL.getOrDefault(levelKey, Long.MIN_VALUE);

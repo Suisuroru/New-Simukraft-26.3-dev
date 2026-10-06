@@ -8,7 +8,7 @@ import common.cn.kafei.simukraft.protection.NpcBlockProtectionPolicy;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -78,7 +78,7 @@ public record ServerConfigSavePacket(
         List<String> materialCategoryGroups,
         List<String> expertModeSkipList
 ) implements CustomPacketPayload {
-    public static final Type<ServerConfigSavePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SimuKraft.MOD_ID, "server_config_save"));
+    public static final Type<ServerConfigSavePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "server_config_save"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ServerConfigSavePacket> STREAM_CODEC = StreamCodec.of(ServerConfigSavePacket::encode, ServerConfigSavePacket::decode);
 
     @Override
