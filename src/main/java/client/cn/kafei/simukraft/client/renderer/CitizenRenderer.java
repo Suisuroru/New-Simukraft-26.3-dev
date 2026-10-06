@@ -14,7 +14,6 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
@@ -109,7 +108,9 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
         return distanceToCameraSq < 45.0D * 45.0D || entity.hasCustomName();
     }
 
-    /** withoutOverheadText：在布偶预览渲染期间屏蔽名称和工作状态文字。 */
+    /**
+     * withoutOverheadText：在布偶预览渲染期间屏蔽名称和工作状态文字。
+     */
     public static void withoutOverheadText(Runnable renderAction) {
         boolean previous = HIDE_OVERHEAD_TEXT.get();
         HIDE_OVERHEAD_TEXT.set(true);

@@ -9,20 +9,21 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 
-/** 医疗控制箱方块，负责打开管理界面和移除清理。 */
+/**
+ * 医疗控制箱方块，负责打开管理界面和移除清理。
+ */
 
 public final class MedicalControlBoxBlock extends Block {
     public MedicalControlBoxBlock(Properties properties) {
         super(properties);
     }
 
-    /** useWithoutItem：玩家空手右键打开医疗控制箱。 */
+    /**
+     * useWithoutItem：玩家空手右键打开医疗控制箱。
+     */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {

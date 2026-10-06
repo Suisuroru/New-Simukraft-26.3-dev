@@ -37,7 +37,9 @@ public class SimuBlockColors {
         return INSTANCE;
     }
 
-    /** 初始化颜色覆盖表。 */
+    /**
+     * 初始化颜色覆盖表。
+     */
     public void init() {
         if (initialized) return;
         initialized = true;
@@ -84,7 +86,7 @@ public class SimuBlockColors {
      *
      * @param state 方块状态
      * @param level 世界实例
-     * @param pos 方块位置
+     * @param pos   方块位置
      * @return ARGB 颜色值
      */
     public int getBlockColor(BlockState state, Level level, BlockPos pos) {
@@ -199,7 +201,9 @@ public class SimuBlockColors {
         return Mth.clamp(((height - north) + (height - west)) * scale, -0.42f, 0.38f);
     }
 
-    /** 获取生物群系草地颜色。 */
+    /**
+     * 获取生物群系草地颜色。
+     */
     private int getBiomeGrassColor(Level level, BlockPos pos) {
         try {
             Biome biome = level.getBiome(Objects.requireNonNull(pos)).value();
@@ -210,7 +214,9 @@ public class SimuBlockColors {
         }
     }
 
-    /** 获取生物群系树叶颜色。 */
+    /**
+     * 获取生物群系树叶颜色。
+     */
     private int getBiomeFoliageColor(Level level, BlockPos pos) {
         try {
             Biome biome = level.getBiome(Objects.requireNonNull(pos)).value();
@@ -221,7 +227,9 @@ public class SimuBlockColors {
         }
     }
 
-    /** 获取生物群系水体颜色。 */
+    /**
+     * 获取生物群系水体颜色。
+     */
     private int getBiomeWaterColor(Level level, BlockPos pos) {
         try {
             Biome biome = level.getBiome(Objects.requireNonNull(pos)).value();
@@ -234,8 +242,8 @@ public class SimuBlockColors {
 
     /**
      * 混合两个 ARGB 颜色。
-     * 
-     * @param base 基色
+     *
+     * @param base    基色
      * @param overlay 叠加色，alpha 控制混合强度
      * @return 混合后的颜色
      */
@@ -264,8 +272,8 @@ public class SimuBlockColors {
 
     /**
      * 调整 ARGB 颜色亮度。
-     * 
-     * @param color ARGB 颜色
+     *
+     * @param color      ARGB 颜色
      * @param brightness 亮度调节值，范围 [-1.0, 1.0]
      * @return 调整后的颜色
      */
@@ -293,7 +301,9 @@ public class SimuBlockColors {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    /** 将 ARGB 转换为 NativeImage 使用的 ABGR 格式。 */
+    /**
+     * 将 ARGB 转换为 NativeImage 使用的 ABGR 格式。
+     */
     public static int toNativeColor(int argb) {
         int a = (argb >> 24) & 0xFF;
         int r = (argb >> 16) & 0xFF;

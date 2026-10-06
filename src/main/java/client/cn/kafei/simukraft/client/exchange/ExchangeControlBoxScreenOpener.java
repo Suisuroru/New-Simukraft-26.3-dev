@@ -1,17 +1,11 @@
 package client.cn.kafei.simukraft.client.exchange;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
-import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
-import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
-import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
-import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
+import com.lowdragmc.lowdraglib2.gui.ui.data.*;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
@@ -31,9 +25,11 @@ import dev.vfyjxf.taffy.style.FlexWrap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-/** ExchangeControlBoxScreenOpener: Ore 主题股市界面，按 GUI 缩放收缩。 */
+/**
+ * ExchangeControlBoxScreenOpener: Ore 主题股市界面，按 GUI 缩放收缩。
+ */
 public final class ExchangeControlBoxScreenOpener {
     private static final int UP = 0xFF55FF55;
     private static final int DOWN = 0xFFFF5555;
@@ -57,12 +53,16 @@ public final class ExchangeControlBoxScreenOpener {
     private ExchangeControlBoxScreenOpener() {
     }
 
-    /** request: 向服务端请求股市快照。 */
+    /**
+     * request: 向服务端请求股市快照。
+     */
     public static void request(BlockPos pos) {
         ClientPacketDistributor.sendToServer(new ExchangeControlBoxOpenRequestPacket(pos, selectedId == null ? "" : selectedId));
     }
 
-    /** open: 打开或原地刷新股市界面，不拆掉全屏 K 线。 */
+    /**
+     * open: 打开或原地刷新股市界面，不拆掉全屏 K 线。
+     */
     public static void open(ExchangeControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) {
@@ -81,7 +81,9 @@ public final class ExchangeControlBoxScreenOpener {
         });
     }
 
-    /** onClientTick: 开着界面时定时拉行情，才能一根一根看到新时段。 */
+    /**
+     * onClientTick: 开着界面时定时拉行情，才能一根一根看到新时段。
+     */
     public static void onClientTick() {
         if (currentPacket == null) {
             return;
@@ -380,7 +382,9 @@ public final class ExchangeControlBoxScreenOpener {
         return label;
     }
 
-    /** selectCompany: 只切换当前股票，不拆掉整棵界面。 */
+    /**
+     * selectCompany: 只切换当前股票，不拆掉整棵界面。
+     */
     private static void selectCompany(String id) {
         if (id == null || id.equals(selectedId) || currentPacket == null || !contains(currentPacket, id)) {
             return;
@@ -393,7 +397,9 @@ public final class ExchangeControlBoxScreenOpener {
         applySnapshot(ui, currentPacket);
     }
 
-    /** applySnapshot: 把最新快照写到现有节点，全屏 K 线一起刷新。 */
+    /**
+     * applySnapshot: 把最新快照写到现有节点，全屏 K 线一起刷新。
+     */
     private static void applySnapshot(ModularUI ui, ExchangeControlBoxOpenResponsePacket packet) {
         ExchangeQuote selected = selectedQuote(packet, selectedId);
         applySelection(ui, selected);
@@ -408,7 +414,9 @@ public final class ExchangeControlBoxScreenOpener {
         }
     }
 
-    /** applySelection: 把行情图、持仓文案和列表高亮写到现有节点。 */
+    /**
+     * applySelection: 把行情图、持仓文案和列表高亮写到现有节点。
+     */
     private static void applySelection(ModularUI ui, ExchangeQuote selected) {
         if (ui.getElementById(CANDLE_ID) instanceof ExchangeChartElement candle) {
             candle.setQuote(selected);

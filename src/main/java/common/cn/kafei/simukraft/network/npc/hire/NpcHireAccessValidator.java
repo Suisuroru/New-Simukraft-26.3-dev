@@ -13,12 +13,12 @@ import common.cn.kafei.simukraft.farmland.FarmlandBoxService;
 import common.cn.kafei.simukraft.industrial.IndustrialConstants;
 import common.cn.kafei.simukraft.industrial.IndustrialControlBoxService;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
-import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import common.cn.kafei.simukraft.logistics.LogisticsConstants;
 import common.cn.kafei.simukraft.logistics.LogisticsControlBoxService;
 import common.cn.kafei.simukraft.medical.MedicalControlBoxService;
 import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingConstants;
 import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingControlBoxService;
+import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import common.cn.kafei.simukraft.network.toast.InfoToastService;
 import common.cn.kafei.simukraft.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -40,7 +40,9 @@ final class NpcHireAccessValidator {
     private NpcHireAccessValidator() {
     }
 
-    /** validateSource: 校验雇佣来源方块、城市归属和操作者管理权限。 */
+    /**
+     * validateSource: 校验雇佣来源方块、城市归属和操作者管理权限。
+     */
     @Nullable
     static SourceContext validateSource(ServerPlayer player, ServerLevel level, BlockPos sourcePos, String sourceType, String role) {
         String normalizedSource = normalize(sourceType);
@@ -64,12 +66,16 @@ final class NpcHireAccessValidator {
         return new SourceContext(sourcePos.immutable(), normalizedSource, normalizedRole, cityId);
     }
 
-    /** isHireCandidateForSource: 只展示同城且空闲的候选 NPC。 */
+    /**
+     * isHireCandidateForSource: 只展示同城且空闲的候选 NPC。
+     */
     static boolean isHireCandidateForSource(CitizenData citizen, SourceContext source) {
         return CitizenService.isHireable(citizen) && belongsToSourceCity(citizen, source);
     }
 
-    /** canAssignCitizen: 服务端执行雇佣前再次验证 NPC 和岗位状态。 */
+    /**
+     * canAssignCitizen: 服务端执行雇佣前再次验证 NPC 和岗位状态。
+     */
     static boolean canAssignCitizen(ServerPlayer player, ServerLevel level, SourceContext source, CitizenData citizen) {
         if (!CitizenService.isHireable(citizen)) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.hire_npc.unavailable", citizen.name()));
@@ -86,7 +92,9 @@ final class NpcHireAccessValidator {
         return true;
     }
 
-    /** canFireCitizen: 解雇必须针对该来源岗位已绑定的 NPC。 */
+    /**
+     * canFireCitizen: 解雇必须针对该来源岗位已绑定的 NPC。
+     */
     static boolean canFireCitizen(ServerPlayer player, SourceContext source, CitizenData citizen) {
         if (citizen.dead() || citizen.child()) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.fire_npc.unavailable", citizen.name()));

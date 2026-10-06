@@ -1,48 +1,38 @@
 package client.cn.kafei.simukraft.client.hire;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import client.cn.kafei.simukraft.client.mineraldrilling.MineralDrillingControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.buildbox.BuildBoxScreenOpener;
+import client.cn.kafei.simukraft.client.citizen.CitizenAvatarFactory;
 import client.cn.kafei.simukraft.client.commercial.CommercialControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.industrial.IndustrialControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.logistics.LogisticsServerBoxScreenOpener;
+import client.cn.kafei.simukraft.client.mineraldrilling.MineralDrillingControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
-import client.cn.kafei.simukraft.client.citizen.CitizenAvatarFactory;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
-import common.cn.kafei.simukraft.SimuKraft;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
+import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.CitizenLevelService;
 import common.cn.kafei.simukraft.citizen.CitizenSkillSnapshot;
 import common.cn.kafei.simukraft.commercial.CommercialConstants;
-import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.industrial.IndustrialConstants;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingConstants;
+import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.logistics.LogisticsConstants;
+import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingConstants;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireAssignPacket;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireListRequestPacket;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireListResponsePacket;
 import common.cn.kafei.simukraft.ui.RecipeBookSearchUi;
-import dev.vfyjxf.taffy.style.AlignContent;
-import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.FlexWrap;
-import dev.vfyjxf.taffy.style.TaffyPosition;
+import dev.vfyjxf.taffy.style.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 public final class NpcHireScreen {
     private static final int CARD_TEXT_COLOR = SimuKraftUiTheme.CARD_TEXT_COLOR;
@@ -555,7 +545,8 @@ public final class NpcHireScreen {
 
     private static Comparator<NpcHireListResponsePacket.HireCandidate> currentComparator() {
         Comparator<NpcHireListResponsePacket.HireCandidate> comparator = switch (sortMode) {
-            case NAME -> Comparator.comparing(NpcHireListResponsePacket.HireCandidate::name, String.CASE_INSENSITIVE_ORDER);
+            case NAME ->
+                    Comparator.comparing(NpcHireListResponsePacket.HireCandidate::name, String.CASE_INSENSITIVE_ORDER);
             case LEVEL -> Comparator.comparingInt(NpcHireListResponsePacket.HireCandidate::skillLevel);
         };
         comparator = comparator.thenComparing(NpcHireListResponsePacket.HireCandidate::name, String.CASE_INSENSITIVE_ORDER)
@@ -611,7 +602,9 @@ public final class NpcHireScreen {
             this.toolbarButtonsRegion = toolbarButtonsRegion;
         }
 
-        /** onSearchChanged: 搜索变化时只刷新列表区域，避免输入框丢焦点。 */
+        /**
+         * onSearchChanged: 搜索变化时只刷新列表区域，避免输入框丢焦点。
+         */
         private void onSearchChanged(String text) {
             searchText = text == null ? "" : text;
             currentPage = 0;
@@ -619,7 +612,9 @@ public final class NpcHireScreen {
             refresh();
         }
 
-        /** refresh: 根据当前搜索、分页和选中状态重建可变区域。 */
+        /**
+         * refresh: 根据当前搜索、分页和选中状态重建可变区域。
+         */
         private void refresh() {
             List<NpcHireListResponsePacket.HireCandidate> filteredCandidates = filteredCandidates(packet.candidates());
             int pageCount = totalPages(filteredCandidates, grid.perPage());

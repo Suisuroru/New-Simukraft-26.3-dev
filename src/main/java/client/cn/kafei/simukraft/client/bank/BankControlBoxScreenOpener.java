@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.bank;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
@@ -28,9 +26,11 @@ import dev.vfyjxf.taffy.style.FlexWrap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-/** BankControlBoxScreenOpener: 银行存取转账界面，Ore 主题并按 GUI 缩放收缩。 */
+/**
+ * BankControlBoxScreenOpener: 银行存取转账界面，Ore 主题并按 GUI 缩放收缩。
+ */
 public final class BankControlBoxScreenOpener {
     private static final int MAX_PANEL_WIDTH = 400;
     private static final int MAX_PANEL_HEIGHT = 280;
@@ -38,12 +38,16 @@ public final class BankControlBoxScreenOpener {
     private BankControlBoxScreenOpener() {
     }
 
-    /** request: 请求打开银行控制箱。 */
+    /**
+     * request: 请求打开银行控制箱。
+     */
     public static void request(BlockPos pos) {
         ClientPacketDistributor.sendToServer(new BankControlBoxOpenRequestPacket(pos));
     }
 
-    /** open: 打开或刷新银行界面。 */
+    /**
+     * open: 打开或刷新银行界面。
+     */
     public static void open(BankControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {

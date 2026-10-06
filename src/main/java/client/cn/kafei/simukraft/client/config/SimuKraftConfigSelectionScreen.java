@@ -2,11 +2,11 @@ package client.cn.kafei.simukraft.client.config;
 
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.mojang.blaze3d.Blaze3D;
 import common.cn.kafei.simukraft.SimuKraft;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
-import com.mojang.blaze3d.Blaze3D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -25,12 +25,16 @@ public final class SimuKraftConfigSelectionScreen {
     private SimuKraftConfigSelectionScreen() {
     }
 
-    /** create: 创建配置选择菜单。 */
+    /**
+     * create: 创建配置选择菜单。
+     */
     public static Screen create(Screen parent) {
         return new ModularUIScreen(SimuKraftConfigWidgets.screenUi(createUi(parent)), Component.translatable("gui.simukraft.config.title"));
     }
 
-    /** createUi: 组装旧版配置选择布局。 */
+    /**
+     * createUi: 组装旧版配置选择布局。
+     */
     private static UIElement createUi(Screen parent) {
         int windowWidth = SimuKraftConfigWidgets.windowWidth(WINDOW_WIDTH, MIN_WINDOW_WIDTH);
         int windowHeight = SimuKraftConfigWidgets.windowHeight(WINDOW_HEIGHT, MIN_WINDOW_HEIGHT);
@@ -102,7 +106,9 @@ public final class SimuKraftConfigSelectionScreen {
         return Math.max(minWidth, Math.min(BUTTON_WIDTH, availableWidth));
     }
 
-    /** canEditServerConfig: 判断当前客户端是否有服务端配置权限。 */
+    /**
+     * canEditServerConfig: 判断当前客户端是否有服务端配置权限。
+     */
     private static boolean canEditServerConfig() {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft.getSingleplayerServer() != null

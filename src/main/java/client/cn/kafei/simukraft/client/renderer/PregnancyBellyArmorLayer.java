@@ -8,7 +8,6 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
@@ -16,7 +15,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
-/** PregnancyBellyArmorLayer：为已装备胸甲的孕期 NPC 绘制外扩腹部盔甲。 */
+/**
+ * PregnancyBellyArmorLayer：为已装备胸甲的孕期 NPC 绘制外扩腹部盔甲。
+ */
 public final class PregnancyBellyArmorLayer extends RenderLayer<CitizenRenderState, CitizenModel> {
     private static final Identifier FALLBACK_ARMOR_TEXTURE = Identifier.withDefaultNamespace("textures/entity/equipment/humanoid/iron.png");
     private static final int ARMOR_TEXTURE_U = 17;
@@ -33,7 +34,7 @@ public final class PregnancyBellyArmorLayer extends RenderLayer<CitizenRenderSta
 
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords,
-            CitizenRenderState state, float yRot, float xRot) {
+                       CitizenRenderState state, float yRot, float xRot) {
         if (state.isInvisible || state.childNpc) {
             return;
         }

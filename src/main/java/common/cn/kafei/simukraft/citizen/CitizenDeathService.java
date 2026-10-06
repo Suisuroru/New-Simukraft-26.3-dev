@@ -1,19 +1,19 @@
 package common.cn.kafei.simukraft.citizen;
 
-import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.building.BuildingAbandonmentService;
-import common.cn.kafei.simukraft.citizen.family.FamilyManager;
+import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.building.PlacedBuildingService;
 import common.cn.kafei.simukraft.building.ResidentialBedPoiService;
 import common.cn.kafei.simukraft.building.controlbox.ResidentialControlBoxService;
 import common.cn.kafei.simukraft.building.controlbox.ResidentialControlBoxView;
+import common.cn.kafei.simukraft.citizen.family.FamilyManager;
+import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
-import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
+import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.network.building.controlbox.ResidentialControlBoxViewUpdatePacket;
-import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import net.minecraft.core.BlockPos;
@@ -64,7 +64,9 @@ public final class CitizenDeathService {
         level.players().forEach(player -> HudSyncService.syncToPlayer(player, true));
     }
 
-    /** dropInventory：NPC 死亡时掉落真实背包与装备，避免物品留在不可访问的实体 NBT。 */
+    /**
+     * dropInventory：NPC 死亡时掉落真实背包与装备，避免物品留在不可访问的实体 NBT。
+     */
     private static void dropInventory(ServerLevel level, CitizenEntity entity) {
         CitizenInventory inventory = entity.getCitizenInventory();
         synchronized (inventory) {

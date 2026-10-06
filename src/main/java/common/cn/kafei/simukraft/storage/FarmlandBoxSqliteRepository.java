@@ -4,11 +4,7 @@ import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 /**
  * 农田盒配置的 SQLite 仓库。读写格式与 FarmlandBoxData.toTag/fromTag 对齐：
@@ -35,8 +31,11 @@ public final class FarmlandBoxSqliteRepository {
                 for (int i = 0; i < boxes.size(); i++) {
                     CompoundTag box = boxes.getCompoundOrEmpty(i);
                     statement.setLong(1, box.getLongOr("BoxPos", 0L));
-                    if (box.contains("Crop")) { statement.setString(2, box.getStringOr("Crop", "")); }
-                    else { statement.setNull(2, java.sql.Types.VARCHAR); }
+                    if (box.contains("Crop")) {
+                        statement.setString(2, box.getStringOr("Crop", ""));
+                    } else {
+                        statement.setNull(2, java.sql.Types.VARCHAR);
+                    }
                     if (box.contains("Plot")) {
                         CompoundTag plot = box.getCompoundOrEmpty("Plot");
                         statement.setLong(3, plot.getLongOr("Min", 0L));
@@ -45,8 +44,11 @@ public final class FarmlandBoxSqliteRepository {
                         statement.setNull(3, java.sql.Types.INTEGER);
                         statement.setNull(4, java.sql.Types.INTEGER);
                     }
-                    if (box.contains("ChestPos")) { statement.setLong(5, box.getLongOr("ChestPos", 0L)); }
-                    else { statement.setNull(5, java.sql.Types.INTEGER); }
+                    if (box.contains("ChestPos")) {
+                        statement.setLong(5, box.getLongOr("ChestPos", 0L));
+                    } else {
+                        statement.setNull(5, java.sql.Types.INTEGER);
+                    }
                     statement.setInt(6, box.getBooleanOr("Running", false) ? 1 : 0);
                     statement.addBatch();
                 }

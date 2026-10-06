@@ -17,7 +17,9 @@ final class CommercialTradeTabStrip {
     private CommercialTradeTabStrip() {
     }
 
-    /** render: 绘制交易列表顶部的分类 Tab。 */
+    /**
+     * render: 绘制交易列表顶部的分类 Tab。
+     */
     static void render(GUIContext guiContext, Font font, int left, int top, CommercialTradeOfferTab activeTab) {
         CommercialTradeOfferTab[] tabs = CommercialTradeOfferTab.values();
         for (int i = 0; i < tabs.length; i++) {
@@ -25,7 +27,9 @@ final class CommercialTradeTabStrip {
         }
     }
 
-    /** hit: 获取鼠标命中的交易分类 Tab。 */
+    /**
+     * hit: 获取鼠标命中的交易分类 Tab。
+     */
     @Nullable
     static CommercialTradeOfferTab hit(float mouseX, float mouseY, int left, int top) {
         CommercialTradeOfferTab[] tabs = CommercialTradeOfferTab.values();

@@ -1,18 +1,14 @@
 package common.cn.kafei.simukraft.network.city.core;
 
-import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkBridge;
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityLevelDefinition;
-import common.cn.kafei.simukraft.city.CityUpgradeState;
-import common.cn.kafei.simukraft.city.CityPermissionLevel;
-import common.cn.kafei.simukraft.city.FinanceTransactionData;
+import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiType;
 import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.job.CityJobCapacityService;
 import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.network.city.CityNetworkViewFactory;
+import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -20,8 +16,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.minecraft.tags.TagKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -31,7 +27,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cityId, String cityName, double funds, int cityLevel, int memberCount, int cityPopulation, int housingCapacity, int cityChunkCount, int cityEnclaveCount, CityPermissionLevel permissionLevel, boolean canCreateCity, boolean canManageCity, List<FinanceEntry> financeEntries, List<PoiStat> poiStats, List<JobStat> jobStats, List<UpgradeTarget> upgradeTargets, UpgradeProgress upgradeProgress) implements CustomPacketPayload {
+public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cityId, String cityName, double funds,
+                                         int cityLevel, int memberCount, int cityPopulation, int housingCapacity,
+                                         int cityChunkCount, int cityEnclaveCount, CityPermissionLevel permissionLevel,
+                                         boolean canCreateCity, boolean canManageCity,
+                                         List<FinanceEntry> financeEntries, List<PoiStat> poiStats,
+                                         List<JobStat> jobStats, List<UpgradeTarget> upgradeTargets,
+                                         UpgradeProgress upgradeProgress) implements CustomPacketPayload {
     private static final int MAX_FINANCE_ENTRIES = 128;
     private static final int MAX_POI_STATS = 64;
     private static final int MAX_JOB_STATS = 128;
@@ -40,7 +42,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
     public static final StreamCodec<RegistryFriendlyByteBuf, CityCoreOpenResponsePacket> STREAM_CODEC = StreamCodec.of(CityCoreOpenResponsePacket::encode, CityCoreOpenResponsePacket::decode);
     public static final UUID EMPTY_CITY_ID = new UUID(0L, 0L);
 
-    /** CityCoreOpenResponsePacket: 兼容未同步区块和飞地统计的旧构造调用。 */
+    /**
+     * CityCoreOpenResponsePacket: 兼容未同步区块和飞地统计的旧构造调用。
+     */
     public CityCoreOpenResponsePacket(BlockPos pos,
                                       boolean hasCity,
                                       UUID cityId,
@@ -62,7 +66,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                 UpgradeProgress.NONE);
     }
 
-    /** CityCoreOpenResponsePacket: 兼容现有城市核心统计响应并附加升级进度快照。 */
+    /**
+     * CityCoreOpenResponsePacket: 兼容现有城市核心统计响应并附加升级进度快照。
+     */
     public CityCoreOpenResponsePacket(BlockPos pos,
                                       boolean hasCity,
                                       UUID cityId,
@@ -280,7 +286,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         return new UpgradeProgress(buffer.readVarInt(), buffer.readLong(), buffer.readVarInt());
     }
 
-    /** upgradeTarget: 返回与当前等级连续的下一等级，缺失时表示不可升级。 */
+    /**
+     * upgradeTarget: 返回与当前等级连续的下一等级，缺失时表示不可升级。
+     */
     public UpgradeTarget upgradeTarget() {
         int expectedLevel = cityLevel >= CityLevelDefinition.MAX_LEVEL ? -1 : cityLevel + 1;
         for (UpgradeTarget target : upgradeTargets) {
@@ -289,7 +297,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         return UpgradeTarget.NONE;
     }
 
-    /** UpgradeTarget: 发送给客户端的下一等级只读快照。 */
+    /**
+     * UpgradeTarget: 发送给客户端的下一等级只读快照。
+     */
     public record UpgradeTarget(int level,
                                 String displayName,
                                 double funds,
@@ -300,7 +310,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                                 int durationTicks) {
         public static final UpgradeTarget NONE = new UpgradeTarget(0, "", 0.0D, 0, 0, 0, List.of(), 0);
 
-        /** UpgradeTarget: 兼容未配置区块和飞地门槛的旧构造调用。 */
+        /**
+         * UpgradeTarget: 兼容未配置区块和飞地门槛的旧构造调用。
+         */
         public UpgradeTarget(int level,
                              String displayName,
                              double funds,
@@ -311,7 +323,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                     level == CityLevelDefinition.MIN_LEVEL ? 0 : CityLevelDefinition.DEFAULT_UPGRADE_DURATION_TICKS);
         }
 
-        /** UpgradeTarget: 兼容未携带升级耗时的城市等级快照调用。 */
+        /**
+         * UpgradeTarget: 兼容未携带升级耗时的城市等级快照调用。
+         */
         public UpgradeTarget(int level,
                              String displayName,
                              double funds,
@@ -349,12 +363,16 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             return level > 0;
         }
 
-        /** unlockedChunks: 返回升级成功后开放的区块容量。 */
+        /**
+         * unlockedChunks: 返回升级成功后开放的区块容量。
+         */
         public int unlockedChunks() {
             return chunks;
         }
 
-        /** unlockedEnclaves: 返回升级成功后开放的飞地容量。 */
+        /**
+         * unlockedEnclaves: 返回升级成功后开放的飞地容量。
+         */
         public int unlockedEnclaves() {
             return enclaves;
         }
@@ -372,7 +390,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                     definition.durationTicks());
         }
 
-        /** from: 把服务端等级定义转换成有界的网络快照列表。 */
+        /**
+         * from: 把服务端等级定义转换成有界的网络快照列表。
+         */
         public static List<UpgradeTarget> from(List<CityLevelDefinition> definitions) {
             if (definitions == null || definitions.isEmpty()) {
                 return List.of();
@@ -384,7 +404,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         }
     }
 
-    /** UpgradeProgress: 发送给客户端的升级任务时间快照，不参与客户端权威判定。 */
+    /**
+     * UpgradeProgress: 发送给客户端的升级任务时间快照，不参与客户端权威判定。
+     */
     public record UpgradeProgress(int targetLevel, long startedAt, int durationTicks) {
         public static final UpgradeProgress NONE = new UpgradeProgress(0, 0L, 0);
 
@@ -398,12 +420,16 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             }
         }
 
-        /** active: 判断客户端快照是否表示一个正在执行的升级任务。 */
+        /**
+         * active: 判断客户端快照是否表示一个正在执行的升级任务。
+         */
         public boolean active() {
             return targetLevel > 0;
         }
 
-        /** progressAt: 根据同步的世界游戏时间计算客户端显示进度。 */
+        /**
+         * progressAt: 根据同步的世界游戏时间计算客户端显示进度。
+         */
         public float progressAt(long gameTime) {
             if (!active()) {
                 return 0.0F;
@@ -412,7 +438,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             return Math.min(1.0F, elapsed / (float) durationTicks);
         }
 
-        /** from: 将服务端城市状态转换为只读网络快照。 */
+        /**
+         * from: 将服务端城市状态转换为只读网络快照。
+         */
         public static UpgradeProgress from(CityUpgradeState state) {
             return state == null || !state.active()
                     ? NONE
@@ -420,7 +448,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         }
     }
 
-    /** UpgradeItem: 升级快照中的精确物品或物品标签材料与可选显示信息。 */
+    /**
+     * UpgradeItem: 升级快照中的精确物品或物品标签材料与可选显示信息。
+     */
     public record UpgradeItem(Identifier itemId,
                               Identifier itemTag,
                               int count,
@@ -430,12 +460,16 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             this(itemId, null, count, null, "");
         }
 
-        /** UpgradeItem: 兼容未携带展示图标和名称的旧网络快照调用。 */
+        /**
+         * UpgradeItem: 兼容未携带展示图标和名称的旧网络快照调用。
+         */
         public UpgradeItem(Identifier itemId, Identifier itemTag, int count) {
             this(itemId, itemTag, count, null, "");
         }
 
-        /** tag: 创建一个按物品标签匹配的网络升级材料。 */
+        /**
+         * tag: 创建一个按物品标签匹配的网络升级材料。
+         */
         public static UpgradeItem tag(Identifier itemTag, int count) {
             return new UpgradeItem(null, itemTag, count, null, "");
         }
@@ -455,7 +489,9 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             return itemTag != null;
         }
 
-        /** matches: 判断客户端物品堆是否满足该升级材料。 */
+        /**
+         * matches: 判断客户端物品堆是否满足该升级材料。
+         */
         public boolean matches(ItemStack stack) {
             if (stack == null || stack.isEmpty()) {
                 return false;
@@ -465,13 +501,16 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                     : BuiltInRegistries.ITEM.getOptional(itemId).map(stack::is).orElse(false);
         }
 
-        /** serializedId: 返回 UI 使用的物品或标签标识。 */
+        /**
+         * serializedId: 返回 UI 使用的物品或标签标识。
+         */
         public String serializedId() {
             return isTag() ? "#" + itemTag : itemId.toString();
         }
     }
 
-    public record FinanceEntry(long time, String actorName, double amount, double balanceAfter, FinanceTransactionData.Type type, String reason) {
+    public record FinanceEntry(long time, String actorName, double amount, double balanceAfter,
+                               FinanceTransactionData.Type type, String reason) {
         public static FinanceEntry from(FinanceTransactionData data) {
             return new FinanceEntry(data.time(), data.actorName(), data.amount(), data.balanceAfter(), data.type(), data.reason());
         }

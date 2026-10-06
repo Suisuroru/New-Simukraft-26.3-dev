@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.farmland;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import common.cn.kafei.simukraft.network.farmland.FarmlandBoxBoundsRequestPacket;
 import common.cn.kafei.simukraft.registry.ModBlocks;
@@ -15,7 +13,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 /**
  * 农田盒悬停预览：玩家视线对准农田盒持续超过 1 秒时，向服务端请求其已保存的作业区域并显示线框。

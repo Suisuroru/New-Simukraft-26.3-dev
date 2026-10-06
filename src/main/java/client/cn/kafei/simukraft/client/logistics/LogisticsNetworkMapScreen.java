@@ -1,11 +1,5 @@
 package client.cn.kafei.simukraft.client.logistics;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import net.minecraft.client.input.KeyEvent;
-
-import net.minecraft.client.input.MouseButtonEvent;
-
 import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegion;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
@@ -16,16 +10,14 @@ import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenRespons
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 final class LogisticsNetworkMapScreen extends Screen {
     private static final double MIN_ZOOM = 0.1D;
@@ -52,7 +44,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         this.packet = packet;
     }
 
-    /** open: 打开旧版全屏物流地图。 */
+    /**
+     * open: 打开旧版全屏物流地图。
+     */
     static void open(LogisticsServerBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
@@ -60,7 +54,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** init: 初始化地图扫描和底部按钮。 */
+    /**
+     * init: 初始化地图扫描和底部按钮。
+     */
     @Override
     protected void init() {
         ensureMapReady();
@@ -68,12 +64,16 @@ final class LogisticsNetworkMapScreen extends Screen {
         rebuildButtons();
     }
 
-    /** renderBackground: 地图已自行绘制全屏底色，禁用原版菜单模糊背景。 */
+    /**
+     * renderBackground: 地图已自行绘制全屏底色，禁用原版菜单模糊背景。
+     */
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
     }
 
-    /** render: 绘制全屏地图、路线、节点、侧边栏和按钮。 */
+    /**
+     * render: 绘制全屏地图、路线、节点、侧边栏和按钮。
+     */
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, this.width, this.height, 0xFF0A0A0A);
@@ -95,7 +95,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
-    /** mouseClicked: 左键选接收端，右键选发送端，空白处拖拽地图。 */
+    /**
+     * mouseClicked: 左键选接收端，右键选发送端，空白处拖拽地图。
+     */
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double mouseX = event.x();
@@ -133,7 +135,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return true;
     }
 
-    /** mouseDragged: 拖拽平移地图。 */
+    /**
+     * mouseDragged: 拖拽平移地图。
+     */
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         double mouseX = event.x();
@@ -149,7 +153,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return super.mouseDragged(event, dragX, dragY);
     }
 
-    /** mouseReleased: 停止地图拖拽。 */
+    /**
+     * mouseReleased: 停止地图拖拽。
+     */
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         double mouseX = event.x();
@@ -161,7 +167,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return super.mouseReleased(event);
     }
 
-    /** mouseScrolled: 以鼠标为中心缩放地图。 */
+    /**
+     * mouseScrolled: 以鼠标为中心缩放地图。
+     */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         double oldZoom = zoomLevel;
@@ -175,7 +183,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return true;
     }
 
-    /** keyPressed: ESC 优先关闭侧边栏，再返回主界面。 */
+    /**
+     * keyPressed: ESC 优先关闭侧边栏，再返回主界面。
+     */
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
@@ -195,7 +205,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return super.keyPressed(event);
     }
 
-    /** removed: 释放 SimuMap 消费者，避免地图纹理长期占用。 */
+    /**
+     * removed: 释放 SimuMap 消费者，避免地图纹理长期占用。
+     */
     @Override
     public void removed() {
         if (mapConsumerAcquired && SimuMapManager.isAvailable()) {
@@ -210,7 +222,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return false;
     }
 
-    /** rebuildButtons: 重建底部按钮和选中节点的路线操作按钮。 */
+    /**
+     * rebuildButtons: 重建底部按钮和选中节点的路线操作按钮。
+     */
     private void rebuildButtons() {
         clearWidgets();
         addRenderableWidget(LogisticsNativeStyle.button(Component.literal("+ ").append(Component.translatable("gui.simukraft.logistics.channel.create")),
@@ -227,8 +241,8 @@ final class LogisticsNetworkMapScreen extends Screen {
         for (LogisticsControlBoxService.ChannelEntry channel : selectedChannels()) {
             UUID channelId = channel.channelId();
             addRenderableWidget(LogisticsNativeStyle.button(Component.translatable(channel.enabled()
-                    ? "gui.simukraft.logistics.channel.disable"
-                    : "gui.simukraft.logistics.channel.enable"), x + 105, y + 8, 32, 14,
+                            ? "gui.simukraft.logistics.channel.disable"
+                            : "gui.simukraft.logistics.channel.enable"), x + 105, y + 8, 32, 14,
                     () -> sendChannelAction(LogisticsBoxActionPacket.Action.TOGGLE_CHANNEL, channelId)));
             addRenderableWidget(LogisticsNativeStyle.button(Component.literal("x"), x + 140, y + 8, 20, 14,
                     () -> sendChannelAction(LogisticsBoxActionPacket.Action.DELETE_CHANNEL, channelId)));
@@ -239,7 +253,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** ensureMapReady: 初始化地图管理器并触发小范围扫描。 */
+    /**
+     * ensureMapReady: 初始化地图管理器并触发小范围扫描。
+     */
     private void ensureMapReady() {
         if (!SimuMapManager.isAvailable()) {
             return;
@@ -258,7 +274,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** renderTerrain: 绘制 SimuMap 地形纹理。 */
+    /**
+     * renderTerrain: 绘制 SimuMap 地形纹理。
+     */
     private void renderTerrain(GuiGraphicsExtractor graphics, int startX, int startY, int width, int height) {
         graphics.fill(startX, startY, startX + width, startY + height, 0xFF1A2028);
         if (!SimuMapManager.isAvailable()) {
@@ -284,7 +302,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** drawRegionTexture: 把地图区域纹理绘制到屏幕坐标。 */
+    /**
+     * drawRegionTexture: 把地图区域纹理绘制到屏幕坐标。
+     */
     private void drawRegionTexture(GuiGraphicsExtractor graphics, Identifier textureLocation, double screenX, double screenY, double regionSize) {
         int x0 = Math.round((float) screenX);
         int y0 = Math.round((float) screenY);
@@ -293,7 +313,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         graphics.blit(textureLocation, x0, y0, x1, y1, 0.0F, 1.0F, 0.0F, 1.0F);
     }
 
-    /** renderChannelLines: 画直线路径和流向动效，双向时同一条线两端各一枚箭头。 */
+    /**
+     * renderChannelLines: 画直线路径和流向动效，双向时同一条线两端各一枚箭头。
+     */
     private void renderChannelLines(GuiGraphicsExtractor graphics, int mapWidth) {
         int centerX = mapWidth / 2;
         int centerY = this.height / 2;
@@ -326,7 +348,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** renderMarkers: 绘制仓库仓房图标和客户端菱形节点。 */
+    /**
+     * renderMarkers: 绘制仓库仓房图标和客户端菱形节点。
+     */
     private void renderMarkers(GuiGraphicsExtractor graphics, int mapWidth) {
         int centerX = mapWidth / 2;
         int centerY = this.height / 2;
@@ -344,7 +368,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** renderSidePanel: 绘制选中客户端的旧版侧边信息面板。 */
+    /**
+     * renderSidePanel: 绘制选中客户端的旧版侧边信息面板。
+     */
     private void renderSidePanel(GuiGraphicsExtractor graphics, int x) {
         int panelWidth = 180;
         LogisticsNativeStyle.drawPanel(graphics, x, 0, panelWidth, this.height);
@@ -379,7 +405,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
     }
 
-    /** renderHoverTooltip: 显示端点或鼠标附近路线的悬浮框。 */
+    /**
+     * renderHoverTooltip: 显示端点或鼠标附近路线的悬浮框。
+     */
     private void renderHoverTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         List<Component> lines = hoverTooltipLines();
         if (lines.isEmpty()) {
@@ -388,7 +416,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         graphics.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
     }
 
-    /** hoverTooltipLines: 组装端点信息和附近路线文本。 */
+    /**
+     * hoverTooltipLines: 组装端点信息和附近路线文本。
+     */
     private List<Component> hoverTooltipLines() {
         List<Component> lines = new ArrayList<>();
         LogisticsControlBoxService.ClientEntry hoveredClient = client(hoveredClientId);
@@ -426,7 +456,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return lines;
     }
 
-    /** updateHover: 根据鼠标位置找出端点和附近路线。 */
+    /**
+     * updateHover: 根据鼠标位置找出端点和附近路线。
+     */
     private void updateHover(int mouseX, int mouseY, int mapWidth) {
         hoveredClientId = null;
         hoveredWarehouse = false;
@@ -450,7 +482,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         hoveredRoutes = nearbyRoutes(mouseX, mouseY, warehouse, centerX, centerY);
     }
 
-    /** nearbyRoutes: 收集鼠标附近的路线，端点上会带上该节点相关线路。 */
+    /**
+     * nearbyRoutes: 收集鼠标附近的路线，端点上会带上该节点相关线路。
+     */
     private List<HoveredRoute> nearbyRoutes(int mouseX, int mouseY, int[] warehouse, int centerX, int centerY) {
         List<HoveredRoute> nearby = new ArrayList<>();
         Set<UUID> seen = new HashSet<>();
@@ -481,7 +515,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return List.copyOf(nearby);
     }
 
-    /** hasBothDirections: 同一客户端同时存在补货和回收时视为双向。 */
+    /**
+     * hasBothDirections: 同一客户端同时存在补货和回收时视为双向。
+     */
     private boolean hasBothDirections(UUID clientId) {
         boolean toClient = false;
         boolean toWarehouse = false;
@@ -528,7 +564,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return false;
     }
 
-    /** endpointAt: 查询鼠标下的仓库或客户端节点。 */
+    /**
+     * endpointAt: 查询鼠标下的仓库或客户端节点。
+     */
     private QuickEndpoint endpointAt(double mouseX, double mouseY) {
         int centerX = mapWidth() / 2;
         int centerY = this.height / 2;
@@ -545,7 +583,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return null;
     }
 
-    /** worldToScreen: 将世界坐标转换为地图屏幕坐标。 */
+    /**
+     * worldToScreen: 将世界坐标转换为地图屏幕坐标。
+     */
     private int[] worldToScreen(BlockPos pos, int centerX, int centerY) {
         return new int[]{
                 (int) Math.round(centerX + offsetX + pos.getX() * zoomLevel),
@@ -553,7 +593,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         };
     }
 
-    /** selectedChannels: 返回当前客户端关联的频道。 */
+    /**
+     * selectedChannels: 返回当前客户端关联的频道。
+     */
     private List<LogisticsControlBoxService.ChannelEntry> selectedChannels() {
         if (selectedClientId == null) {
             return List.of();
@@ -563,7 +605,9 @@ final class LogisticsNetworkMapScreen extends Screen {
                 .toList();
     }
 
-    /** client: 按 ID 查找客户端数据。 */
+    /**
+     * client: 按 ID 查找客户端数据。
+     */
     private LogisticsControlBoxService.ClientEntry client(UUID clientId) {
         if (clientId == null) {
             return null;
@@ -574,7 +618,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return null;
     }
 
-    /** preferredClientId: 根据快速端点为普通创建按钮预选客户端。 */
+    /**
+     * preferredClientId: 根据快速端点为普通创建按钮预选客户端。
+     */
     private UUID preferredClientId() {
         if (quickReceiver != null && !quickReceiver.warehouse()) {
             return quickReceiver.clientId();
@@ -585,7 +631,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return selectedClientId;
     }
 
-    /** preferredDirection: 根据快速端点为普通创建按钮预选方向。 */
+    /**
+     * preferredDirection: 根据快速端点为普通创建按钮预选方向。
+     */
     private LogisticsDirection preferredDirection() {
         if (quickSender != null && !quickSender.warehouse()) {
             return LogisticsDirection.CLIENT_TO_WAREHOUSE;
@@ -593,7 +641,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return LogisticsDirection.WAREHOUSE_TO_CLIENT;
     }
 
-    /** tryOpenQuickCreate: 双端点有效时打开创建线路弹窗。 */
+    /**
+     * tryOpenQuickCreate: 双端点有效时打开创建线路弹窗。
+     */
     private boolean tryOpenQuickCreate() {
         if (quickReceiver == null || quickSender == null) {
             return false;
@@ -614,7 +664,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return false;
     }
 
-    /** endpointLabel: 返回快速创建端点的紧凑显示名。 */
+    /**
+     * endpointLabel: 返回快速创建端点的紧凑显示名。
+     */
     private String endpointLabel(QuickEndpoint endpoint) {
         if (endpoint == null) {
             return "-";
@@ -634,24 +686,32 @@ final class LogisticsNetworkMapScreen extends Screen {
         return new QuickEndpoint(false, client.clientId(), client.boxPos().immutable());
     }
 
-    /** sendChannelAction: 发送启停或删除频道请求。 */
+    /**
+     * sendChannelAction: 发送启停或删除频道请求。
+     */
     private void sendChannelAction(LogisticsBoxActionPacket.Action action, UUID channelId) {
         ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, "", LogisticsDirection.WAREHOUSE_TO_CLIENT));
         selectedClientId = null;
     }
 
-    /** centerOnWarehouse: 将地图中心移动到仓库盒。 */
+    /**
+     * centerOnWarehouse: 将地图中心移动到仓库盒。
+     */
     private void centerOnWarehouse() {
         offsetX = -packet.boxPos().getX() * zoomLevel;
         offsetY = -packet.boxPos().getZ() * zoomLevel;
     }
 
-    /** mapWidth: 根据侧边栏状态计算地图宽度。 */
+    /**
+     * mapWidth: 根据侧边栏状态计算地图宽度。
+     */
     private int mapWidth() {
         return selectedClientId == null ? this.width : this.width - 180;
     }
 
-    /** channelLaneSlot: 同一客户端多条线路时的错开序号。 */
+    /**
+     * channelLaneSlot: 同一客户端多条线路时的错开序号。
+     */
     private int channelLaneSlot(LogisticsControlBoxService.ChannelEntry channel) {
         int slot = 0;
         for (LogisticsControlBoxService.ChannelEntry other : packet.channels()) {
@@ -666,7 +726,9 @@ final class LogisticsNetworkMapScreen extends Screen {
         return 0;
     }
 
-    /** channelLaneCount: 统计指向同一客户端的线路数量。 */
+    /**
+     * channelLaneCount: 统计指向同一客户端的线路数量。
+     */
     private int channelLaneCount(UUID clientId) {
         int count = 0;
         for (LogisticsControlBoxService.ChannelEntry channel : packet.channels()) {

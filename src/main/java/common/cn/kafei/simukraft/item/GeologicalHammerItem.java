@@ -1,12 +1,7 @@
 package common.cn.kafei.simukraft.item;
 
 import common.cn.kafei.simukraft.network.geology.GeologicalSurveyHintService;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinFieldProfile;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinLookupResult;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinLookupStatus;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinService;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlot;
-import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlotState;
+import common.cn.kafei.simukraft.virtualvein.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -28,13 +23,17 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** GeologicalHammerItem: 勘探当前位置所属矿区的矿脉。 */
+/**
+ * GeologicalHammerItem: 勘探当前位置所属矿区的矿脉。
+ */
 
 public final class GeologicalHammerItem extends Item {
     private static final int MAX_DURABILITY = 800;
     private static final int PROSPECTING_DEPTH = 60;
     private static final int COOLDOWN_TICKS = 20;
-    /** 以铁质工具属性为基准，仅将耐久提升至 MAX_DURABILITY 的自定义工具材质。 */
+    /**
+     * 以铁质工具属性为基准，仅将耐久提升至 MAX_DURABILITY 的自定义工具材质。
+     */
     private static final ToolMaterial HAMMER_MATERIAL = new ToolMaterial(
             BlockTags.INCORRECT_FOR_IRON_TOOL,
             MAX_DURABILITY,
@@ -48,7 +47,9 @@ public final class GeologicalHammerItem extends Item {
         super(properties.stacksTo(1).pickaxe(HAMMER_MATERIAL, 1.0F, -2.8F));
     }
 
-    /** appendHoverText: 在物品提示中显示地质锤的叙述性描述。 */
+    /**
+     * appendHoverText: 在物品提示中显示地质锤的叙述性描述。
+     */
     @Override
     public void appendHoverText(ItemStack stack,
                                 TooltipContext context,
@@ -60,7 +61,9 @@ public final class GeologicalHammerItem extends Item {
                 .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
     }
 
-    /** useOn: 服务端探查右键位置向下 60 格范围内的矿脉。 */
+    /**
+     * useOn: 服务端探查右键位置向下 60 格范围内的矿脉。
+     */
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
@@ -91,7 +94,9 @@ public final class GeologicalHammerItem extends Item {
         return InteractionResult.CONSUME;
     }
 
-    /** showNearbyVeins: 提示右键位置向下探查范围内仍可开采的矿脉痕迹。 */
+    /**
+     * showNearbyVeins: 提示右键位置向下探查范围内仍可开采的矿脉痕迹。
+     */
     private static void showNearbyVeins(ServerPlayer player,
                                         VirtualVeinFieldProfile profile,
                                         int rangeMinY,
@@ -123,17 +128,23 @@ public final class GeologicalHammerItem extends Item {
         GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.no_nearby"));
     }
 
-    /** scanMinimumY: 计算向下探查 60 格后的最低高度，并限制在世界可用高度内。 */
+    /**
+     * scanMinimumY: 计算向下探查 60 格后的最低高度，并限制在世界可用高度内。
+     */
     static int scanMinimumY(int clickedY, int minBuildHeight) {
         return Math.max(minBuildHeight, clickedY - PROSPECTING_DEPTH);
     }
 
     private static void sendLookupFailure(ServerPlayer player, VirtualVeinLookupStatus status) {
         switch (status) {
-            case NOT_OVERWORLD -> GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.not_overworld"));
-            case DEFINITIONS_UNAVAILABLE -> GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.definitions_unavailable"));
-            case DATABASE_UNAVAILABLE -> GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.database_unavailable"));
-            case UNSUPPORTED_WORLDGEN -> GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.unsupported_worldgen"));
+            case NOT_OVERWORLD ->
+                    GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.not_overworld"));
+            case DEFINITIONS_UNAVAILABLE ->
+                    GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.definitions_unavailable"));
+            case DATABASE_UNAVAILABLE ->
+                    GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.database_unavailable"));
+            case UNSUPPORTED_WORLDGEN ->
+                    GeologicalSurveyHintService.send(player, Component.translatable("message.simukraft.geological_hammer.unsupported_worldgen"));
             case READY -> {
             }
         }

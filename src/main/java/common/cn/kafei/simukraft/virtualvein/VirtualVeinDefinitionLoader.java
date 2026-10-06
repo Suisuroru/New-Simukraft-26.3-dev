@@ -22,7 +22,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** VirtualVeinDefinitionLoader: 加载虚拟矿脉数据包定义。 */
+/**
+ * VirtualVeinDefinitionLoader: 加载虚拟矿脉数据包定义。
+ */
 
 public final class VirtualVeinDefinitionLoader implements PreparableReloadListener {
     public static final VirtualVeinDefinitionLoader INSTANCE = new VirtualVeinDefinitionLoader();
@@ -64,7 +66,9 @@ public final class VirtualVeinDefinitionLoader implements PreparableReloadListen
         return List.copyOf(loaded);
     }
 
-    /** parse: 校验并解析单份矿脉 JSON 定义。 */
+    /**
+     * parse: 校验并解析单份矿脉 JSON 定义。
+     */
     static VirtualVeinDefinition parse(Identifier resourceId, JsonObject root) {
         String id = text(root, "id");
         String displayName = text(root, "display_name");

@@ -3,24 +3,24 @@ package client.cn.kafei.simukraft.client.mineraldrilling;
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingConstants;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingMenuHolder;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingMenuSnapshot;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingUiLayout;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingUiMetrics;
+import common.cn.kafei.simukraft.mineraldrilling.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
-/** MineralDrillingUiFactory: 按客户端逻辑分辨率创建钻井容器并连接本地辅助界面。 */
+/**
+ * MineralDrillingUiFactory: 按客户端逻辑分辨率创建钻井容器并连接本地辅助界面。
+ */
 public final class MineralDrillingUiFactory {
     private static final MineralDrillingUiLayout.ClientActions CLIENT_ACTIONS = new ClientActions();
 
     private MineralDrillingUiFactory() {
     }
 
-    /** create: 以 510x340 为 1080P、GUI 缩放 3 的上限，并在较小窗口保留槽位原始尺寸。 */
+    /**
+     * create: 以 510x340 为 1080P、GUI 缩放 3 的上限，并在较小窗口保留槽位原始尺寸。
+     */
     public static ModularUI create(MineralDrillingMenuHolder holder, Player player) {
         Minecraft minecraft = Minecraft.getInstance();
         int width = minecraft != null ? minecraft.getWindow().getGuiScaledWidth() : MineralDrillingUiMetrics.MAX_WIDTH;
@@ -30,7 +30,9 @@ public final class MineralDrillingUiFactory {
                 MineralDrillingClientTextResolver::resolveProductText);
     }
 
-    /** clearBounds: 清除指定控制箱的客户端建筑边界映射。 */
+    /**
+     * clearBounds: 清除指定控制箱的客户端建筑边界映射。
+     */
     static void clearBounds(BlockPos boxPos) {
         if (boxPos != null) {
             BuildingBoundsRenderer.setBuildingBoundsVisible(boxPos, null, false);
@@ -38,7 +40,9 @@ public final class MineralDrillingUiFactory {
     }
 
     private static final class ClientActions implements MineralDrillingUiLayout.ClientActions {
-        /** requestHire: 复用统一 NPC 雇佣界面请求钻井工候选列表。 */
+        /**
+         * requestHire: 复用统一 NPC 雇佣界面请求钻井工候选列表。
+         */
         @Override
         public void requestHire(BlockPos boxPos) {
             NpcHireScreen.request(boxPos,
@@ -46,7 +50,9 @@ public final class MineralDrillingUiFactory {
                     MineralDrillingConstants.HIRE_ROLE);
         }
 
-        /** toggleBounds: 仅在客户端切换已由服务端快照确认的建筑边界。 */
+        /**
+         * toggleBounds: 仅在客户端切换已由服务端快照确认的建筑边界。
+         */
         @Override
         public void toggleBounds(MineralDrillingMenuSnapshot snapshot) {
             if (snapshot == null || !snapshot.hasBounds()) {
@@ -61,7 +67,9 @@ public final class MineralDrillingUiFactory {
                     snapshot.boxPos(), bounds(snapshot.boundsMin(), snapshot.boundsMax()), true);
         }
 
-        /** clearBounds: 拆除请求发出时移除本地边界，防止容器关闭后继续渲染。 */
+        /**
+         * clearBounds: 拆除请求发出时移除本地边界，防止容器关闭后继续渲染。
+         */
         @Override
         public void clearBounds(MineralDrillingMenuSnapshot snapshot) {
             if (snapshot != null) {

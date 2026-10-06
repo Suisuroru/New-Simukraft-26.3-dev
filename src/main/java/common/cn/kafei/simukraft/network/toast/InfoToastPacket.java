@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.network.toast;
 
-import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkBridge;
 import common.cn.kafei.simukraft.SimuKraft;
+import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkBridge;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -12,7 +12,8 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
-public record InfoToastPacket(Component title, Component message, String style, ItemStack iconStack) implements CustomPacketPayload {
+public record InfoToastPacket(Component title, Component message, String style,
+                              ItemStack iconStack) implements CustomPacketPayload {
     public static final Type<InfoToastPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "info_toast"));
     public static final StreamCodec<RegistryFriendlyByteBuf, InfoToastPacket> STREAM_CODEC = StreamCodec.of(InfoToastPacket::encode, InfoToastPacket::decode);
 

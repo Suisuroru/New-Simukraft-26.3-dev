@@ -31,7 +31,8 @@ public final class ClientHUDOverlay {
     private static CityPermissionLevel cachedPermissionLevel = CityPermissionLevel.CITIZEN;
     private static boolean cachedCreativeMode = false;
 
-    private ClientHUDOverlay() {}
+    private ClientHUDOverlay() {
+    }
 
     public static void render(RenderGuiEvent.Post event) {
         Minecraft mc = Objects.requireNonNull(Minecraft.getInstance());
@@ -67,10 +68,13 @@ public final class ClientHUDOverlay {
                 };
                 g.text(font, line, x, pos[1] + i * lineStep, HUD_COLOR, true);
             }
-        } catch (RuntimeException ignored) {}
+        } catch (RuntimeException ignored) {
+        }
     }
 
-    /** getDisplayLines: 供编辑器使用，返回按指定宽度换行后的行列表。 */
+    /**
+     * getDisplayLines: 供编辑器使用，返回按指定宽度换行后的行列表。
+     */
     public static List<String> getDisplayLines(Font font, int maxWidth) {
         List<String> fields = getOrBuildFields(font,
                 ClientSimukraftData.getCurrentDay(),
@@ -83,7 +87,9 @@ public final class ClientHUDOverlay {
         return wrapFieldsToLines(font, fields, maxWidth);
     }
 
-    /** getCurrentDisplayText: 兼容旧接口，返回单行完整文本（编辑器fallback用）。 */
+    /**
+     * getCurrentDisplayText: 兼容旧接口，返回单行完整文本（编辑器fallback用）。
+     */
     public static String getCurrentDisplayText() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.font == null) return "";
@@ -98,7 +104,9 @@ public final class ClientHUDOverlay {
         return String.join(SEPARATOR, fields);
     }
 
-    /** wrapFieldsToLines: 将字段列表按最大宽度分行，字段整体不拆断。0=不限制（单行）。 */
+    /**
+     * wrapFieldsToLines: 将字段列表按最大宽度分行，字段整体不拆断。0=不限制（单行）。
+     */
     public static List<String> wrapFieldsToLines(Font font, List<String> fields, int maxWidth) {
         if (maxWidth <= 0 || fields.isEmpty()) {
             return List.of(String.join(SEPARATOR, fields));
@@ -125,7 +133,9 @@ public final class ClientHUDOverlay {
         return lines;
     }
 
-    /** widestLineWidth: 返回多行中最宽一行的像素宽度。 */
+    /**
+     * widestLineWidth: 返回多行中最宽一行的像素宽度。
+     */
     public static int widestLineWidth(Font font, List<String> lines) {
         int w = 0;
         for (String line : lines) w = Math.max(w, font.width(line));
@@ -133,8 +143,8 @@ public final class ClientHUDOverlay {
     }
 
     private static List<String> getOrBuildFields(Font font, int currentDay, int worldPopulation,
-            String cityName, double funds, int cityPopulation,
-            CityPermissionLevel permissionLevel, boolean creativeMode) {
+                                                 String cityName, double funds, int cityPopulation,
+                                                 CityPermissionLevel permissionLevel, boolean creativeMode) {
         String safeCityName = safeText(cityName);
         if (currentDay == cachedDay
                 && worldPopulation == cachedWorldPopulation

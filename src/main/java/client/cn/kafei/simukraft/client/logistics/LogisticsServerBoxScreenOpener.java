@@ -1,9 +1,5 @@
 package client.cn.kafei.simukraft.client.logistics;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import net.minecraft.client.input.MouseButtonEvent;
-
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.selection.TwoPointSelectionScreen;
 import common.cn.kafei.simukraft.logistics.LogisticsConstants;
@@ -18,9 +14,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,30 +29,40 @@ public final class LogisticsServerBoxScreenOpener {
     private LogisticsServerBoxScreenOpener() {
     }
 
-    /** pushWarehouseItems: 把服务端仓库快照推给当前旧版仓库页。 */
+    /**
+     * pushWarehouseItems: 把服务端仓库快照推给当前旧版仓库页。
+     */
     public static void pushWarehouseItems(BlockPos pos, List<net.minecraft.world.item.ItemStack> items, List<Integer> counts) {
         LogisticsWarehouseGridScreen.receiveIfOpen(pos, items, counts);
     }
 
-    /** request: 请求打开旧版服务端主界面。 */
+    /**
+     * request: 请求打开旧版服务端主界面。
+     */
     public static void request(BlockPos pos) {
         activeTab = ActiveTab.OVERVIEW;
         ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
-    /** requestMap: 请求打开旧版地图 Tab。 */
+    /**
+     * requestMap: 请求打开旧版地图 Tab。
+     */
     public static void requestMap(BlockPos pos) {
         activeTab = ActiveTab.MAP;
         ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
-    /** requestManage: 请求打开旧版仓库总览 Tab。 */
+    /**
+     * requestManage: 请求打开旧版仓库总览 Tab。
+     */
     public static void requestManage(BlockPos pos) {
         activeTab = ActiveTab.OVERVIEW;
         ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
-    /** open: 接收服务端快照并打开原生 Screen。 */
+    /**
+     * open: 接收服务端快照并打开原生 Screen。
+     */
     public static void open(LogisticsServerBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
@@ -76,7 +83,9 @@ public final class LogisticsServerBoxScreenOpener {
 
         private static final int ROUTE_ROW_H = 48;
         private static final int SCROLLBAR_W = 6;
-        /** savedRouteScrollRow: 静态保存路由列表滚动行，服务端刷新重建界面后仍保持位置。 */
+        /**
+         * savedRouteScrollRow: 静态保存路由列表滚动行，服务端刷新重建界面后仍保持位置。
+         */
         private static int savedRouteScrollRow = 0;
 
         private final LogisticsServerBoxOpenResponsePacket packet;
@@ -90,27 +99,37 @@ public final class LogisticsServerBoxScreenOpener {
             this.routeScrollRow = savedRouteScrollRow;
         }
 
-        /** routeViewportTop: 路由列表首行顶部 Y。 */
+        /**
+         * routeViewportTop: 路由列表首行顶部 Y。
+         */
         private int routeViewportTop() {
             return 60;
         }
 
-        /** routeViewportBottom: 路由列表可视区底部 Y。 */
+        /**
+         * routeViewportBottom: 路由列表可视区底部 Y。
+         */
         private int routeViewportBottom() {
             return this.height - 8;
         }
 
-        /** routeVisibleRows: 可视区能完整容纳的频道行数。 */
+        /**
+         * routeVisibleRows: 可视区能完整容纳的频道行数。
+         */
         private int routeVisibleRows() {
             return Math.max(1, (routeViewportBottom() - routeViewportTop()) / ROUTE_ROW_H);
         }
 
-        /** maxRouteScroll: 最大滚动行（顶端行索引上限）。 */
+        /**
+         * maxRouteScroll: 最大滚动行（顶端行索引上限）。
+         */
         private int maxRouteScroll() {
             return Math.max(0, packet.channels().size() - routeVisibleRows());
         }
 
-        /** clampRouteScroll: 约束滚动行并同步到静态保存值。 */
+        /**
+         * clampRouteScroll: 约束滚动行并同步到静态保存值。
+         */
         private void clampRouteScroll() {
             routeScrollRow = Math.max(0, Math.min(maxRouteScroll(), routeScrollRow));
             savedRouteScrollRow = routeScrollRow;
@@ -118,9 +137,9 @@ public final class LogisticsServerBoxScreenOpener {
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        double mouseX = event.x();
-        double mouseY = event.y();
-        int button = event.button();
+            double mouseX = event.x();
+            double mouseY = event.y();
+            int button = event.button();
             if (currentTab == ActiveTab.ROUTES && maxRouteScroll() > 0) {
                 int panelR = this.width - 6;
                 int sbX = panelR - SCROLLBAR_W - 1;
@@ -150,19 +169,25 @@ public final class LogisticsServerBoxScreenOpener {
             return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
 
-        /** init: 重建左侧 Tab 和当前内容页按钮。 */
+        /**
+         * init: 重建左侧 Tab 和当前内容页按钮。
+         */
         @Override
         protected void init() {
             rebuildUI();
         }
 
-        /** renderBackground: 绘制旧版深色背景。 */
+        /**
+         * renderBackground: 绘制旧版深色背景。
+         */
         @Override
         public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
         }
 
-        /** render: 绘制标题、左侧栏、分隔线和当前 Tab 文本。 */
+        /**
+         * render: 绘制标题、左侧栏、分隔线和当前 Tab 文本。
+         */
         @Override
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.title"), TAB_X, 10, LogisticsNativeStyle.TEXT, true);
@@ -184,7 +209,9 @@ public final class LogisticsServerBoxScreenOpener {
             return false;
         }
 
-        /** rebuildUI: 清空并重建所有按钮，防止刷新后重复绑定。 */
+        /**
+         * rebuildUI: 清空并重建所有按钮，防止刷新后重复绑定。
+         */
         private void rebuildUI() {
             clearWidgets();
             int tabY = 30;
@@ -200,7 +227,9 @@ public final class LogisticsServerBoxScreenOpener {
             }
         }
 
-        /** addTab: 创建左侧旧版 Tab 按钮。 */
+        /**
+         * addTab: 创建左侧旧版 Tab 按钮。
+         */
         private void addTab(Component label, ActiveTab tab, int y) {
             String prefix = currentTab == tab ? "> " : "";
             Button button = addRenderableWidget(LogisticsNativeStyle.button(Component.literal(prefix).append(label),
@@ -212,23 +241,25 @@ public final class LogisticsServerBoxScreenOpener {
             button.active = currentTab != tab;
         }
 
-        /** buildOverviewButtons: 创建仓库总览页按钮。 */
+        /**
+         * buildOverviewButtons: 创建仓库总览页按钮。
+         */
         private void buildOverviewButtons(int x, int y) {
             int buttonWidth = 150;
             int buttonHeight = 20;
             int gap = 24;
             boolean hasWarehouse = hasWarehouse();
             Button hire = addRenderableWidget(LogisticsNativeStyle.button(packet.hasWorker()
-                    ? Component.translatable("gui.simukraft.logistics.worker_line", packet.workerName())
-                    : Component.translatable("gui.simukraft.logistics.hire_storage"), x, y, buttonWidth, buttonHeight,
+                            ? Component.translatable("gui.simukraft.logistics.worker_line", packet.workerName())
+                            : Component.translatable("gui.simukraft.logistics.hire_storage"), x, y, buttonWidth, buttonHeight,
                     () -> NpcHireScreen.request(packet.boxPos(), LogisticsConstants.SERVER_SOURCE_TYPE, LogisticsConstants.STORAGE_ROLE)));
             hire.active = packet.hasCity() && !packet.hasWorker();
             Button fire = addRenderableWidget(LogisticsNativeStyle.button(Component.translatable("gui.simukraft.logistics.fire_storage"),
                     x, y + gap, buttonWidth, buttonHeight, this::fireWorker));
             fire.active = packet.hasWorker() && packet.workerId() != null;
             Button create = addRenderableWidget(LogisticsNativeStyle.button(hasWarehouse
-                    ? Component.translatable("gui.simukraft.logistics.create_warehouse.count", packet.containers().size())
-                    : Component.translatable("gui.simukraft.logistics.create_warehouse"), x, y + gap * 2, buttonWidth, buttonHeight,
+                            ? Component.translatable("gui.simukraft.logistics.create_warehouse.count", packet.containers().size())
+                            : Component.translatable("gui.simukraft.logistics.create_warehouse"), x, y + gap * 2, buttonWidth, buttonHeight,
                     () -> TwoPointSelectionScreen.openLogistics(packet.boxPos(), LogisticsBoxActionPacket.Action.BIND_WAREHOUSE_AREA)));
             create.active = packet.hasCity() && !hasWarehouse;
             Button delete = addRenderableWidget(LogisticsNativeStyle.button(Component.translatable("gui.simukraft.logistics.delete_warehouse"),
@@ -241,14 +272,18 @@ public final class LogisticsServerBoxScreenOpener {
             manage.active = hasWarehouse;
         }
 
-        /** buildMapButtons: 创建地图页打开按钮。 */
+        /**
+         * buildMapButtons: 创建地图页打开按钮。
+         */
         private void buildMapButtons(int x, int y) {
             Button openMap = addRenderableWidget(LogisticsNativeStyle.button(Component.translatable("gui.simukraft.logistics.server.tab.map"),
                     x, y + 44, 120, 20, () -> LogisticsNetworkMapScreen.open(packet)));
             openMap.active = hasWarehouse();
         }
 
-        /** buildRouteButtons: 创建路径管理按钮（支持滚动 + 发送/接收双端保有量）。 */
+        /**
+         * buildRouteButtons: 创建路径管理按钮（支持滚动 + 发送/接收双端保有量）。
+         */
         private void buildRouteButtons(int x, int y) {
             Button addRoute = addRenderableWidget(LogisticsNativeStyle.button(Component.literal("+ ").append(Component.translatable("gui.simukraft.logistics.channel.create")),
                     x + 120, y - 2, 112, 18, () -> LogisticsChannelCreateScreenOpener.open(packet, null)));
@@ -281,7 +316,9 @@ public final class LogisticsServerBoxScreenOpener {
             }
         }
 
-        /** keepBox: 创建只接受数字的保有量输入框。 */
+        /**
+         * keepBox: 创建只接受数字的保有量输入框。
+         */
         private net.minecraft.client.gui.components.EditBox keepBox(int x, int y, int value) {
             net.minecraft.client.gui.components.EditBox box = new net.minecraft.client.gui.components.EditBox(this.font, x, y, 38, 12, Component.empty());
             box.setValue(String.valueOf(Math.max(0, value)));
@@ -295,7 +332,9 @@ public final class LogisticsServerBoxScreenOpener {
             return box;
         }
 
-        /** keepValue: 读取保有量输入框的非负整数值，空白按 0。 */
+        /**
+         * keepValue: 读取保有量输入框的非负整数值，空白按 0。
+         */
         private int keepValue(net.minecraft.client.gui.components.EditBox box) {
             String val = box.getValue();
             if (val == null || val.isBlank()) {
@@ -308,7 +347,9 @@ public final class LogisticsServerBoxScreenOpener {
             }
         }
 
-        /** renderOverview: 绘制仓库状态和费用说明。 */
+        /**
+         * renderOverview: 绘制仓库状态和费用说明。
+         */
         private void renderOverview(GuiGraphicsExtractor graphics, int x, int y) {
             graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.tab.overview"), x, y, LogisticsNativeStyle.TEXT_WARN);
             y += 14;
@@ -339,14 +380,18 @@ public final class LogisticsServerBoxScreenOpener {
             }
         }
 
-        /** renderMapTab: 绘制旧版地图页提示。 */
+        /**
+         * renderMapTab: 绘制旧版地图页提示。
+         */
         private void renderMapTab(GuiGraphicsExtractor graphics, int x, int y) {
             graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.tab.map"), x, y, LogisticsNativeStyle.TEXT_WARN);
             y += 16;
             graphics.text(this.font, Component.translatable("gui.simukraft.logistics.map.hint"), x, y, LogisticsNativeStyle.TEXT_DIM);
         }
 
-        /** renderRoutes: 绘制路径列表（与 buildRouteButtons 共用滚动窗口）。 */
+        /**
+         * renderRoutes: 绘制路径列表（与 buildRouteButtons 共用滚动窗口）。
+         */
         private void renderRoutes(GuiGraphicsExtractor graphics, int x, int y) {
             List<LogisticsControlBoxService.ChannelEntry> channels = packet.channels();
             Component header = Component.translatable("gui.simukraft.logistics.server.tab.routes")
@@ -388,14 +433,18 @@ public final class LogisticsServerBoxScreenOpener {
             graphics.fill(sbX, thumbY, sbX + SCROLLBAR_W, thumbY + thumbH, 0xCC6666AA);
         }
 
-        /** send: 发送物流服务端盒动作包。 */
+        /**
+         * send: 发送物流服务端盒动作包。
+         */
         private void send(LogisticsBoxActionPacket.Action action, UUID clientId, UUID channelId, BlockPos targetPos,
                           String value, LogisticsDirection direction, List<String> filters) {
             ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, clientId, channelId, targetPos, value, direction,
                     BlockPos.ZERO, BlockPos.ZERO, filters));
         }
 
-        /** fireWorker: 解雇当前仓储管理员。 */
+        /**
+         * fireWorker: 解雇当前仓储管理员。
+         */
         private void fireWorker() {
             if (packet.hasWorker() && packet.workerId() != null) {
                 ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), LogisticsConstants.SERVER_SOURCE_TYPE,
@@ -403,12 +452,16 @@ public final class LogisticsServerBoxScreenOpener {
             }
         }
 
-        /** hasWarehouse: 判断当前服务端盒是否已绑定仓库容器。 */
+        /**
+         * hasWarehouse: 判断当前服务端盒是否已绑定仓库容器。
+         */
         private boolean hasWarehouse() {
             return !packet.containers().isEmpty();
         }
 
-        /** clientName: 按客户端 ID 获取显示名。 */
+        /**
+         * clientName: 按客户端 ID 获取显示名。
+         */
         private String clientName(UUID clientId) {
             for (var client : packet.clients()) {
                 if (client.clientId().equals(clientId)) return client.name();

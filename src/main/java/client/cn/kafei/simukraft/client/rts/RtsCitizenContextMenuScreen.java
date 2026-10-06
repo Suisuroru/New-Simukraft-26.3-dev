@@ -1,21 +1,20 @@
 package client.cn.kafei.simukraft.client.rts;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import net.minecraft.client.input.MouseButtonEvent;
-
 import common.cn.kafei.simukraft.network.rts.RtsCitizenActionPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.List;
 import java.util.UUID;
 
-/** RTS 市民右键菜单：提供信息、商店和移动三项操作。 */
+/**
+ * RTS 市民右键菜单：提供信息、商店和移动三项操作。
+ */
 public final class RtsCitizenContextMenuScreen extends Screen {
     private static final int MENU_WIDTH = 76;
     private static final int HEADER_HEIGHT = 20;
@@ -43,7 +42,9 @@ public final class RtsCitizenContextMenuScreen extends Screen {
         this.cursorY = cursorY;
     }
 
-    /** open: 在系统光标旁打开指定市民的紧凑 RTS 操作菜单。 */
+    /**
+     * open: 在系统光标旁打开指定市民的紧凑 RTS 操作菜单。
+     */
     public static void open(UUID citizenId, Component citizenName) {
         Minecraft minecraft = Minecraft.getInstance();
         if (citizenId == null || minecraft.gui.screen() != null) {
@@ -64,23 +65,31 @@ public final class RtsCitizenContextMenuScreen extends Screen {
         menuY = Math.max(4, Math.min(cursorY, height - MENU_HEIGHT - 4));
     }
 
-    /** openInfo: 请求服务端以 RTS 远程会话打开市民信息界面。 */
+    /**
+     * openInfo: 请求服务端以 RTS 远程会话打开市民信息界面。
+     */
     private void openInfo() {
         sendAction(RtsCitizenActionPacket.Action.OPEN_INFO);
     }
 
-    /** openShop: 请求服务端打开商店，非商业员工由服务端回退到信息界面。 */
+    /**
+     * openShop: 请求服务端打开商店，非商业员工由服务端回退到信息界面。
+     */
     private void openShop() {
         sendAction(RtsCitizenActionPacket.Action.OPEN_SHOP);
     }
 
-    /** beginMove: 将指定市民设为下一次地表点击的移动对象。 */
+    /**
+     * beginMove: 将指定市民设为下一次地表点击的移动对象。
+     */
     private void beginMove() {
         RtsSelectionManager.beginCitizenMove(citizenId);
         onClose();
     }
 
-    /** sendAction: 发送单一市民的界面打开操作并关闭当前下拉菜单。 */
+    /**
+     * sendAction: 发送单一市民的界面打开操作并关闭当前下拉菜单。
+     */
     private void sendAction(RtsCitizenActionPacket.Action action) {
         ClientPacketDistributor.sendToServer(new RtsCitizenActionPacket(action, List.of(citizenId), BlockPos.ZERO));
         onClose();
@@ -134,7 +143,9 @@ public final class RtsCitizenContextMenuScreen extends Screen {
         return false;
     }
 
-    /** renderActionRow: 绘制一项带悬停色的紧凑下拉菜单操作。 */
+    /**
+     * renderActionRow: 绘制一项带悬停色的紧凑下拉菜单操作。
+     */
     private void renderActionRow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, int rowY, int action, String key) {
         boolean hovered = actionAt(mouseX, mouseY) == action;
         if (hovered) {
@@ -144,7 +155,9 @@ public final class RtsCitizenContextMenuScreen extends Screen {
                 hovered ? COLOR_TITLE : COLOR_ACTION, false);
     }
 
-    /** actionAt: 解析鼠标坐标对应的菜单操作索引。 */
+    /**
+     * actionAt: 解析鼠标坐标对应的菜单操作索引。
+     */
     private int actionAt(double mouseX, double mouseY) {
         if (mouseX < menuX || mouseX >= menuX + MENU_WIDTH) {
             return -1;
@@ -159,7 +172,9 @@ public final class RtsCitizenContextMenuScreen extends Screen {
         return -1;
     }
 
-    /** fitTitle: 将市民名称裁剪到现有菜单宽度，避免文本越界。 */
+    /**
+     * fitTitle: 将市民名称裁剪到现有菜单宽度，避免文本越界。
+     */
     private String fitTitle(String title) {
         int maxWidth = MENU_WIDTH - 12;
         if (font.width(title) <= maxWidth) {

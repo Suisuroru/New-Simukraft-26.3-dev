@@ -1,6 +1,8 @@
 package common.cn.kafei.simukraft.exchange;
 
-/** ExchangeCompany: 数据包驱动的上市公司。 */
+/**
+ * ExchangeCompany: 数据包驱动的上市公司。
+ */
 public record ExchangeCompany(String id, String displayName, String sector, double basePrice, double volatility) {
     public ExchangeCompany {
         id = id != null ? id.trim() : "";

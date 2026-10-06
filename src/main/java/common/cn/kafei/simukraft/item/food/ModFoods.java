@@ -10,7 +10,8 @@ import java.util.List;
 
 public final class ModFoods {
 
-    private ModFoods() {}
+    private ModFoods() {
+    }
 
     private static MobEffectInstance effect(Holder<MobEffect> effect, int duration, int amplifier) {
         return new MobEffectInstance(effect, duration, amplifier);

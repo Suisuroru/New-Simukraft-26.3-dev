@@ -43,7 +43,9 @@ public final class PopulationGrowthService {
         return totalSpawned;
     }
 
-    /** shouldRunGrowth：判断当天是否首次达到每日人口增长时刻。 */
+    /**
+     * shouldRunGrowth：判断当天是否首次达到每日人口增长时刻。
+     */
     static boolean shouldRunGrowth(long dayTime, long lastGrowthDay) {
         long currentDay = Math.floorDiv(dayTime, TICKS_PER_DAY);
         return currentDay != lastGrowthDay && Math.floorMod(dayTime, TICKS_PER_DAY) >= GROWTH_CHECK_TIME;

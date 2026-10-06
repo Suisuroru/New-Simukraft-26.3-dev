@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.logistics;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import common.cn.kafei.simukraft.logistics.LogisticsDirection;
 import common.cn.kafei.simukraft.logistics.LogisticsPortData;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
@@ -11,7 +9,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.UUID;
 
@@ -24,7 +22,9 @@ final class LogisticsClientPortManageScreen extends Screen {
         this.packet = packet;
     }
 
-    /** init: 创建返回按钮和可见端口删除按钮。 */
+    /**
+     * init: 创建返回按钮和可见端口删除按钮。
+     */
     @Override
     protected void init() {
         int bottomY = this.height - 28;
@@ -50,13 +50,17 @@ final class LogisticsClientPortManageScreen extends Screen {
         }
     }
 
-    /** renderBackground: 绘制旧版深色背景。 */
+    /**
+     * renderBackground: 绘制旧版深色背景。
+     */
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
     }
 
-    /** render: 绘制端口列表。 */
+    /**
+     * render: 绘制端口列表。
+     */
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.centeredText(this.font, this.title, this.width / 2, 10, LogisticsNativeStyle.TEXT);
@@ -83,12 +87,16 @@ final class LogisticsClientPortManageScreen extends Screen {
         return false;
     }
 
-    /** send: 向服务端发送客户端端口管理操作。 */
+    /**
+     * send: 向服务端发送客户端端口管理操作。
+     */
     private void send(LogisticsBoxActionPacket.Action action, UUID channelId, String value) {
         ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, value, LogisticsDirection.WAREHOUSE_TO_CLIENT));
     }
 
-    /** renameEndpoint: 把输入框中的名称提交为当前客户端端点名。 */
+    /**
+     * renameEndpoint: 把输入框中的名称提交为当前客户端端点名。
+     */
     private void renameEndpoint() {
         String name = nameField != null ? nameField.getValue() : packet.name();
         send(LogisticsBoxActionPacket.Action.RENAME_CLIENT, null, name);

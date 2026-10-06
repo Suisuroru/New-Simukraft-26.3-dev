@@ -1,19 +1,21 @@
 package client.cn.kafei.simukraft.client.network;
 
 import client.cn.kafei.simukraft.client.ClientSimukraftData;
+import client.cn.kafei.simukraft.client.bank.BankControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.buildbox.BuildBoxScreenOpener;
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.buildbox.BuildingCacheService;
 import client.cn.kafei.simukraft.client.buildbox.PlannerMaterialSelectionScreenOpener;
 import client.cn.kafei.simukraft.client.citizen.CityCitizenManageScreen;
-import client.cn.kafei.simukraft.client.city.ClientCityChunkCache;
 import client.cn.kafei.simukraft.client.city.CityCoreScreenOpener;
+import client.cn.kafei.simukraft.client.city.ClientCityChunkCache;
 import client.cn.kafei.simukraft.client.commercial.CommercialControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.compat.ClientCompatHooks;
-import common.cn.kafei.simukraft.commercial.CommercialTradeUiRoot;
 import client.cn.kafei.simukraft.client.controlbox.ResidentialControlBoxScreenOpener;
+import client.cn.kafei.simukraft.client.exchange.ExchangeControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.farmland.FarmlandBoxScreenOpener;
 import client.cn.kafei.simukraft.client.farmland.FarmlandHoverPreview;
+import client.cn.kafei.simukraft.client.geology.GeologicalSurveyHintOverlay;
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.industrial.IndustrialControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.logistics.LogisticsClientBoxScreenOpener;
@@ -21,7 +23,8 @@ import client.cn.kafei.simukraft.client.logistics.LogisticsServerBoxScreenOpener
 import client.cn.kafei.simukraft.client.medical.MedicalControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.path.NpcPathDebugRenderer;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
-import client.cn.kafei.simukraft.client.geology.GeologicalSurveyHintOverlay;
+import common.cn.kafei.simukraft.commercial.CommercialTradeUiRoot;
+import common.cn.kafei.simukraft.network.bank.BankControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.building.BuildingCacheReloadPacket;
 import common.cn.kafei.simukraft.network.building.controlbox.ResidentialControlBoxBoundsUpdatePacket;
 import common.cn.kafei.simukraft.network.building.controlbox.ResidentialControlBoxOpenResponsePacket;
@@ -35,6 +38,7 @@ import common.cn.kafei.simukraft.network.city.member.CityCoreMembersResponsePack
 import common.cn.kafei.simukraft.network.clientbound.ClientboundNetworkHandler;
 import common.cn.kafei.simukraft.network.commercial.CommercialControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.commercial.CommercialTradeOpenResponsePacket;
+import common.cn.kafei.simukraft.network.exchange.ExchangeControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.farmland.FarmlandBoxBoundsResponsePacket;
 import common.cn.kafei.simukraft.network.farmland.FarmlandBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.geology.GeologicalSurveyHintPacket;
@@ -44,17 +48,13 @@ import common.cn.kafei.simukraft.network.industrial.IndustrialControlBoxViewUpda
 import common.cn.kafei.simukraft.network.logistics.LogisticsClientBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsWarehouseGridResponsePacket;
-import client.cn.kafei.simukraft.client.bank.BankControlBoxScreenOpener;
-import client.cn.kafei.simukraft.client.exchange.ExchangeControlBoxScreenOpener;
-import common.cn.kafei.simukraft.network.bank.BankControlBoxOpenResponsePacket;
-import common.cn.kafei.simukraft.network.exchange.ExchangeControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.medical.MedicalControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireListResponsePacket;
 import common.cn.kafei.simukraft.network.npc.state.EmploymentStateResponsePacket;
 import common.cn.kafei.simukraft.network.path.NpcPathDebugSyncPacket;
 import common.cn.kafei.simukraft.network.planner.PlannerMaterialScanResponsePacket;
-import common.cn.kafei.simukraft.network.toast.InfoToastPacket;
 import common.cn.kafei.simukraft.network.rts.RtsBuildingBoundsSyncPacket;
+import common.cn.kafei.simukraft.network.toast.InfoToastPacket;
 
 import java.util.Map;
 import java.util.UUID;
@@ -245,7 +245,9 @@ public final class ClientboundNetworkHandlerImpl implements ClientboundNetworkHa
         ClientInfoToast.show(packet.title(), packet.message(), packet.style(), packet.iconStack());
     }
 
-    /** handleGeologicalSurveyHint: 显示地质锤准星提示。 */
+    /**
+     * handleGeologicalSurveyHint: 显示地质锤准星提示。
+     */
     @Override
     public void handleGeologicalSurveyHint(GeologicalSurveyHintPacket packet) {
         GeologicalSurveyHintOverlay.show(packet.message());

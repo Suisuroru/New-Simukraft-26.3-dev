@@ -1,8 +1,8 @@
 package common.cn.kafei.simukraft.industrial;
 
+import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -64,7 +64,9 @@ public final class IndustrialBoxManager extends SavedData {
         }
     }
 
-    /** level: 返回当前管理器绑定的服务端维度，用于状态视图同步。 */
+    /**
+     * level: 返回当前管理器绑定的服务端维度，用于状态视图同步。
+     */
     public ServerLevel level() {
         return level;
     }

@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.commercial;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.building.BuildingIntegrityUi;
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
@@ -28,7 +26,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 public final class CommercialControlBoxScreenOpener {
     private static final int PANEL_WIDTH = 320;
@@ -37,15 +35,20 @@ public final class CommercialControlBoxScreenOpener {
     private static final int ACTION_HEIGHT = 22;
     private static final int INTEGRITY_HEIGHT = 18;
     private static final float TEXT_ROLL_SPEED = 0.25F;
+
     private CommercialControlBoxScreenOpener() {
     }
 
-    /** request: 请求服务端打开商业控制箱管理界面。 */
+    /**
+     * request: 请求服务端打开商业控制箱管理界面。
+     */
     public static void request(BlockPos pos) {
         ClientPacketDistributor.sendToServer(new CommercialControlBoxOpenRequestPacket(pos));
     }
 
-    /** open: 打开或刷新商业控制箱管理界面。 */
+    /**
+     * open: 打开或刷新商业控制箱管理界面。
+     */
     public static void open(CommercialControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) {

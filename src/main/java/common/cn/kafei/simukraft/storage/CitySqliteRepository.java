@@ -1,8 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
-import common.cn.kafei.simukraft.util.NbtUuid;
-
 import common.cn.kafei.simukraft.SimuKraft;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
@@ -87,21 +86,21 @@ public final class CitySqliteRepository {
             try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM cities WHERE dimension_id = ? ORDER BY city_id")) {
                 statement.setString(1, normalizeDimensionId(dimensionId));
                 try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    String cityId = resultSet.getString("city_id");
-                    CompoundTag cityTag = new CompoundTag();
-                    NbtUuid.put(cityTag, "CityId", java.util.UUID.fromString(cityId));
-                    cityTag.putString("CityName", resultSet.getString("city_name"));
-                    cityTag.putString("DimensionId", normalizeDimensionId(resultSet.getString("dimension_id")));
-                    cityTag.putInt("CoreX", resultSet.getInt("core_x"));
-                    cityTag.putInt("CoreY", resultSet.getInt("core_y"));
-                    cityTag.putInt("CoreZ", resultSet.getInt("core_z"));
-                    cityTag.putDouble("Funds", resultSet.getDouble("funds"));
-                    cityTag.putInt("CityLevel", resultSet.getInt("city_level"));
-                    cityTag.put("Members", membersByCity.getOrDefault(cityId, new ListTag()));
-                    cityTag.put("FinanceTransactions", financesByCity.getOrDefault(cityId, new ListTag()));
-                    cities.add(cityTag);
-                }
+                    while (resultSet.next()) {
+                        String cityId = resultSet.getString("city_id");
+                        CompoundTag cityTag = new CompoundTag();
+                        NbtUuid.put(cityTag, "CityId", java.util.UUID.fromString(cityId));
+                        cityTag.putString("CityName", resultSet.getString("city_name"));
+                        cityTag.putString("DimensionId", normalizeDimensionId(resultSet.getString("dimension_id")));
+                        cityTag.putInt("CoreX", resultSet.getInt("core_x"));
+                        cityTag.putInt("CoreY", resultSet.getInt("core_y"));
+                        cityTag.putInt("CoreZ", resultSet.getInt("core_z"));
+                        cityTag.putDouble("Funds", resultSet.getDouble("funds"));
+                        cityTag.putInt("CityLevel", resultSet.getInt("city_level"));
+                        cityTag.put("Members", membersByCity.getOrDefault(cityId, new ListTag()));
+                        cityTag.put("FinanceTransactions", financesByCity.getOrDefault(cityId, new ListTag()));
+                        cities.add(cityTag);
+                    }
                 }
             }
             tag.put("Cities", cities);

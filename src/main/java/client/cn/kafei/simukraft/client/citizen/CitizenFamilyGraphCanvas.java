@@ -10,15 +10,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.joml.Vector2f;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-/** 五代关系图画布：复用城市地图的裁剪画布、拖拽平移和滚轮缩放。 */
+/**
+ * 五代关系图画布：复用城市地图的裁剪画布、拖拽平移和滚轮缩放。
+ */
 
 public final class CitizenFamilyGraphCanvas extends UIElement {
     private static final double MIN_ZOOM = 0.6D;
@@ -113,7 +109,7 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
     }
 
     private void renderHoverTooltip(GUIContext guiContext, int startX, int startY, int width, int height,
-            double centerX, double centerY, float size) {
+                                    double centerX, double centerY, float size) {
         Minecraft minecraft = Minecraft.getInstance();
         double mouseX = minecraft.mouseHandler.xpos() * minecraft.getWindow().getGuiScaledWidth() / minecraft.getWindow().getScreenWidth();
         double mouseY = minecraft.mouseHandler.ypos() * minecraft.getWindow().getGuiScaledHeight() / minecraft.getWindow().getScreenHeight();
@@ -229,7 +225,7 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
     }
 
     private static void appendSpouse(List<CitizenFamilyGraphSnapshot.Node> ordered,
-            List<CitizenFamilyGraphSnapshot.Node> row, CitizenFamilyGraphSnapshot.Node node) {
+                                     List<CitizenFamilyGraphSnapshot.Node> row, CitizenFamilyGraphSnapshot.Node node) {
         if (node.spouseId() == null) {
             return;
         }

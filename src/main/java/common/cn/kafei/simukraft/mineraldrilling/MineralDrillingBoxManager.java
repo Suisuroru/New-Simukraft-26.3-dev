@@ -1,8 +1,8 @@
 package common.cn.kafei.simukraft.mineraldrilling;
 
+import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
@@ -14,12 +14,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -44,6 +39,7 @@ public final class MineralDrillingBoxManager extends SavedData {
         HolderLookup.Provider registries = level != null ? level.registryAccess() : RegistryAccess.EMPTY;
         return save(new CompoundTag(), registries);
     }
+
     private static final ExecutorService IO_EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "simukraft-mineral-drilling-io");
         thread.setDaemon(true);
@@ -56,7 +52,9 @@ public final class MineralDrillingBoxManager extends SavedData {
     private volatile boolean sqliteLoaded;
     private volatile ServerLevel level;
 
-    /** get: 获取当前维度管理器，并首次访问时从 SQLite 懒加载。 */
+    /**
+     * get: 获取当前维度管理器，并首次访问时从 SQLite 懒加载。
+     */
     public static MineralDrillingBoxManager get(ServerLevel level) {
         MineralDrillingBoxManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
@@ -64,12 +62,16 @@ public final class MineralDrillingBoxManager extends SavedData {
         return manager;
     }
 
-    /** level: 返回当前管理器绑定的服务端维度。 */
+    /**
+     * level: 返回当前管理器绑定的服务端维度。
+     */
     public ServerLevel level() {
         return level;
     }
 
-    /** load: 从 SavedData 灾备 NBT 恢复当前维度的控制箱。 */
+    /**
+     * load: 从 SavedData 灾备 NBT 恢复当前维度的控制箱。
+     */
     private static MineralDrillingBoxManager load(CompoundTag tag) {
         return load(tag, RegistryAccess.EMPTY);
     }
@@ -88,7 +90,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         return manager;
     }
 
-    /** save: 生成线程安全的 SavedData 灾备快照。 */
+    /**
+     * save: 生成线程安全的 SavedData 灾备快照。
+     */
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (MineralDrillingBoxData data : boxes.values()) {
@@ -102,7 +106,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         return tag;
     }
 
-    /** saveToSqlite: 同步写入当前维度完整快照，用于服务器保存/关闭流程。 */
+    /**
+     * saveToSqlite: 同步写入当前维度完整快照，用于服务器保存/关闭流程。
+     */
     public synchronized void saveToSqlite(ServerLevel level) {
         if (level == null) {
             return;
@@ -120,7 +126,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         }
     }
 
-    /** reloadFromSqlite: 清空内存副本并重新读取当前维度状态。 */
+    /**
+     * reloadFromSqlite: 清空内存副本并重新读取当前维度状态。
+     */
     public synchronized void reloadFromSqlite(ServerLevel level) {
         boxes.values().forEach(data -> data.setChangeListener(null));
         boxes.clear();
@@ -128,7 +136,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         loadFromSqlite(level);
     }
 
-    /** loadFromSqlite: 仅首次访问时以 SQLite 快照覆盖灾备状态。 */
+    /**
+     * loadFromSqlite: 仅首次访问时以 SQLite 快照覆盖灾备状态。
+     */
     private synchronized void loadFromSqlite(ServerLevel level) {
         if (sqliteLoaded) {
             return;
@@ -154,18 +164,24 @@ public final class MineralDrillingBoxManager extends SavedData {
         setDirty();
     }
 
-    /** get: 查询指定位置的控制箱状态。 */
+    /**
+     * get: 查询指定位置的控制箱状态。
+     */
     public MineralDrillingBoxData get(BlockPos boxPos) {
         return boxPos != null ? boxes.get(boxPos.immutable()) : null;
     }
 
-    /** getOrCreate: 查询或创建指定位置的控制箱状态。 */
+    /**
+     * getOrCreate: 查询或创建指定位置的控制箱状态。
+     */
     public MineralDrillingBoxData getOrCreate(BlockPos boxPos) {
         BlockPos key = boxPos.immutable();
         return boxes.computeIfAbsent(key, position -> attach(new MineralDrillingBoxData(position)));
     }
 
-    /** persist: 更新灾备状态，并合并排队同一位置的 SQLite 写入。 */
+    /**
+     * persist: 更新灾备状态，并合并排队同一位置的 SQLite 写入。
+     */
     public void persist(MineralDrillingBoxData data) {
         if (data == null) {
             return;
@@ -194,7 +210,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         }
     }
 
-    /** remove: 移除内存状态，并让删除操作与尚未完成的增量写保持顺序。 */
+    /**
+     * remove: 移除内存状态，并让删除操作与尚未完成的增量写保持顺序。
+     */
     public void remove(BlockPos boxPos) {
         if (boxPos == null) {
             return;
@@ -212,25 +230,33 @@ public final class MineralDrillingBoxManager extends SavedData {
         }
     }
 
-    /** all: 返回当前维度控制箱状态的不可变列表快照。 */
+    /**
+     * all: 返回当前维度控制箱状态的不可变列表快照。
+     */
     public List<MineralDrillingBoxData> all() {
         return List.copyOf(boxes.values());
     }
 
-    /** attach: 将数据变化绑定到当前管理器的合并写入入口。 */
+    /**
+     * attach: 将数据变化绑定到当前管理器的合并写入入口。
+     */
     private MineralDrillingBoxData attach(MineralDrillingBoxData data) {
         data.setChangeListener(() -> persist(data));
         return data;
     }
 
-    /** scheduleDrain: 保证每个管理器同时最多排队一个数据库排空任务。 */
+    /**
+     * scheduleDrain: 保证每个管理器同时最多排队一个数据库排空任务。
+     */
     private void scheduleDrain() {
         if (drainScheduled.compareAndSet(false, true)) {
             IO_EXECUTOR.execute(this::drainPendingWrites);
         }
     }
 
-    /** drainPendingWrites: 逐键提取最新操作，跳过已被新快照替换的旧操作。 */
+    /**
+     * drainPendingWrites: 逐键提取最新操作，跳过已被新快照替换的旧操作。
+     */
     private void drainPendingWrites() {
         while (true) {
             boolean processed = false;
@@ -259,7 +285,9 @@ public final class MineralDrillingBoxManager extends SavedData {
         }
     }
 
-    /** retryWrite: 对短暂 SQLite 失败进行有限次数重试。 */
+    /**
+     * retryWrite: 对短暂 SQLite 失败进行有限次数重试。
+     */
     private static void retryWrite(WriteOperation operation, String operationName, String target) {
         for (int attempt = 1; attempt <= MAX_WRITE_ATTEMPTS; attempt++) {
             try {
@@ -287,17 +315,23 @@ public final class MineralDrillingBoxManager extends SavedData {
 
     @FunctionalInterface
     private interface WriteOperation {
-        /** run: 执行一次数据库操作并返回是否成功。 */
+        /**
+         * run: 执行一次数据库操作并返回是否成功。
+         */
         boolean run();
     }
 
     private record PendingWrite(ServerLevel level, CompoundTag snapshot, boolean delete) {
-        /** save: 创建保留独立 NBT 快照的增量写请求。 */
+        /**
+         * save: 创建保留独立 NBT 快照的增量写请求。
+         */
         private static PendingWrite save(ServerLevel level, CompoundTag snapshot) {
             return new PendingWrite(level, snapshot, false);
         }
 
-        /** delete: 创建按维度和位置删除记录的请求。 */
+        /**
+         * delete: 创建按维度和位置删除记录的请求。
+         */
         private static PendingWrite delete(ServerLevel level) {
             return new PendingWrite(level, null, true);
         }

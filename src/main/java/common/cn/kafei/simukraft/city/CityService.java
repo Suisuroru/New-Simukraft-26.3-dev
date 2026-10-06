@@ -3,6 +3,7 @@ package common.cn.kafei.simukraft.city;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -213,6 +214,6 @@ public final class CityService {
     }
 
     public static String dimensionId(ServerLevel level) {
-        return level.dimension().registry().toString();
+        return level.dimension().identifier().toString();
     }
 }

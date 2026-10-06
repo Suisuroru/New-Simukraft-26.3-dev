@@ -1,11 +1,7 @@
 package common.cn.kafei.simukraft.commercial;
 
 import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
-import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
-import common.cn.kafei.simukraft.citizen.CitizenJobVisualService;
-import common.cn.kafei.simukraft.citizen.CitizenLevelService;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
+import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.medical.MedicalService;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
@@ -32,7 +28,9 @@ public final class CommercialWorkService {
     private CommercialWorkService() {
     }
 
-    /** tick: 处理商业箱补货与 NPC 自动经营。 */
+    /**
+     * tick: 处理商业箱补货与 NPC 自动经营。
+     */
     public static void tick(ServerLevel level) {
         if (level == null || level.isClientSide()) {
             return;
@@ -49,7 +47,9 @@ public final class CommercialWorkService {
         }
     }
 
-    /** flush: 立即保存商业箱和库存。 */
+    /**
+     * flush: 立即保存商业箱和库存。
+     */
     public static void flush(ServerLevel level) {
         if (level != null) {
             CommercialBoxManager.get(level).saveToSqlite(level);
@@ -57,7 +57,9 @@ public final class CommercialWorkService {
         }
     }
 
-    /** clearServerCaches: 清理指定存档的商业运行时缓存。 */
+    /**
+     * clearServerCaches: 清理指定存档的商业运行时缓存。
+     */
     public static void clearServerCaches(MinecraftServer server) {
         String serverKey = SaveScopedCacheKey.serverKey(server).toLowerCase(Locale.ROOT);
         RUNTIMES.keySet().removeIf(key -> key.startsWith(serverKey + "|"));

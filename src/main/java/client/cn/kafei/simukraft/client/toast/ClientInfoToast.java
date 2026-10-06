@@ -1,20 +1,18 @@
 package client.cn.kafei.simukraft.client.toast;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 
-/** ClientInfoToast: 独立管理并绘制 SimuKraft 客户端通知。 */
+import java.util.*;
+
+/**
+ * ClientInfoToast: 独立管理并绘制 SimuKraft 客户端通知。
+ */
 
 public final class ClientInfoToast {
     private static final int SLOT_HEIGHT = 32;
@@ -41,7 +39,7 @@ public final class ClientInfoToast {
     private int cachedLayoutHeight = Integer.MIN_VALUE;
 
     private ClientInfoToast(Component title, Component message, String style, ItemStack iconStack,
-            ToastKey token) {
+                            ToastKey token) {
         this.title = title != null ? title : Component.translatable("toast.simukraft.title");
         this.message = message != null ? message : Component.empty();
         this.style = style != null && !style.isBlank() ? style : "info";
@@ -49,12 +47,16 @@ public final class ClientInfoToast {
         this.token = token;
     }
 
-    /** show: 显示不含物品图标的独立通知。 */
+    /**
+     * show: 显示不含物品图标的独立通知。
+     */
     public static void show(Component title, Component message, String style) {
         show(title, message, style, ItemStack.EMPTY);
     }
 
-    /** show: 入队独立通知，并合并当前可见的重复通知。 */
+    /**
+     * show: 入队独立通知，并合并当前可见的重复通知。
+     */
     public static void show(Component title, Component message, String style, ItemStack iconStack) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null || minecraft.font == null) {
@@ -70,7 +72,9 @@ public final class ClientInfoToast {
         PENDING_TOASTS.addLast(new ClientInfoToast(title, message, key.style(), iconStack, key));
     }
 
-    /** render: 在独立 HUD 图层中绘制通知队列。 */
+    /**
+     * render: 在独立 HUD 图层中绘制通知队列。
+     */
     public static void render(GuiGraphicsExtractor graphics) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.font == null) {
@@ -102,7 +106,9 @@ public final class ClientInfoToast {
         }
     }
 
-    /** renderPreview: 在编辑器中绘制与实际通知相同的预览内容。 */
+    /**
+     * renderPreview: 在编辑器中绘制与实际通知相同的预览内容。
+     */
     public static void renderPreview(GuiGraphicsExtractor graphics, Font font, int x, int y, int width, int height) {
         ClientToastLayout layout = ClientToastLayout.create(
                 font,
@@ -114,13 +120,17 @@ public final class ClientInfoToast {
         layout.render(graphics, font, x, y, 1, "success");
     }
 
-    /** clear: 清理断开连接后残留的通知状态。 */
+    /**
+     * clear: 清理断开连接后残留的通知状态。
+     */
     public static void clear() {
         PENDING_TOASTS.clear();
         VISIBLE_TOASTS.clear();
     }
 
-    /** findVisibleToast: 查找可重置计时的当前可见通知。 */
+    /**
+     * findVisibleToast: 查找可重置计时的当前可见通知。
+     */
     private static ClientInfoToast findVisibleToast(ToastKey key) {
         for (ClientInfoToast toast : VISIBLE_TOASTS) {
             if (toast.token.equals(key)) {
@@ -130,7 +140,9 @@ public final class ClientInfoToast {
         return null;
     }
 
-    /** removeHiddenToasts: 清理已完成退出动画的通知。 */
+    /**
+     * removeHiddenToasts: 清理已完成退出动画的通知。
+     */
     private static void removeHiddenToasts(long nowMillis) {
         Iterator<ClientInfoToast> iterator = VISIBLE_TOASTS.iterator();
         while (iterator.hasNext()) {
@@ -140,7 +152,9 @@ public final class ClientInfoToast {
         }
     }
 
-    /** promotePendingToasts: 在可用槽位中加入等待显示的通知。 */
+    /**
+     * promotePendingToasts: 在可用槽位中加入等待显示的通知。
+     */
     private static void promotePendingToasts(long nowMillis) {
         int slotCount = slotCountForHeight(ClientToastConfig.height());
         int usedSlots = VISIBLE_TOASTS.size() * slotCount;
@@ -152,7 +166,9 @@ public final class ClientInfoToast {
         }
     }
 
-    /** stackedY: 根据锚点确定从上向下或从下向上的堆叠坐标。 */
+    /**
+     * stackedY: 根据锚点确定从上向下或从下向上的堆叠坐标。
+     */
     private static int stackedY(ClientToastConfig.Anchor anchor, int initialY, int usedSlots) {
         int offset = usedSlots * SLOT_HEIGHT;
         return switch (anchor) {
@@ -161,9 +177,11 @@ public final class ClientInfoToast {
         };
     }
 
-    /** animatedX: 计算左侧向右和右侧向左的通知入场坐标。 */
+    /**
+     * animatedX: 计算左侧向右和右侧向左的通知入场坐标。
+     */
     private static int animatedX(ClientToastConfig.Anchor anchor, int targetX, int toastWidth,
-            float visibility) {
+                                 float visibility) {
         return switch (anchor) {
             case TOP_LEFT, BOTTOM_LEFT -> targetX - Math.round(toastWidth * (1.0F - visibility));
             case TOP_RIGHT, BOTTOM_RIGHT -> targetX + Math.round(toastWidth * (1.0F - visibility));
@@ -171,9 +189,11 @@ public final class ClientInfoToast {
         };
     }
 
-    /** animatedY: 计算居中通知由上至下或由下至上的入场坐标。 */
+    /**
+     * animatedY: 计算居中通知由上至下或由下至上的入场坐标。
+     */
     private static int animatedY(ClientToastConfig.Anchor anchor, int targetY, int toastHeight,
-            float visibility) {
+                                 float visibility) {
         return switch (anchor) {
             case TOP_CENTER -> targetY - Math.round(toastHeight * (1.0F - visibility));
             case BOTTOM_CENTER -> targetY + Math.round(toastHeight * (1.0F - visibility));
@@ -181,12 +201,16 @@ public final class ClientInfoToast {
         };
     }
 
-    /** slotCountForHeight: 将实际通知高度换算为队列占用槽数。 */
+    /**
+     * slotCountForHeight: 将实际通知高度换算为队列占用槽数。
+     */
     private static int slotCountForHeight(int toastHeight) {
         return Math.max(1, Math.min(MAX_VISIBLE_SLOTS, (toastHeight + SLOT_HEIGHT - 1) / SLOT_HEIGHT));
     }
 
-    /** createLayout: 按当前尺寸计算缩放、换行与垂直排版。 */
+    /**
+     * createLayout: 按当前尺寸计算缩放、换行与垂直排版。
+     */
     private ClientToastLayout createLayout(Font font, int toastWidth, int toastHeight) {
         if (cachedLayout == null
                 || cachedLayoutFont != font
@@ -200,14 +224,18 @@ public final class ClientInfoToast {
         return cachedLayout;
     }
 
-    /** show: 初始化通知的显示与入场动画计时。 */
+    /**
+     * show: 初始化通知的显示与入场动画计时。
+     */
     private void show(long nowMillis) {
         shownAtMillis = nowMillis;
         hideStartedAtMillis = 0L;
         restartRequested = false;
     }
 
-    /** visibility: 计算与原版通知一致的平方缓动入场和退场进度。 */
+    /**
+     * visibility: 计算与原版通知一致的平方缓动入场和退场进度。
+     */
     private float visibility(long nowMillis) {
         if (restartRequested) {
             show(nowMillis);
@@ -229,18 +257,24 @@ public final class ClientInfoToast {
         return transitionProgress * transitionProgress;
     }
 
-    /** isHidden: 判断退场动画是否已经结束。 */
+    /**
+     * isHidden: 判断退场动画是否已经结束。
+     */
     private boolean isHidden(long nowMillis) {
         return hideStartedAtMillis != 0L && nowMillis - hideStartedAtMillis >= TRANSITION_TIME_MS;
     }
 
-    /** displayTimeMillis: 读取原版无障碍通知时长倍率。 */
+    /**
+     * displayTimeMillis: 读取原版无障碍通知时长倍率。
+     */
     private static long displayTimeMillis() {
         double multiplier = Minecraft.getInstance().options.notificationDisplayTime().get();
         return (long) (DISPLAY_TIME_MS * multiplier);
     }
 
-    /** mergeDuplicate: 增加重复计数并在下一帧重置显示时长。 */
+    /**
+     * mergeDuplicate: 增加重复计数并在下一帧重置显示时长。
+     */
     private void mergeDuplicate() {
         if (count < Integer.MAX_VALUE) {
             count++;
@@ -249,7 +283,9 @@ public final class ClientInfoToast {
     }
 
     private record ToastKey(String title, String message, String style, String iconId) {
-        /** from: 构建用于合并当前可见重复通知的稳定键。 */
+        /**
+         * from: 构建用于合并当前可见重复通知的稳定键。
+         */
         private static ToastKey from(Component title, Component message, String style, ItemStack iconStack) {
             Component normalizedTitle = title != null
                     ? title

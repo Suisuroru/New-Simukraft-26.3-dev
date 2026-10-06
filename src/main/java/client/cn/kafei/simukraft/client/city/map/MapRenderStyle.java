@@ -24,7 +24,9 @@ public enum MapRenderStyle {
      */
     FTB;
 
-    /** 根据名称解析样式，无效值返回 {@link #SIMUKRAFT}。 */
+    /**
+     * 根据名称解析样式，无效值返回 {@link #SIMUKRAFT}。
+     */
     public static MapRenderStyle fromString(String name) {
         try {
             return valueOf(name.toUpperCase());

@@ -1,6 +1,7 @@
 package common.cn.kafei.simukraft.guard;
 
 import net.neoforged.fml.ModList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -17,10 +18,14 @@ import java.util.Properties;
  */
 public final class NtIntegrityGuard {
 
-    /** NT 保护模组 ID（与 NT 项目 neoforge.mods.toml 中声明一致） */
+    /**
+     * NT 保护模组 ID（与 NT 项目 neoforge.mods.toml 中声明一致）
+     */
     private static final String NT_MOD_ID = "nt";
 
-    /** 构建类型标记文件路径（由 build.gradle 的 generateBuildMarker 任务生成） */
+    /**
+     * 构建类型标记文件路径（由 build.gradle 的 generateBuildMarker 任务生成）
+     */
     private static final String BUILD_MARKER = "/META-INF/simukraft-build.properties";
 
     private NtIntegrityGuard() {
@@ -48,19 +53,19 @@ public final class NtIntegrityGuard {
 
         if (!ModList.get().isLoaded(NT_MOD_ID)) {
             throw new IllegalStateException(
-                "\n\n" +
-                "========================================================================\n" +
-                "  [SimuKraft] 内测版完整性校验失败\n" +
-                "  \n" +
-                "  NT 保护层（mod id: " + NT_MOD_ID + "）未加载！\n" +
-                "  \n" +
-                "  可能原因：\n" +
-                "  - 手动修改了 mod 文件（删除了嵌入的 JiJ 文件）\n" +
-                "  - 使用了非官方修改版本\n" +
-                "  \n" +
-                "  解决方法：\n" +
-                "  请使用从官方渠道获取的未经修改的内测版本。\n" +
-                "========================================================================\n"
+                    "\n\n" +
+                            "========================================================================\n" +
+                            "  [SimuKraft] 内测版完整性校验失败\n" +
+                            "  \n" +
+                            "  NT 保护层（mod id: " + NT_MOD_ID + "）未加载！\n" +
+                            "  \n" +
+                            "  可能原因：\n" +
+                            "  - 手动修改了 mod 文件（删除了嵌入的 JiJ 文件）\n" +
+                            "  - 使用了非官方修改版本\n" +
+                            "  \n" +
+                            "  解决方法：\n" +
+                            "  请使用从官方渠道获取的未经修改的内测版本。\n" +
+                            "========================================================================\n"
             );
         }
     }

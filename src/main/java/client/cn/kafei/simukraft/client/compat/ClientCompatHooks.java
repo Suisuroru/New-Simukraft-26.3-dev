@@ -10,7 +10,9 @@ public final class ClientCompatHooks {
     private ClientCompatHooks() {
     }
 
-    /** refreshXaeroCityHighlights: Xaero 存在时刷新城市区块高亮缓存。 */
+    /**
+     * refreshXaeroCityHighlights: Xaero 存在时刷新城市区块高亮缓存。
+     */
     public static void refreshXaeroCityHighlights() {
         if (!ModList.get().isLoaded(XAERO_WORLD_MAP_MOD_ID)) {
             return;

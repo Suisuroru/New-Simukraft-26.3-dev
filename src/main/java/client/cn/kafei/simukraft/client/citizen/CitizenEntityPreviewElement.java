@@ -1,14 +1,16 @@
 package client.cn.kafei.simukraft.client.citizen;
 
+import client.cn.kafei.simukraft.client.renderer.CitizenRenderer;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
-import client.cn.kafei.simukraft.client.renderer.CitizenRenderer;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
-/** 在 LDLib 元素内绘制当前已加载的 NPC 实体模型。 */
+/**
+ * 在 LDLib 元素内绘制当前已加载的 NPC 实体模型。
+ */
 
 public final class CitizenEntityPreviewElement extends UIElement {
     private final int entityId;
@@ -18,7 +20,9 @@ public final class CitizenEntityPreviewElement extends UIElement {
         setAllowHitTest(false);
     }
 
-    /** drawBackgroundAdditional：使用原版物品栏实体预览渲染器绘制 NPC。 */
+    /**
+     * drawBackgroundAdditional：使用原版物品栏实体预览渲染器绘制 NPC。
+     */
     @Override
     public void drawBackgroundAdditional(IGUIContext raw) {
         GUIContext context = (GUIContext) raw;
@@ -34,12 +38,12 @@ public final class CitizenEntityPreviewElement extends UIElement {
         int width = Math.max(1, Math.round(getSizeWidth()));
         int height = Math.max(1, Math.round(getSizeHeight()));
         CitizenRenderer.withoutOverheadText(() ->
-            InventoryScreen.extractEntityInInventoryFollowsMouse(
-                    context.graphics,
-                    x, y, x + width, y + height,
-                    Math.max(20, Math.round(height * 0.42F)),
-                    0.0625F,
-                    context.mouseX, context.mouseY,
-                    living));
+                InventoryScreen.extractEntityInInventoryFollowsMouse(
+                        context.graphics,
+                        x, y, x + width, y + height,
+                        Math.max(20, Math.round(height * 0.42F)),
+                        0.0625F,
+                        context.mouseX, context.mouseY,
+                        living));
     }
 }

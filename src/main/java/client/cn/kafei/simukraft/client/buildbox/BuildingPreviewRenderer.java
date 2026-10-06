@@ -1,5 +1,6 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -12,7 +13,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
-import com.mojang.blaze3d.vertex.PoseStack;
 
 @EventBusSubscriber(modid = SimuKraft.MOD_ID, value = Dist.CLIENT)
 public final class BuildingPreviewRenderer {
@@ -33,7 +33,9 @@ public final class BuildingPreviewRenderer {
         submitMesh(BuildingPreviewManager.getCachedMesh(), event);
     }
 
-    /** submitMesh: 把预览方块提交进 26.3 的几何收集器。 */
+    /**
+     * submitMesh: 把预览方块提交进 26.3 的几何收集器。
+     */
     public static void submitMesh(PreviewMesh mesh, SubmitCustomGeometryEvent event) {
         if (mesh == null || mesh.isEmpty()) {
             if (!loggedOnce) {

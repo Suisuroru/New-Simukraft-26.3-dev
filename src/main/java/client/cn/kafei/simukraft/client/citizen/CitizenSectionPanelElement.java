@@ -4,7 +4,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 
-/** 直接绘制双层区域面板，避免 LDLib 背景纹理的层级覆盖。 */
+/**
+ * 直接绘制双层区域面板，避免 LDLib 背景纹理的层级覆盖。
+ */
 
 public final class CitizenSectionPanelElement extends UIElement {
     private final int fillColor;
@@ -18,7 +20,9 @@ public final class CitizenSectionPanelElement extends UIElement {
         setAllowHitTest(false);
     }
 
-    /** drawBackgroundAdditional：绘制 2px 外框、1px 内描边与不透明内容底色。 */
+    /**
+     * drawBackgroundAdditional：绘制 2px 外框、1px 内描边与不透明内容底色。
+     */
     @Override
     public void drawBackgroundAdditional(IGUIContext raw) {
         GUIContext context = (GUIContext) raw;

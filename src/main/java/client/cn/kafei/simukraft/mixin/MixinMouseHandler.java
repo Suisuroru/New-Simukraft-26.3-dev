@@ -15,11 +15,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MouseHandler.class)
 public final class MixinMouseHandler {
-    @Shadow private double accumulatedDX;
-    @Shadow private double accumulatedDY;
-    @Shadow private boolean mouseGrabbed;
-    @Unique private double simukraft$lastX = Double.NaN;
-    @Unique private double simukraft$lastY = Double.NaN;
+    @Shadow
+    private double accumulatedDX;
+    @Shadow
+    private double accumulatedDY;
+    @Shadow
+    private boolean mouseGrabbed;
+    @Unique
+    private double simukraft$lastX = Double.NaN;
+    @Unique
+    private double simukraft$lastY = Double.NaN;
 
     @Inject(method = "onMove", at = @At("HEAD"))
     private void simukraft$onMove(long window, double xpos, double ypos, double xrel, double yrel, CallbackInfo callbackInfo) {

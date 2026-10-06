@@ -3,13 +3,10 @@ package common.cn.kafei.simukraft.planner;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
-import common.cn.kafei.simukraft.citizen.CitizenLevelService;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
+import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
+import common.cn.kafei.simukraft.city.group.CityUserGroup;
+import common.cn.kafei.simukraft.city.group.CityUserGroupService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.job.CityJobType;
@@ -20,17 +17,14 @@ import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import common.cn.kafei.simukraft.path.MovementIntent;
 import common.cn.kafei.simukraft.protection.NpcBlockProtectionPolicy;
 import common.cn.kafei.simukraft.registry.ModBlocks;
+import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
 import common.cn.kafei.simukraft.util.NpcWorkChunkLoadService;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
-import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
-import common.cn.kafei.simukraft.city.group.CityUserGroup;
-import common.cn.kafei.simukraft.city.group.CityUserGroupService;
-import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -40,16 +34,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -61,7 +47,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class PlannerWorkService {
     private static final ConcurrentMap<String, LevelRuntime> LEVEL_RUNTIMES = new ConcurrentHashMap<>();
-    private static final ExecutorService IO_EXECUTOR = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "simukraft-planner-io"); t.setDaemon(true); return t; });
+    private static final ExecutorService IO_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "simukraft-planner-io");
+        t.setDaemon(true);
+        return t;
+    });
     private static final int SAVE_BLOCK_INTERVAL = 16;
     private static final int SCAN_LIMIT_PER_TICK = 2048;
     private static final long MATERIAL_RETRY_INTERVAL_TICKS = 40L;
@@ -192,7 +182,9 @@ public final class PlannerWorkService {
         LEVEL_RUNTIMES.keySet().removeIf(key -> key.startsWith(serverKey + "|"));
     }
 
-    /** acquireTaskTickets：为规划师和任务选区分别申请实体 tick 与区块加载 ticket。 */
+    /**
+     * acquireTaskTickets：为规划师和任务选区分别申请实体 tick 与区块加载 ticket。
+     */
     private static void acquireTaskTickets(ServerLevel level, PlanningTaskData task) {
         NpcWorkChunkLoadService.acquire(level, task.taskId(), task.buildBoxPos());
         NpcWorkChunkLoadService.loadWorkArea(level, task.taskId(), task.minPos(), task.maxPos(), 0);
@@ -297,7 +289,8 @@ public final class PlannerWorkService {
         return switch (task.operation()) {
             case REMOVE -> applyRemove(level, pos, chestPositions, task.buildBoxPos());
             case FILL -> applyFill(level, pos, chestPositions, task.fillBlockId());
-            case REPLACE -> applyReplace(level, pos, chestPositions, task.effectiveReplacementMap(), task.buildBoxPos());
+            case REPLACE ->
+                    applyReplace(level, pos, chestPositions, task.effectiveReplacementMap(), task.buildBoxPos());
         };
     }
 
@@ -306,7 +299,8 @@ public final class PlannerWorkService {
         return switch (task.operation()) {
             case REMOVE -> isRemoveTarget(level, pos, task.buildBoxPos(), chestPositions);
             case FILL -> isFillTarget(level, pos, task.fillBlockId());
-            case REPLACE -> isReplaceTarget(level, pos, task.effectiveReplacementMap(), task.buildBoxPos(), chestPositions);
+            case REPLACE ->
+                    isReplaceTarget(level, pos, task.effectiveReplacementMap(), task.buildBoxPos(), chestPositions);
         };
     }
 
@@ -400,7 +394,11 @@ public final class PlannerWorkService {
         if (!runtime.loadFuture.isDone()) return;
         runtime.hydrated = true;
         List<PlanningTaskData> tasks;
-        try { tasks = runtime.loadFuture.get(); } catch (Exception e) { tasks = List.of(); }
+        try {
+            tasks = runtime.loadFuture.get();
+        } catch (Exception e) {
+            tasks = List.of();
+        }
         for (PlanningTaskData task : tasks) {
             PlanningTaskStatus status = PlanningTaskStatus.from(task.status());
             if (status == PlanningTaskStatus.COMPLETED || status == PlanningTaskStatus.INTERRUPTED) {
@@ -447,7 +445,9 @@ public final class PlannerWorkService {
                 .orElse("");
     }
 
-    /** pauseForMedicalLeave：医疗休假期间暂停规划任务并保留职业绑定。 */
+    /**
+     * pauseForMedicalLeave：医疗休假期间暂停规划任务并保留职业绑定。
+     */
     private static void pauseForMedicalLeave(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime) {
         PlanningTaskData task = taskRuntime.task;
         if (PlanningTaskStatus.from(task.status()) == PlanningTaskStatus.PAUSED_RESTING) {

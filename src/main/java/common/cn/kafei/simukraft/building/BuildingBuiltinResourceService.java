@@ -18,7 +18,9 @@ public final class BuildingBuiltinResourceService {
     private BuildingBuiltinResourceService() {
     }
 
-    /** ensureCopied: 将官方建筑 zip 原样复制到建筑包目录，已存在时不覆盖。 */
+    /**
+     * ensureCopied: 将官方建筑 zip 原样复制到建筑包目录，已存在时不覆盖。
+     */
     public static void ensureCopied(Path rootDirectory) {
         if (rootDirectory == null) {
             return;
@@ -37,7 +39,9 @@ public final class BuildingBuiltinResourceService {
         }
     }
 
-    /** forceOverwrite: 强制用 jar 内置包覆写磁盘上的官方建筑 zip，无论文件是否存在。 */
+    /**
+     * forceOverwrite: 强制用 jar 内置包覆写磁盘上的官方建筑 zip，无论文件是否存在。
+     */
     public static void forceOverwrite(Path rootDirectory) {
         if (rootDirectory == null) {
             return;
@@ -71,12 +75,16 @@ public final class BuildingBuiltinResourceService {
         }
     }
 
-    /** clearCache: 清理已复制目录标记，测试和重载时允许重新检查官方包。 */
+    /**
+     * clearCache: 清理已复制目录标记，测试和重载时允许重新检查官方包。
+     */
     public static void clearCache() {
         COPIED_ROOTS.clear();
     }
 
-    /** openOfficialPackage: 打开 jar 内置官方建筑包，调用方负责关闭。 */
+    /**
+     * openOfficialPackage: 打开 jar 内置官方建筑包，调用方负责关闭。
+     */
     public static InputStream openOfficialPackage() {
         return openResource();
     }

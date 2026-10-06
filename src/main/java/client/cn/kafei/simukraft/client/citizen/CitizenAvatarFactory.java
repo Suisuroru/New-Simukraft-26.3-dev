@@ -1,12 +1,8 @@
 package client.cn.kafei.simukraft.client.citizen;
 
-import common.cn.kafei.simukraft.SimuKraft;
-import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.*;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
@@ -75,7 +71,9 @@ public final class CitizenAvatarFactory {
         return Identifier.fromNamespaceAndPath(MOD_ID, normalized + ".png");
     }
 
-    /** blitHead：在画布上绘制头像，已故市民使用灰阶着色。 */
+    /**
+     * blitHead：在画布上绘制头像，已故市民使用灰阶着色。
+     */
     public static void blitHead(GuiGraphicsExtractor graphics, String skinPath, float x, float y, float size, boolean grayscale) {
         int frame = grayscale ? 0xFF2A2A2A : FRAME_BACKGROUND;
         int inner = grayscale ? 0xFF3F3F3F : FRAME_INNER;

@@ -41,7 +41,9 @@ public record VirtualVeinDefinition(String id,
         }
     }
 
-    /** matches: 按多重噪声参数点的六项范围判断矿脉资格。 */
+    /**
+     * matches: 按多重噪声参数点的六项范围判断矿脉资格。
+     */
     public boolean matches(Climate.ParameterPoint point) {
         return matches(continentalness, point.continentalness())
                 && matches(erosion, point.erosion())

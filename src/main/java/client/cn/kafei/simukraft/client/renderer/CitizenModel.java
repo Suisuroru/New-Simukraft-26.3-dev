@@ -2,7 +2,6 @@ package client.cn.kafei.simukraft.client.renderer;
 
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 
 public class CitizenModel extends HumanoidModel<CitizenRenderState> {

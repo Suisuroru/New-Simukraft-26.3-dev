@@ -13,7 +13,9 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 
-/** PregnancyBellyLayer：按同步的孕期阶段绘制成年 NPC 的腹部几何体。 */
+/**
+ * PregnancyBellyLayer：按同步的孕期阶段绘制成年 NPC 的腹部几何体。
+ */
 public final class PregnancyBellyLayer extends RenderLayer<CitizenRenderState, CitizenModel> {
     private static final float EARLY_SCALE = 0.45F;
     private static final float MIDDLE_SCALE = 0.75F;
@@ -30,7 +32,7 @@ public final class PregnancyBellyLayer extends RenderLayer<CitizenRenderState, C
 
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords,
-            CitizenRenderState state, float yRot, float xRot) {
+                       CitizenRenderState state, float yRot, float xRot) {
         if (state.isInvisible || state.childNpc) {
             return;
         }

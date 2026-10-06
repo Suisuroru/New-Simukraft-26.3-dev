@@ -5,7 +5,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-/** 主库的迁移清单。新增迁移只需往 {@link #all()} 里追加，版本号必须连续递增。 */
+/**
+ * 主库的迁移清单。新增迁移只需往 {@link #all()} 里追加，版本号必须连续递增。
+ */
 public final class SimuMigrations {
     private SimuMigrations() {
     }
@@ -59,7 +61,9 @@ public final class SimuMigrations {
         }
     }
 
-    /** v3：持久化孕妇已预约的婴儿床位，避免重启后丢失分娩前置条件。 */
+    /**
+     * v3：持久化孕妇已预约的婴儿床位，避免重启后丢失分娩前置条件。
+     */
     private static final class CitizenReservedBabyBed implements Migration {
         @Override
         public int version() {
@@ -137,7 +141,9 @@ public final class SimuMigrations {
         }
     }
 
-    /** v5：记下住院治疗的世界时间锚点，睡觉跳过的区间才能在重启后继续结算。 */
+    /**
+     * v5：记下住院治疗的世界时间锚点，睡觉跳过的区间才能在重启后继续结算。
+     */
     private static final class CitizenLastHospitalProgressDayTime implements Migration {
         @Override
         public int version() {
@@ -158,7 +164,9 @@ public final class SimuMigrations {
         }
     }
 
-    /** v6: 股市市况、行情、K 线与持仓。 */
+    /**
+     * v6: 股市市况、行情、K 线与持仓。
+     */
     private static final class ExchangeTables implements Migration {
         @Override
         public int version() {
@@ -189,7 +197,9 @@ public final class SimuMigrations {
         }
     }
 
-    /** v7: 旧存档基线没有住宅入住开关表，缺表会把整库打成降级，股市 K 线也无法落盘。 */
+    /**
+     * v7: 旧存档基线没有住宅入住开关表，缺表会把整库打成降级，股市 K 线也无法落盘。
+     */
     private static final class ResidentialOccupancyTable implements Migration {
         @Override
         public int version() {

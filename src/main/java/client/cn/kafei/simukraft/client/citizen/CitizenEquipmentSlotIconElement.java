@@ -3,11 +3,13 @@ package client.cn.kafei.simukraft.client.citizen;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
-import net.minecraft.client.renderer.RenderPipelines;
 import common.cn.kafei.simukraft.citizen.CitizenInventory;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
-/** 在 LDLib 槽位上补绘原版玩家装备空槽图标。 */
+/**
+ * 在 LDLib 槽位上补绘原版玩家装备空槽图标。
+ */
 
 public final class CitizenEquipmentSlotIconElement extends UIElement {
     private final CitizenInventory inventory;
@@ -30,13 +32,17 @@ public final class CitizenEquipmentSlotIconElement extends UIElement {
         setAllowHitTest(false);
     }
 
-    /** mainHand：创建仅在主手为空时显示的指定剑形空槽贴图。 */
+    /**
+     * mainHand：创建仅在主手为空时显示的指定剑形空槽贴图。
+     */
     public static CitizenEquipmentSlotIconElement mainHand(CitizenInventory inventory, int inventorySlot) {
         return new CitizenEquipmentSlotIconElement(inventory, inventorySlot, null,
                 Identifier.fromNamespaceAndPath("simukraft", "textures/gui/citizen_main_hand_slot.png"));
     }
 
-    /** drawBackgroundAdditional：仅在对应装备槽为空时绘制原版图集精灵。 */
+    /**
+     * drawBackgroundAdditional：仅在对应装备槽为空时绘制原版图集精灵。
+     */
     @Override
     public void drawBackgroundAdditional(IGUIContext raw) {
         GUIContext context = (GUIContext) raw;

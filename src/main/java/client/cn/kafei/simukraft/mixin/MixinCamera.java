@@ -24,7 +24,9 @@ public abstract class MixinCamera {
     @Shadow
     protected abstract void setRotation(float yRot, float xRot, float roll);
 
-    /** simukraft$update: 原版相机对齐实体后覆盖为独立 RTS/自由相机姿态。 */
+    /**
+     * simukraft$update: 原版相机对齐实体后覆盖为独立 RTS/自由相机姿态。
+     */
     @Inject(method = "update", at = @At("TAIL"))
     private void simukraft$update(DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
         if (FreeCameraManager.isActive() && entity instanceof LocalPlayer) {
@@ -33,7 +35,9 @@ public abstract class MixinCamera {
         }
     }
 
-    /** simukraft$applyRtsProjection: 用 RTS 正交矩阵替换提取后的透视投影。 */
+    /**
+     * simukraft$applyRtsProjection: 用 RTS 正交矩阵替换提取后的透视投影。
+     */
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void simukraft$applyRtsProjection(CameraRenderState cameraState, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
         if (FreeCameraManager.isRtsActive()) {

@@ -9,12 +9,7 @@ import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -116,7 +111,7 @@ public final class CityJobAssignmentService {
     private static AssignmentIndex index(ServerLevel level, UUID cityId) {
         AssignmentCacheKey key = new AssignmentCacheKey(
                 SaveScopedCacheKey.serverKey(level.getServer()),
-                level.dimension().registry().toString(),
+                level.dimension().identifier().toString(),
                 cityId);
         return INDICES.computeIfAbsent(key, ignored -> buildIndex(level, cityId));
     }

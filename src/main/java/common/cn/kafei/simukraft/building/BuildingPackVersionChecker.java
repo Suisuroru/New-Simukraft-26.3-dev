@@ -23,7 +23,9 @@ public final class BuildingPackVersionChecker {
     private BuildingPackVersionChecker() {
     }
 
-    /** 读取 JAR 内置 official_building.zip 中的 pack.json version 字段 */
+    /**
+     * 读取 JAR 内置 official_building.zip 中的 pack.json version 字段
+     */
     public static Optional<String> builtinVersion() {
         String resourcePath = "assets/simukraft/building/" + BuildingPackageCatalog.OFFICIAL_PACKAGE_NAME;
         ClassLoader cl = BuildingPackVersionChecker.class.getClassLoader();
@@ -39,7 +41,9 @@ public final class BuildingPackVersionChecker {
         }
     }
 
-    /** 读取本地 simukraftbuilding/official_building.zip 中的 pack.json version 字段 */
+    /**
+     * 读取本地 simukraftbuilding/official_building.zip 中的 pack.json version 字段
+     */
     public static Optional<String> localVersion() {
         Path localZip = BuildingPackageCatalog.rootDirectory().resolve(BuildingPackageCatalog.OFFICIAL_PACKAGE_NAME);
         if (!Files.exists(localZip)) {
@@ -53,7 +57,9 @@ public final class BuildingPackVersionChecker {
         }
     }
 
-    /** 本地版本是否低于 JAR 内版本（语义化版本比较） */
+    /**
+     * 本地版本是否低于 JAR 内版本（语义化版本比较）
+     */
     public static boolean isLocalOutdated() {
         Optional<String> local = localVersion();
         Optional<String> builtin = builtinVersion();
@@ -63,7 +69,9 @@ public final class BuildingPackVersionChecker {
         return isOlderThan(local.get(), builtin.get());
     }
 
-    /** 从 ZIP 输入流中读取 pack.json 的 version 字段 */
+    /**
+     * 从 ZIP 输入流中读取 pack.json 的 version 字段
+     */
     private static Optional<String> readVersionFromZip(InputStream zipStream) {
         try (ZipInputStream zis = new ZipInputStream(zipStream)) {
             ZipEntry entry;
@@ -84,7 +92,9 @@ public final class BuildingPackVersionChecker {
         return Optional.empty();
     }
 
-    /** 语义化版本比较：a < b 返回 true */
+    /**
+     * 语义化版本比较：a < b 返回 true
+     */
     public static boolean isOlderThan(String a, String b) {
         int[] va = parseVersion(a);
         int[] vb = parseVersion(b);
@@ -95,7 +105,9 @@ public final class BuildingPackVersionChecker {
         return va.length < vb.length;
     }
 
-    /** 解析版本号为整数数组（"2.1.0" → [2, 1, 0]） */
+    /**
+     * 解析版本号为整数数组（"2.1.0" → [2, 1, 0]）
+     */
     private static int[] parseVersion(String version) {
         String[] parts = version.split("\\.");
         int[] result = new int[parts.length];

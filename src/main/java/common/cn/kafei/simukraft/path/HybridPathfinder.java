@@ -46,7 +46,7 @@ final class HybridPathfinder {
     /**
      * Computes a path from the request start to its target over the given snapshot.
      *
-     * @param request the movement request describing start, target and intent
+     * @param request  the movement request describing start, target and intent
      * @param snapshot the immutable world sample the search runs on
      * @return a successful result with smoothed waypoints, or a failed result with a reason code
      */
@@ -456,7 +456,9 @@ final class HybridPathfinder {
                 && canCrossHorizontalBoundary(snapshot, acrossZ, target);
     }
 
-    /** Returns whether a one-block horizontal move clears thin collision panels at both feet levels. */
+    /**
+     * Returns whether a one-block horizontal move clears thin collision panels at both feet levels.
+     */
     private static boolean canCrossHorizontalBoundary(PathSnapshot snapshot, PathCell from, PathCell to) {
         int horizontalDistance = Math.abs(to.x() - from.x()) + Math.abs(to.z() - from.z());
         if (horizontalDistance != 1) {
@@ -742,7 +744,10 @@ final class HybridPathfinder {
                     PathCell cell = snapshot.cell(target.getX() + dx, target.getY() + dy, target.getZ() + dz);
                     if (cell == null) continue;
                     double d = dx * dx + dy * dy + dz * dz;
-                    if (d < bestAnyDistance) { bestAny = cell; bestAnyDistance = d; }
+                    if (d < bestAnyDistance) {
+                        bestAny = cell;
+                        bestAnyDistance = d;
+                    }
                     if (d < bestClearDistance && hasCitizenClearance(cell, shapes)) {
                         bestClear = cell;
                         bestClearDistance = d;
@@ -920,7 +925,8 @@ final class HybridPathfinder {
                         open.add(next);
                     }
                 }
-                if (open.isEmpty() || totalIterations >= MAX_ITERATIONS) result = PathResult.failed(request, "path_not_found");
+                if (open.isEmpty() || totalIterations >= MAX_ITERATIONS)
+                    result = PathResult.failed(request, "path_not_found");
             } catch (RuntimeException e) {
                 result = PathResult.failed(request, "internal_error");
             }

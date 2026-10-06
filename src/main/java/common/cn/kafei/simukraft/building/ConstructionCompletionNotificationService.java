@@ -1,13 +1,12 @@
 package common.cn.kafei.simukraft.building;
 
+import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;
-import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 
 

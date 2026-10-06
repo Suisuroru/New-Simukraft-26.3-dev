@@ -9,7 +9,9 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import java.util.List;
 
-/** GeologicalSurveyHintOverlay: 在准星右下方绘制地质锤短提示。 */
+/**
+ * GeologicalSurveyHintOverlay: 在准星右下方绘制地质锤短提示。
+ */
 
 public final class GeologicalSurveyHintOverlay {
     private static final long DISPLAY_MILLIS = 2_000L;
@@ -26,13 +28,17 @@ public final class GeologicalSurveyHintOverlay {
     private GeologicalSurveyHintOverlay() {
     }
 
-    /** show: 替换当前提示并重新开始两秒计时。 */
+    /**
+     * show: 替换当前提示并重新开始两秒计时。
+     */
     public static void show(Component newMessage) {
         message = newMessage != null ? newMessage : Component.empty();
         expiresAtMillis = Util.getMillis() + DISPLAY_MILLIS;
     }
 
-    /** render: 绘制仍在有效期内的勘探提示。 */
+    /**
+     * render: 绘制仍在有效期内的勘探提示。
+     */
     public static void render(RenderGuiEvent.Post event) {
         if (message == null || message.getString().isBlank()) {
             return;
@@ -70,7 +76,9 @@ public final class GeologicalSurveyHintOverlay {
         }
     }
 
-    /** clear: 清理退出服务器后的临时提示状态。 */
+    /**
+     * clear: 清理退出服务器后的临时提示状态。
+     */
     public static void clear() {
         message = Component.empty();
         expiresAtMillis = 0L;

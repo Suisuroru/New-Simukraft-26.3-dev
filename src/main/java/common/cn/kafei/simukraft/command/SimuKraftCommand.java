@@ -6,23 +6,10 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import common.cn.kafei.simukraft.building.BuildingBuiltinResourceService;
-import common.cn.kafei.simukraft.building.BuildingPackageCatalog;
-import common.cn.kafei.simukraft.citizen.CitizenLevelService;
-import common.cn.kafei.simukraft.citizen.CitizenSkillSnapshot;
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenManager;
-import common.cn.kafei.simukraft.citizen.NpcPregnancyService;
-import common.cn.kafei.simukraft.citizen.PregnancyStage;
-import common.cn.kafei.simukraft.job.CityJobType;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
 import common.cn.kafei.simukraft.building.BuildingCatalog;
-import common.cn.kafei.simukraft.city.CityChunkManager;
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityManager;
-import common.cn.kafei.simukraft.city.CityPermissionInviteService;
-import common.cn.kafei.simukraft.city.CityPermissionLevel;
-import common.cn.kafei.simukraft.city.CityService;
+import common.cn.kafei.simukraft.building.BuildingPackageCatalog;
+import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiService;
@@ -30,18 +17,19 @@ import common.cn.kafei.simukraft.city.poi.CityPoiType;
 import common.cn.kafei.simukraft.commercial.CommercialBoxManager;
 import common.cn.kafei.simukraft.commercial.CommercialDefinitionLoader;
 import common.cn.kafei.simukraft.commercial.CommercialStockManager;
-import common.cn.kafei.simukraft.farmland.FarmlandBoxManager;
-import common.cn.kafei.simukraft.industrial.IndustrialBoxManager;
-import common.cn.kafei.simukraft.industrial.IndustrialDefinitionLoader;
-import common.cn.kafei.simukraft.logistics.LogisticsManager;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingBoxManager;
-import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingDefinitionLoader;
-import common.cn.kafei.simukraft.medical.DiseaseType;
-import common.cn.kafei.simukraft.medical.MedicalDefinitionLoader;
-import common.cn.kafei.simukraft.medical.MedicalService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.economy.EconomyService;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
+import common.cn.kafei.simukraft.farmland.FarmlandBoxManager;
+import common.cn.kafei.simukraft.industrial.IndustrialBoxManager;
+import common.cn.kafei.simukraft.industrial.IndustrialDefinitionLoader;
+import common.cn.kafei.simukraft.job.CityJobType;
+import common.cn.kafei.simukraft.logistics.LogisticsManager;
+import common.cn.kafei.simukraft.medical.DiseaseType;
+import common.cn.kafei.simukraft.medical.MedicalDefinitionLoader;
+import common.cn.kafei.simukraft.medical.MedicalService;
+import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingBoxManager;
+import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingDefinitionLoader;
 import common.cn.kafei.simukraft.network.building.BuildingCacheReloadPacket;
 import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
@@ -62,8 +50,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
-
-import common.cn.kafei.simukraft.city.CityMemberData;
 
 import java.util.List;
 import java.util.Locale;
@@ -153,7 +139,7 @@ public final class SimuKraftCommand {
                                                         context.getSource(),
                                                         DoubleArgumentType.getDouble(context, "amount"),
                                                         EntityArgument.getPlayer(context, "player")))))))
-);
+        );
         root.then(Commands.literal("path")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("test")
@@ -299,7 +285,9 @@ public final class SimuKraftCommand {
         dispatcher.register(root);
     }
 
-    /** addNpcXp：给选中 NPC 增加 XP。 */
+    /**
+     * addNpcXp：给选中 NPC 增加 XP。
+     */
     private static int addNpcXp(CommandSourceStack source, Entity entity, int amount) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -311,7 +299,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** removeNpcXp：从选中 NPC 扣除 XP（下限 0）。 */
+    /**
+     * removeNpcXp：从选中 NPC 扣除 XP（下限 0）。
+     */
     private static int removeNpcXp(CommandSourceStack source, Entity entity, int amount) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -323,7 +313,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** setNpcXp：将选中 NPC 的 XP 直接设为指定值。 */
+    /**
+     * setNpcXp：将选中 NPC 的 XP 直接设为指定值。
+     */
     private static int setNpcXp(CommandSourceStack source, Entity entity, int amount) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -335,7 +327,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** addNpcLevel：给选中 NPC 增加等级。 */
+    /**
+     * addNpcLevel：给选中 NPC 增加等级。
+     */
     private static int addNpcLevel(CommandSourceStack source, Entity entity, int count) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -347,7 +341,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** removeNpcLevel：从选中 NPC 扣除等级（下限 1）。 */
+    /**
+     * removeNpcLevel：从选中 NPC 扣除等级（下限 1）。
+     */
     private static int removeNpcLevel(CommandSourceStack source, Entity entity, int count) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -359,7 +355,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** setNpcLevel：将选中 NPC 的等级直接设为指定值。 */
+    /**
+     * setNpcLevel：将选中 NPC 的等级直接设为指定值。
+     */
     private static int setNpcLevel(CommandSourceStack source, Entity entity, int targetLevel) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) return 0;
@@ -371,7 +369,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** setNpcHunger：将选中 NPC 的饥饿度设为 0-20 的整数并触发现有保存流程。 */
+    /**
+     * setNpcHunger：将选中 NPC 的饥饿度设为 0-20 的整数并触发现有保存流程。
+     */
     private static int setNpcHunger(CommandSourceStack source, Entity entity, int hunger) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) {
@@ -386,7 +386,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** startNpcPregnancy：为符合家庭、医疗和床位条件的成年女性 NPC 开始妊娠。 */
+    /**
+     * startNpcPregnancy：为符合家庭、医疗和床位条件的成年女性 NPC 开始妊娠。
+     */
     private static int startNpcPregnancy(CommandSourceStack source, Entity entity) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) {
@@ -402,7 +404,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** changeNpcPregnancyProgress：按游戏日增减已怀孕 NPC 的进度并同步外观。 */
+    /**
+     * changeNpcPregnancyProgress：按游戏日增减已怀孕 NPC 的进度并同步外观。
+     */
     private static int changeNpcPregnancyProgress(CommandSourceStack source, Entity entity, int deltaDays) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) {
@@ -438,7 +442,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** setCitizenDisease：给选中的存活 NPC 设置测试疾病并立即持久化。 */
+    /**
+     * setCitizenDisease：给选中的存活 NPC 设置测试疾病并立即持久化。
+     */
     private static int setCitizenDisease(CommandSourceStack source, Entity entity, String diseaseName) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) {
@@ -459,7 +465,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** clearCitizenDisease：清除选中 NPC 的测试疾病并立即持久化。 */
+    /**
+     * clearCitizenDisease：清除选中 NPC 的测试疾病并立即持久化。
+     */
     private static int clearCitizenDisease(CommandSourceStack source, Entity entity) {
         CitizenData citizen = resolveCommandCitizen(source, entity);
         if (citizen == null) {
@@ -473,7 +481,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** resolveCommandCitizen：校验命令目标并解析为可修改的存活 NPC 数据。 */
+    /**
+     * resolveCommandCitizen：校验命令目标并解析为可修改的存活 NPC 数据。
+     */
     private static CitizenData resolveCommandCitizen(CommandSourceStack source, Entity entity) {
         if (!(entity instanceof CitizenEntity citizenEntity) || !(entity.level() instanceof ServerLevel level)) {
             source.sendFailure(Component.translatable("message.simukraft.command.npc_disease.selected_not_citizen"));
@@ -579,7 +589,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** storageStats: 输出主库与建筑结构库的写队列指标快照，用于现场排查存储故障。 */
+    /**
+     * storageStats: 输出主库与建筑结构库的写队列指标快照，用于现场排查存储故障。
+     */
     private static int storageStats(CommandSourceStack source) {
         String main = common.cn.kafei.simukraft.storage.SimuSqliteStorage.summarizeStorage(source.getServer());
         String buildings = common.cn.kafei.simukraft.storage.BuildingStructureSqliteDatabase.summarizeFor(source.getServer());
@@ -913,7 +925,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** transferMayorByName: OP 通过城市名（支持离线市长）强制将市长转让给目标在线玩家。 */
+    /**
+     * transferMayorByName: OP 通过城市名（支持离线市长）强制将市长转让给目标在线玩家。
+     */
     private static int transferMayorByName(CommandSourceStack source, String cityName, ServerPlayer toPlayer) {
         ServerLevel level = source.getServer().overworld();
         Optional<CityData> cityOpt = CityService.findCityByName(level, cityName);
@@ -956,7 +970,9 @@ public final class SimuKraftCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    /** transferMayor: OP 强制将指定城市市长身份转让给目标玩家（目标不能已有城市）。 */
+    /**
+     * transferMayor: OP 强制将指定城市市长身份转让给目标玩家（目标不能已有城市）。
+     */
     private static int transferMayor(CommandSourceStack source, ServerPlayer fromPlayer, ServerPlayer toPlayer) {
         ServerLevel level = fromPlayer.level();
         Optional<CityData> cityOpt = CityService.findPlayerCity(level, fromPlayer.getUUID());

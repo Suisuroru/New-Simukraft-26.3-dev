@@ -1,10 +1,6 @@
 package common.cn.kafei.simukraft.city;
 
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenManager;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
-import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
+import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
@@ -24,7 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** 城市激活状态和离线居民按需恢复。 */
+/**
+ * 城市激活状态和离线居民按需恢复。
+ */
 
 public final class CityRuntimeService {
     private static final long RECOVERY_PROCESS_INTERVAL_TICKS = 20L;
@@ -41,7 +39,9 @@ public final class CityRuntimeService {
     private CityRuntimeService() {
     }
 
-    /** tick：每 tick 刷新玩家触发的城市状态，每秒处理居民恢复 ticket。 */
+    /**
+     * tick：每 tick 刷新玩家触发的城市状态，每秒处理居民恢复 ticket。
+     */
     public static void tick(ServerLevel level) {
         if (level == null || level.isClientSide()) {
             return;
@@ -71,7 +71,9 @@ public final class CityRuntimeService {
         });
     }
 
-    /** isCityActive：判断城市是否允许执行实体级操作。 */
+    /**
+     * isCityActive：判断城市是否允许执行实体级操作。
+     */
     public static boolean isCityActive(ServerLevel level, UUID cityId) {
         if (level == null || cityId == null) {
             return false;
@@ -81,15 +83,19 @@ public final class CityRuntimeService {
         return cityRuntime != null && cityRuntime.state == CityRuntimeState.ACTIVE;
     }
 
-    /** isCitizenActive：判断居民所属城市是否允许执行实体级操作。 */
+    /**
+     * isCitizenActive：判断居民所属城市是否允许执行实体级操作。
+     */
     public static boolean isCitizenActive(ServerLevel level, CitizenData citizen) {
         return citizen != null && !citizen.dead()
                 && level != null
-                && level.dimension().registry().toString().equals(citizen.dimensionId())
+                && level.dimension().identifier().toString().equals(citizen.dimensionId())
                 && isCityActive(level, citizen.cityId());
     }
 
-    /** requestCitizenRecovery：为活跃城市中未加载的居民申请短时源区块加载。 */
+    /**
+     * requestCitizenRecovery：为活跃城市中未加载的居民申请短时源区块加载。
+     */
     public static void requestCitizenRecovery(ServerLevel level, CitizenData citizen) {
         if (!isCitizenActive(level, citizen) || CitizenTeleportService.findCitizenEntity(level, citizen.uuid()) != null) {
             return;
@@ -115,7 +121,9 @@ public final class CityRuntimeService {
         }
     }
 
-    /** clearServerCaches：服务器停止时移除尚未释放的恢复 ticket。 */
+    /**
+     * clearServerCaches：服务器停止时移除尚未释放的恢复 ticket。
+     */
     public static void clearServerCaches(MinecraftServer server) {
         if (server == null) {
             return;
@@ -164,7 +172,9 @@ public final class CityRuntimeService {
         });
     }
 
-    /** resolveRecoveryChunks：优先精确位置，并为旧存档按城市领地顺序补充候选区块。 */
+    /**
+     * resolveRecoveryChunks：优先精确位置，并为旧存档按城市领地顺序补充候选区块。
+     */
     private static List<ChunkPos> resolveRecoveryChunks(ServerLevel level, CitizenData citizen) {
         LinkedHashSet<Long> chunkLongs = new LinkedHashSet<>();
         citizen.lastKnownChunk().ifPresent(chunkPos -> chunkLongs.add(chunkPos.pack()));
@@ -189,9 +199,11 @@ public final class CityRuntimeService {
         return List.copyOf(chunks);
     }
 
-    /** advanceRecovery：当前候选未恢复实体时切换到下一个短时强加载区块。 */
+    /**
+     * advanceRecovery：当前候选未恢复实体时切换到下一个短时强加载区块。
+     */
     private static void advanceRecovery(ServerLevel level, CityRuntime cityRuntime, UUID citizenId,
-            PendingRecovery pending, long gameTime) {
+                                        PendingRecovery pending, long gameTime) {
         PendingRecovery next = pending.nextCandidate(gameTime);
         if (next != null) {
             if (cityRuntime.pendingRecoveries.replace(citizenId, pending, next)) {

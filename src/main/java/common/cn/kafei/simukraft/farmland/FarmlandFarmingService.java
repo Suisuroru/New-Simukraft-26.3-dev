@@ -2,12 +2,7 @@ package common.cn.kafei.simukraft.farmland;
 
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
+import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.material.GenericContainerAccess;
@@ -546,9 +541,11 @@ public final class FarmlandFarmingService {
         private int cursor(FarmlandWorkPhase phase) {
             return cursors[phase.ordinal()];
         }
+
         private void setCursor(FarmlandWorkPhase phase, int cursor) {
             cursors[phase.ordinal()] = cursor;
         }
+
         private void setVisual(ItemStack tool, boolean active) {
             visualTool = FarmlandFarmerVisualService.normalize(tool);
             visualActive = active;

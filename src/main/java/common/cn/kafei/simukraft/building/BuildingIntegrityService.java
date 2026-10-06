@@ -178,7 +178,8 @@ public final class BuildingIntegrityService {
         }
     }
 
-    public record IntegrityPreview(boolean available, int totalBlocks, int intactBlocks, int repairableBlocks, int manualRepairBlocks, double repairCost) {
+    public record IntegrityPreview(boolean available, int totalBlocks, int intactBlocks, int repairableBlocks,
+                                   int manualRepairBlocks, double repairCost) {
         public double percent() {
             return totalBlocks <= 0 ? 100.0D : intactBlocks * 100.0D / totalBlocks;
         }

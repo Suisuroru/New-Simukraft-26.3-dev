@@ -67,7 +67,8 @@ public record IndustrialDefinition(String id,
         List<ItemRequirement> itemLeaves();
     }
 
-    public record ItemRequirement(IndustrialItemStackSpec spec, int count, boolean consume) implements InputRequirement {
+    public record ItemRequirement(IndustrialItemStackSpec spec, int count,
+                                  boolean consume) implements InputRequirement {
         public ItemRequirement {
             spec = spec != null ? spec : IndustrialItemStackSpec.empty();
             count = Math.max(1, count);
@@ -110,7 +111,8 @@ public record IndustrialDefinition(String id,
         ANY
     }
 
-    public record ProductOutput(IndustrialItemStackSpec spec, int baseAmount, int randomRange, double probability, boolean ignoreMultiplier) {
+    public record ProductOutput(IndustrialItemStackSpec spec, int baseAmount, int randomRange, double probability,
+                                boolean ignoreMultiplier) {
         public ProductOutput {
             spec = spec != null ? spec : IndustrialItemStackSpec.empty();
             baseAmount = Math.max(1, baseAmount);

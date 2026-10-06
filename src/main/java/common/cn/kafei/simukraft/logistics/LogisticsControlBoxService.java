@@ -1,10 +1,10 @@
 package common.cn.kafei.simukraft.logistics;
 
 import common.cn.kafei.simukraft.citizen.CitizenData;
+import common.cn.kafei.simukraft.city.CityChunkManager;
 import common.cn.kafei.simukraft.city.CityData;
 import common.cn.kafei.simukraft.city.CityManager;
 import common.cn.kafei.simukraft.city.CityService;
-import common.cn.kafei.simukraft.city.CityChunkManager;
 import common.cn.kafei.simukraft.economy.EconomyService;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.material.GenericContainerAccess;
@@ -12,26 +12,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 
 public final class LogisticsControlBoxService {
     private LogisticsControlBoxService() {
     }
 
-    /** buildServerView: 构建物流服务器盒界面快照。 */
+    /**
+     * buildServerView: 构建物流服务器盒界面快照。
+     */
     public static ServerView buildServerView(ServerLevel level, BlockPos boxPos) {
         UUID cityId = cityIdFor(level, boxPos);
         CityData city = cityId != null ? CityManager.get(level).getCity(cityId).orElse(null) : null;
@@ -61,7 +55,9 @@ public final class LogisticsControlBoxService {
                 clientInventories);
     }
 
-    /** buildClientView: 构建物流客户端盒界面快照。 */
+    /**
+     * buildClientView: 构建物流客户端盒界面快照。
+     */
     public static ClientView buildClientView(ServerLevel level, BlockPos boxPos) {
         UUID cityId = cityIdFor(level, boxPos);
         CityData city = cityId != null ? CityManager.get(level).getCity(cityId).orElse(null) : null;
@@ -82,17 +78,23 @@ public final class LogisticsControlBoxService {
                 channels.stream().map(LogisticsControlBoxService::channelEntry).toList());
     }
 
-    /** bindWarehouseAdjacent: 绑定服务器盒相邻实体容器。 */
+    /**
+     * bindWarehouseAdjacent: 绑定服务器盒相邻实体容器。
+     */
     public static ActionResult bindWarehouseAdjacent(ServerLevel level, BlockPos boxPos) {
         return LogisticsContainerBindingService.bindWarehouseAdjacent(level, boxPos);
     }
 
-    /** bindWarehouseArea: 通过两点选区批量绑定仓库容器。 */
+    /**
+     * bindWarehouseArea: 通过两点选区批量绑定仓库容器。
+     */
     public static ActionResult bindWarehouseArea(ServerLevel level, BlockPos boxPos, BlockPos areaMin, BlockPos areaMax) {
         return LogisticsContainerBindingService.bindWarehouseArea(level, boxPos, areaMin, areaMax);
     }
 
-    /** deleteWarehouse: 删除当前服务器盒绑定的仓库与关联路线。 */
+    /**
+     * deleteWarehouse: 删除当前服务器盒绑定的仓库与关联路线。
+     */
     public static ActionResult deleteWarehouse(ServerLevel level, BlockPos boxPos) {
         LogisticsWarehouseData warehouse = LogisticsManager.get(level).warehouseAt(boxPos);
         if (warehouse == null || warehouse.containers().isEmpty()) {
@@ -102,7 +104,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** removeWarehouseContainer: 移除仓库容器绑定。 */
+    /**
+     * removeWarehouseContainer: 移除仓库容器绑定。
+     */
     public static ActionResult removeWarehouseContainer(ServerLevel level, BlockPos boxPos, BlockPos containerPos) {
         LogisticsWarehouseData warehouse = LogisticsManager.get(level).warehouseAt(boxPos);
         if (warehouse == null || containerPos == null) {
@@ -118,17 +122,23 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** bindClientAdjacent: 绑定客户端盒相邻实体容器端口。 */
+    /**
+     * bindClientAdjacent: 绑定客户端盒相邻实体容器端口。
+     */
     public static ActionResult bindClientAdjacent(ServerLevel level, BlockPos boxPos) {
         return LogisticsContainerBindingService.bindClientAdjacent(level, boxPos);
     }
 
-    /** bindClientArea: 通过两点选区批量绑定客户端端口容器。 */
+    /**
+     * bindClientArea: 通过两点选区批量绑定客户端端口容器。
+     */
     public static ActionResult bindClientArea(ServerLevel level, BlockPos boxPos, BlockPos areaMin, BlockPos areaMax) {
         return LogisticsContainerBindingService.bindClientArea(level, boxPos, areaMin, areaMax);
     }
 
-    /** removeClientPort: 移除客户端端口绑定。 */
+    /**
+     * removeClientPort: 移除客户端端口绑定。
+     */
     public static ActionResult removeClientPort(ServerLevel level, BlockPos boxPos, String portId) {
         LogisticsClientData client = LogisticsManager.get(level).clientAt(boxPos);
         if (client == null || portId == null || portId.isBlank()) {
@@ -144,7 +154,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** renameClient: 修改手动物流客户端显示名。 */
+    /**
+     * renameClient: 修改手动物流客户端显示名。
+     */
     public static ActionResult renameClient(ServerLevel level, BlockPos boxPos, String name) {
         LogisticsClientData client = LogisticsManager.get(level).clientAt(boxPos);
         if (client == null) {
@@ -154,12 +166,16 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** addChannel: 新增仓库到客户端的物流路线。 */
+    /**
+     * addChannel: 新增仓库到客户端的物流路线。
+     */
     public static ActionResult addChannel(ServerLevel level, BlockPos serverBoxPos, UUID clientId, LogisticsDirection direction, String name, String filterItemId) {
         return addChannel(level, serverBoxPos, clientId, direction, name, filterItemId != null && !filterItemId.isBlank() ? List.of(filterItemId) : List.of());
     }
 
-    /** addChannel: 新增带多个物品过滤器的物流路线。 */
+    /**
+     * addChannel: 新增带多个物品过滤器的物流路线。
+     */
     public static ActionResult addChannel(ServerLevel level, BlockPos serverBoxPos, UUID clientId, LogisticsDirection direction, String name, List<String> filterItemIds) {
         LogisticsWarehouseData warehouse = LogisticsManager.get(level).warehouseAt(serverBoxPos);
         LogisticsClientData client = resolveClient(level, clientId);
@@ -190,7 +206,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** toggleChannel: 启用或暂停物流路线。 */
+    /**
+     * toggleChannel: 启用或暂停物流路线。
+     */
     public static ActionResult toggleChannel(ServerLevel level, UUID channelId) {
         LogisticsChannelData channel = LogisticsManager.get(level).channel(channelId);
         if (channel == null) {
@@ -200,7 +218,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** setChannelKeepQuantities: 设置路线发送端/接收端保有量，0 表示该端不限制。 */
+    /**
+     * setChannelKeepQuantities: 设置路线发送端/接收端保有量，0 表示该端不限制。
+     */
     public static ActionResult setChannelKeepQuantities(ServerLevel level, UUID channelId, int sourceQuantity, int targetQuantity) {
         LogisticsChannelData channel = LogisticsManager.get(level).channel(channelId);
         if (channel == null) {
@@ -210,7 +230,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** removeChannel: 删除物流路线。 */
+    /**
+     * removeChannel: 删除物流路线。
+     */
     public static ActionResult removeChannel(ServerLevel level, UUID channelId) {
         if (LogisticsManager.get(level).channel(channelId) == null) {
             return ActionResult.NOT_FOUND;
@@ -219,7 +241,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.SUCCESS;
     }
 
-    /** depositPlayerInventory: 将玩家背包可放入的物品存入仓库容器。 */
+    /**
+     * depositPlayerInventory: 将玩家背包可放入的物品存入仓库容器。
+     */
     public static ActionResult depositPlayerInventory(ServerLevel level, BlockPos boxPos, ServerPlayer player) {
         LogisticsWarehouseData warehouse = LogisticsManager.get(level).warehouseAt(boxPos);
         if (warehouse == null || warehouse.containers().isEmpty() || player == null) {
@@ -247,7 +271,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.NO_SPACE;
     }
 
-    /** extractWarehouseItem: 按物品 ID 从仓库取出一组到玩家背包。 */
+    /**
+     * extractWarehouseItem: 按物品 ID 从仓库取出一组到玩家背包。
+     */
     public static ActionResult extractWarehouseItem(ServerLevel level, BlockPos boxPos, ServerPlayer player, String itemId) {
         LogisticsWarehouseData warehouse = LogisticsManager.get(level).warehouseAt(boxPos);
         if (warehouse == null || warehouse.containers().isEmpty() || player == null || itemId == null || itemId.isBlank()) {
@@ -287,7 +313,9 @@ public final class LogisticsControlBoxService {
         return ActionResult.NOT_FOUND;
     }
 
-    /** onServerRemoved: 服务器盒被破坏时清理仓库、路线和仓储管理员岗位。 */
+    /**
+     * onServerRemoved: 服务器盒被破坏时清理仓库、路线和仓储管理员岗位。
+     */
     public static void onServerRemoved(ServerLevel level, BlockPos boxPos) {
         if (level == null || boxPos == null) {
             return;
@@ -301,37 +329,47 @@ public final class LogisticsControlBoxService {
         LogisticsManager.get(level).removeWarehouse(boxPos);
     }
 
-    /** onClientRemoved: 客户端盒被破坏时清理客户端和相关路线。 */
+    /**
+     * onClientRemoved: 客户端盒被破坏时清理客户端和相关路线。
+     */
     public static void onClientRemoved(ServerLevel level, BlockPos boxPos) {
         if (level != null && boxPos != null) {
             LogisticsManager.get(level).removeClient(boxPos);
         }
     }
 
-    /** findAssignedStorageWorker: 查找仓储管理员。 */
+    /**
+     * findAssignedStorageWorker: 查找仓储管理员。
+     */
     public static CitizenData findAssignedStorageWorker(ServerLevel level, BlockPos boxPos) {
         return CitizenEmploymentService.findAssigned(level, LogisticsConstants.SERVER_SOURCE_TYPE, LogisticsConstants.STORAGE_ROLE, boxPos).orElse(null);
     }
 
-    /** cityIdFor: 按物流盒所在区块解析城市归属。 */
+    /**
+     * cityIdFor: 按物流盒所在区块解析城市归属。
+     */
     public static UUID cityIdFor(ServerLevel level, BlockPos pos) {
         return level != null && pos != null ? CityChunkManager.get(level).getChunkOwner(ChunkPos.containing(pos).pack()) : null;
     }
 
-    /** canManage: 校验玩家是否可以管理物流盒所在城市。 */
+    /**
+     * canManage: 校验玩家是否可以管理物流盒所在城市。
+     */
     public static boolean canManage(ServerLevel level, BlockPos pos, ServerPlayer player) {
         UUID cityId = cityIdFor(level, pos);
         return cityId != null && player != null && CityService.canManageCity(level, cityId, player.getUUID());
     }
 
-    /** resolveClient: 同时查找手动客户端和建筑自动客户端。 */
+    /**
+     * resolveClient: 同时查找手动客户端和建筑自动客户端。
+     */
     public static LogisticsClientData resolveClient(ServerLevel level, UUID clientId) {
         LogisticsClientData manual = LogisticsManager.get(level).manualClient(clientId);
         return manual != null ? manual : LogisticsAutoClientService.findClient(level, clientId);
     }
 
     public static String dimensionId(ServerLevel level) {
-        return level.dimension().registry().toString();
+        return level.dimension().identifier().toString();
     }
 
     private static List<LogisticsClientData> allClients(ServerLevel level, UUID cityId, String dimensionId) {
@@ -447,13 +485,15 @@ public final class LogisticsControlBoxService {
                              List<ChannelEntry> channels) {
     }
 
-    public record ClientEntry(UUID clientId, BlockPos boxPos, String name, boolean automatic, String sourceType, int portCount) {
+    public record ClientEntry(UUID clientId, BlockPos boxPos, String name, boolean automatic, String sourceType,
+                              int portCount) {
     }
 
     public record ClientInventoryEntry(UUID clientId, List<LogisticsInventoryEntry> inventory) {
     }
 
-    public record ChannelEntry(UUID channelId, UUID clientId, LogisticsDirection direction, String name, boolean enabled, List<String> filters, int keepSourceQuantity, int keepTargetQuantity) {
+    public record ChannelEntry(UUID channelId, UUID clientId, LogisticsDirection direction, String name,
+                               boolean enabled, List<String> filters, int keepSourceQuantity, int keepTargetQuantity) {
         public String directionName() {
             return direction != null ? direction.name().toLowerCase(Locale.ROOT) : "";
         }

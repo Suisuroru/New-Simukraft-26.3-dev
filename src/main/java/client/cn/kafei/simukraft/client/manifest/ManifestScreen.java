@@ -1,9 +1,5 @@
 package client.cn.kafei.simukraft.client.manifest;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import net.minecraft.client.input.MouseButtonEvent;
-
 import common.cn.kafei.simukraft.item.ManifestItem;
 import common.cn.kafei.simukraft.network.manifest.ManifestTogglePacket;
 import net.minecraft.client.Minecraft;
@@ -11,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -19,7 +16,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -220,7 +217,9 @@ public final class ManifestScreen extends Screen {
         }
     }
 
-    /** renderMaterialFrame: 绘制材料列表区域的小标题和边框。 */
+    /**
+     * renderMaterialFrame: 绘制材料列表区域的小标题和边框。
+     */
     private void renderMaterialFrame(GuiGraphicsExtractor guiGraphics, PageLayout layout, Component title) {
         int left = layout.contentX() - 5;
         int right = layout.contentRight() + 5;
@@ -238,7 +237,9 @@ public final class ManifestScreen extends Screen {
         guiGraphics.text(font, title, titleX, titleY, MUTED_TEXT_COLOR, false);
     }
 
-    /** renderProductGroup: 上下动态分栏渲染”需要物品 / 产出商品”。 */
+    /**
+     * renderProductGroup: 上下动态分栏渲染”需要物品 / 产出商品”。
+     */
     private void renderProductGroup(GuiGraphicsExtractor guiGraphics, PageLayout layout, ManifestItem.ProductGroup group) {
         int left = layout.contentX() + 4;
         int right = layout.contentRight() - 4;

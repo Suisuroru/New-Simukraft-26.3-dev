@@ -1,15 +1,27 @@
 package client.cn.kafei.simukraft.client.city;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
-import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
-import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
-import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.citizen.CitizenAvatarFactory;
 import client.cn.kafei.simukraft.client.citizen.CitizenFamilyGraphCanvas;
+import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegion;
+import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
+import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
+import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
+import com.lowdragmc.lowdraglib2.editor.ui.View;
+import com.lowdragmc.lowdraglib2.editor.ui.ViewContainer;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.Icons;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import common.cn.kafei.simukraft.city.CityPermissionLevel;
+import common.cn.kafei.simukraft.network.citizen.manage.*;
 import common.cn.kafei.simukraft.network.city.chunk.CityChunkBatchPurchasePacket;
 import common.cn.kafei.simukraft.network.city.chunk.CityChunkBatchReleasePacket;
 import common.cn.kafei.simukraft.network.city.chunk.CityChunkPurchasePacket;
@@ -18,33 +30,10 @@ import common.cn.kafei.simukraft.network.city.core.CityCoreManageCityPacket;
 import common.cn.kafei.simukraft.network.city.core.CityCoreOpenResponsePacket;
 import common.cn.kafei.simukraft.network.city.map.CityCoreMapRequestPacket;
 import common.cn.kafei.simukraft.network.city.map.CityCoreMapResponsePacket;
-import common.cn.kafei.simukraft.network.citizen.manage.CityCitizenFamilyGraphRequestPacket;
-import common.cn.kafei.simukraft.network.citizen.manage.CityCitizenFamilyGraphResponsePacket;
-import common.cn.kafei.simukraft.network.citizen.manage.CityCitizenManageActionPacket;
-import common.cn.kafei.simukraft.network.citizen.manage.CityCitizenManageRequestPacket;
-import common.cn.kafei.simukraft.network.citizen.manage.CityCitizenManageResponsePacket;
 import common.cn.kafei.simukraft.network.city.member.CityCoreMemberActionPacket;
 import common.cn.kafei.simukraft.network.city.member.CityCoreMembersRequestPacket;
 import common.cn.kafei.simukraft.network.city.member.CityCoreMembersResponsePacket;
-
-import com.lowdragmc.lowdraglib2.editor.ui.View;
-import com.lowdragmc.lowdraglib2.editor.ui.ViewContainer;
-import com.lowdragmc.lowdraglib2.gui.ColorPattern;
-import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.Icons;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import common.cn.kafei.simukraft.ui.RecipeBookSearchUi;
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Tab;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
-import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
-import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
@@ -53,19 +42,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.joml.Vector2f;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 
 public final class CityCoreScreenOpener {
     private static final int BUTTON_WIDTH = 120;
@@ -100,7 +83,9 @@ public final class CityCoreScreenOpener {
         });
     }
 
-    /** expectUpgradeRefresh: 标记一次升级后的定向刷新，避免迟到响应重新弹出已关闭窗口。 */
+    /**
+     * expectUpgradeRefresh: 标记一次升级后的定向刷新，避免迟到响应重新弹出已关闭窗口。
+     */
     static void expectUpgradeRefresh(CityCoreOpenResponsePacket packet) {
         CityCoreWindow window = activeWindow;
         if (packet != null && packet.hasCity() && window != null && window.matches(packet)) {
@@ -108,7 +93,9 @@ public final class CityCoreScreenOpener {
         }
     }
 
-    /** takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。 */
+    /**
+     * takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。
+     */
     private static UpgradeRefreshExpectation takeUpgradeRefresh(CityCoreOpenResponsePacket packet) {
         UpgradeRefreshExpectation expectation = pendingUpgradeRefresh;
         if (expectation != null && expectation.matches(packet)) {
@@ -149,14 +136,18 @@ public final class CityCoreScreenOpener {
         });
     }
 
-    /** isActiveScreen: 验证异步响应仍属于当前城市核心窗口。 */
+    /**
+     * isActiveScreen: 验证异步响应仍属于当前城市核心窗口。
+     */
     private static boolean isActiveScreen(Minecraft minecraft, CityCoreWindow window) {
         return window != null
                 && activeWindow == window
                 && minecraft.gui.screen() == activeScreen;
     }
 
-    /** show: 记录并切换城市核心 Screen，供迟到响应进行精确身份校验。 */
+    /**
+     * show: 记录并切换城市核心 Screen，供迟到响应进行精确身份校验。
+     */
     private static void show(Minecraft minecraft, ModularUI ui) {
         com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen screen =
                 new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(ui, Component.empty());
@@ -188,7 +179,9 @@ public final class CityCoreScreenOpener {
                 .shouldCloseOnKeyInventory(false);
     }
 
-    /** rememberSummary：缓存完整城市核心包，供地图/成员页重建窗口时保留人口和住房容量。 */
+    /**
+     * rememberSummary：缓存完整城市核心包，供地图/成员页重建窗口时保留人口和住房容量。
+     */
     private static void rememberSummary(CityCoreOpenResponsePacket packet) {
         if (packet != null && packet.hasCity()) {
             lastSummaryPacket = packet;
@@ -197,7 +190,9 @@ public final class CityCoreScreenOpener {
         }
     }
 
-    /** cachedSummary：按城市和核心坐标读取最近一次完整统计包。 */
+    /**
+     * cachedSummary：按城市和核心坐标读取最近一次完整统计包。
+     */
     private static CityCoreOpenResponsePacket cachedSummary(UUID cityId, BlockPos pos) {
         CityCoreWindow window = activeWindow;
         if (window != null && sameSummary(window.packet, cityId, pos)) {
@@ -351,7 +346,9 @@ public final class CityCoreScreenOpener {
         });
     }
 
-    /** openFamilyGraph：在城市核心窗口内打开无侧栏内容的五代关系图画布。 */
+    /**
+     * openFamilyGraph：在城市核心窗口内打开无侧栏内容的五代关系图画布。
+     */
     public static void openFamilyGraph(CityCitizenFamilyGraphResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(() -> {
@@ -408,7 +405,8 @@ public final class CityCoreScreenOpener {
                 listPanel.addChild(citizenRow(packet, citizen));
                 any = true;
             }
-            if (!any) listPanel.addChild(line(Component.translatable("screen.simukraft.city_core.citizen_manage.empty")));
+            if (!any)
+                listPanel.addChild(line(Component.translatable("screen.simukraft.city_core.citizen_manage.empty")));
         };
 
         searchField.setTextResponder(t -> rebuild.run());
@@ -454,9 +452,15 @@ public final class CityCoreScreenOpener {
                 () -> ClientPacketDistributor.sendToServer(new CityCitizenFamilyGraphRequestPacket(packet.pos(), citizen.citizenId()))));
         if (packet.canManage()) {
             row.addChild(memberActionButton("screen.simukraft.city_core.citizen_manage.dismiss", 52,
-                    () -> { ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.DISMISS, citizen.citizenId())); close(); }));
+                    () -> {
+                        ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.DISMISS, citizen.citizenId()));
+                        close();
+                    }));
             row.addChild(memberActionButton("screen.simukraft.city_core.citizen_manage.exile", 44,
-                    () -> { ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.EXILE, citizen.citizenId())); close(); }));
+                    () -> {
+                        ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.EXILE, citizen.citizenId()));
+                        close();
+                    }));
         }
         return row;
     }
@@ -907,7 +911,9 @@ public final class CityCoreScreenOpener {
             openDefaultTabs();
         }
 
-        /** summaryPacket：成员页响应不带统计字段时，复用最近一次城市核心统计。 */
+        /**
+         * summaryPacket：成员页响应不带统计字段时，复用最近一次城市核心统计。
+         */
         private static CityCoreOpenResponsePacket summaryPacket(CityCoreMembersResponsePacket packet) {
             CityCoreOpenResponsePacket cached = cachedSummary(packet.cityId(), packet.pos());
             int population = cached != null ? cached.cityPopulation() : 0;
@@ -922,7 +928,9 @@ public final class CityCoreScreenOpener {
             return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.members().size(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.viewerPermission(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress);
         }
 
-        /** summaryPacket：地图响应不带统计字段时，复用最近一次城市核心统计。 */
+        /**
+         * summaryPacket：地图响应不带统计字段时，复用最近一次城市核心统计。
+         */
         private static CityCoreOpenResponsePacket summaryPacket(CityCoreMapResponsePacket packet) {
             CityCoreOpenResponsePacket cached = cachedSummary(packet.cityId(), packet.pos());
             int population = cached != null ? cached.cityPopulation() : 0;
@@ -957,7 +965,9 @@ public final class CityCoreScreenOpener {
             rebuildSidebar();
         }
 
-        /** hideSidebar：关系图画布占满内容区，不保留左侧菜单。 */
+        /**
+         * hideSidebar：关系图画布占满内容区，不保留左侧菜单。
+         */
         private void hideSidebar() {
             if (!sidebarCollapsed) {
                 sidebarCollapsed = true;
@@ -982,7 +992,9 @@ public final class CityCoreScreenOpener {
             }
         }
 
-        /** openOrReplaceTab：同一标签换内容，避免关系图停留在上一个市民。 */
+        /**
+         * openOrReplaceTab：同一标签换内容，避免关系图停留在上一个市民。
+         */
         private void openOrReplaceTab(String id, String titleKey, UIElement content) {
             View existing = openedTabs.remove(id);
             if (existing != null && rightTabs.hasView(existing)) {
@@ -1008,12 +1020,16 @@ public final class CityCoreScreenOpener {
             return other != null && packet.cityId().equals(other.cityId()) && packet.pos().equals(other.pos());
         }
 
-        /** matches: 校验带城市标识的异步响应归属。 */
+        /**
+         * matches: 校验带城市标识的异步响应归属。
+         */
         private boolean matches(BlockPos pos, UUID cityId) {
             return packet.pos().equals(pos) && packet.cityId().equals(cityId);
         }
 
-        /** matches: 校验仅携带核心坐标的异步响应归属。 */
+        /**
+         * matches: 校验仅携带核心坐标的异步响应归属。
+         */
         private boolean matches(BlockPos pos) {
             return packet.pos().equals(pos);
         }

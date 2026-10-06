@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.freecamera;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
+import com.mojang.blaze3d.platform.InputConstants;
+import common.cn.kafei.simukraft.network.rts.RtsChunkViewPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -14,10 +14,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
-import common.cn.kafei.simukraft.network.rts.RtsChunkViewPacket;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.joml.Matrix4f;
-import com.mojang.blaze3d.platform.InputConstants;
 
 @EventBusSubscriber(value = Dist.CLIENT)
 public final class FreeCameraManager {
@@ -75,7 +73,9 @@ public final class FreeCameraManager {
         CameraMouseLock.setLocked(true);
     }
 
-    /** activateRts: 启动保持系统光标可见的 RTS 俯视相机。 */
+    /**
+     * activateRts: 启动保持系统光标可见的 RTS 俯视相机。
+     */
     public static void activateRts() {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
@@ -115,22 +115,30 @@ public final class FreeCameraManager {
         return active;
     }
 
-    /** isRtsActive: 判断当前相机是否处于正交 RTS 视图。 */
+    /**
+     * isRtsActive: 判断当前相机是否处于正交 RTS 视图。
+     */
     public static boolean isRtsActive() {
         return active && rtsMode;
     }
 
-    /** rtsZoom: 返回 RTS 正交视图的纵向世界范围。 */
+    /**
+     * rtsZoom: 返回 RTS 正交视图的纵向世界范围。
+     */
     public static double rtsZoom() {
         return rtsZoom;
     }
 
-    /** rtsFocus: 返回 RTS 相机当前视图中心。 */
+    /**
+     * rtsFocus: 返回 RTS 相机当前视图中心。
+     */
     public static Vec3 rtsFocus() {
         return rtsFocus;
     }
 
-    /** setRtsFocus: 在不移动玩家本体的前提下定位 RTS 相机中心。 */
+    /**
+     * setRtsFocus: 在不移动玩家本体的前提下定位 RTS 相机中心。
+     */
     public static void setRtsFocus(double x, double z) {
         if (!isRtsActive()) {
             return;
@@ -141,7 +149,9 @@ public final class FreeCameraManager {
         syncRtsChunkView();
     }
 
-    /** rtsProjectionMatrix: 生成与 RTS 缩放值一致的正交投影矩阵。 */
+    /**
+     * rtsProjectionMatrix: 生成与 RTS 缩放值一致的正交投影矩阵。
+     */
     public static Matrix4f rtsProjectionMatrix() {
         Minecraft minecraft = Minecraft.getInstance();
         int width = minecraft.getWindow().getScreenWidth();
@@ -208,12 +218,16 @@ public final class FreeCameraManager {
         }
     }
 
-    /** adjustZoom: 沿当前相机视线缩放 RTS 俯视镜头。 */
+    /**
+     * adjustZoom: 沿当前相机视线缩放 RTS 俯视镜头。
+     */
     public static void adjustZoom(double scrollDelta) {
         adjustZoom(scrollDelta, false);
     }
 
-    /** adjustZoom: 按指定加速状态缩放 RTS 俯视镜头。 */
+    /**
+     * adjustZoom: 按指定加速状态缩放 RTS 俯视镜头。
+     */
     public static void adjustZoom(double scrollDelta, boolean fast) {
         if (!active || scrollDelta == 0.0D) {
             return;
@@ -296,7 +310,9 @@ public final class FreeCameraManager {
         }
     }
 
-    /** onComputeFov: 正交 RTS 视图固定 FOV，保持原版渲染阶段的视锥计算稳定。 */
+    /**
+     * onComputeFov: 正交 RTS 视图固定 FOV，保持原版渲染阶段的视锥计算稳定。
+     */
     @SubscribeEvent
     public static void onComputeFov(ViewportEvent.ComputeFov event) {
         if (isRtsActive()) {
@@ -304,12 +320,16 @@ public final class FreeCameraManager {
         }
     }
 
-    /** updateRtsCameraPosition: 保持固定俯角时围绕 RTS 视图中心旋转相机。 */
+    /**
+     * updateRtsCameraPosition: 保持固定俯角时围绕 RTS 视图中心旋转相机。
+     */
     private static void updateRtsCameraPosition() {
         position = rtsFocus.subtract(Vec3.directionFromRotation(pitch, yaw).scale(RTS_CAMERA_DISTANCE));
     }
 
-    /** syncRtsChunkView: 焦点跨区块或维度切换时请求服务端更新摄像机区块视窗。 */
+    /**
+     * syncRtsChunkView: 焦点跨区块或维度切换时请求服务端更新摄像机区块视窗。
+     */
     private static void syncRtsChunkView() {
         Minecraft minecraft = Minecraft.getInstance();
         if (!isRtsActive() || minecraft.player == null || minecraft.level == null) {
@@ -327,7 +347,9 @@ public final class FreeCameraManager {
         lastRtsViewDimension = dimension;
     }
 
-    /** clearRtsChunkViewSync: 清除客户端发送节流状态，保证下次 RTS 必定同步初始焦点。 */
+    /**
+     * clearRtsChunkViewSync: 清除客户端发送节流状态，保证下次 RTS 必定同步初始焦点。
+     */
     private static void clearRtsChunkViewSync() {
         lastRtsViewChunkX = Integer.MIN_VALUE;
         lastRtsViewChunkZ = Integer.MIN_VALUE;
@@ -344,7 +366,9 @@ public final class FreeCameraManager {
         minecraft.options.keySprint.setDown(false);
     }
 
-    /** isRtsFastMoveActive: 判断 RTS 中 Ctrl 是否按下以启用快速平移。 */
+    /**
+     * isRtsFastMoveActive: 判断 RTS 中 Ctrl 是否按下以启用快速平移。
+     */
     private static boolean isRtsFastMoveActive(Minecraft minecraft) {
         if (!rtsMode || minecraft == null) {
             return false;
@@ -353,18 +377,24 @@ public final class FreeCameraManager {
                 || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
     }
 
-    /** setRtsEdgePanBlocked: 设置 RTS 边缘平移是否暂时让给小地图等界面。 */
+    /**
+     * setRtsEdgePanBlocked: 设置 RTS 边缘平移是否暂时让给小地图等界面。
+     */
     public static void setRtsEdgePanBlocked(boolean blocked) {
         rtsEdgePanBlocked = blocked;
     }
 
-    /** isRtsEdgePanActive: 判断当前帧是否允许鼠标边缘平移。 */
+    /**
+     * isRtsEdgePanActive: 判断当前帧是否允许鼠标边缘平移。
+     */
     private static boolean isRtsEdgePanActive(Minecraft minecraft) {
         return isRtsActive() && !rtsEdgePanBlocked && (minecraft.gui.screen() == null
                 || minecraft.gui.screen() instanceof FreeCameraScreen) && !isRtsCameraRotationActive(minecraft);
     }
 
-    /** rtsEdgePanHorizontal: 计算鼠标靠近左右边缘时的相机输入。 */
+    /**
+     * rtsEdgePanHorizontal: 计算鼠标靠近左右边缘时的相机输入。
+     */
     private static double rtsEdgePanHorizontal(Minecraft minecraft) {
         int width = minecraft.getWindow().getScreenWidth();
         if (width <= 0) {
@@ -376,7 +406,9 @@ public final class FreeCameraManager {
         return right - left;
     }
 
-    /** rtsEdgePanVertical: 计算鼠标靠近上下边缘时的相机输入。 */
+    /**
+     * rtsEdgePanVertical: 计算鼠标靠近上下边缘时的相机输入。
+     */
     private static double rtsEdgePanVertical(Minecraft minecraft) {
         int height = minecraft.getWindow().getScreenHeight();
         if (height <= 0) {
@@ -388,7 +420,9 @@ public final class FreeCameraManager {
         return top - bottom;
     }
 
-    /** edgeStrength: 将鼠标到屏幕边缘的距离转换为平滑的 0 到 1 输入。 */
+    /**
+     * edgeStrength: 将鼠标到屏幕边缘的距离转换为平滑的 0 到 1 输入。
+     */
     private static double edgeStrength(double distance) {
         if (distance >= RTS_EDGE_PAN_MARGIN) {
             return 0.0D;
@@ -397,7 +431,9 @@ public final class FreeCameraManager {
                 0.0D, RTS_EDGE_PAN_MAX_INPUT);
     }
 
-    /** isRtsCameraRotationActive: 判断 Alt+右键旋转期间是否应暂停边缘平移。 */
+    /**
+     * isRtsCameraRotationActive: 判断 Alt+右键旋转期间是否应暂停边缘平移。
+     */
     private static boolean isRtsCameraRotationActive(Minecraft minecraft) {
         boolean alt = InputConstants.isKeyDown(InputConstants.KEY_LALT)
                 || InputConstants.isKeyDown(InputConstants.KEY_RALT);

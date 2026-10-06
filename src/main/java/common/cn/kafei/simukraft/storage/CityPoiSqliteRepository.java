@@ -1,8 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
-import common.cn.kafei.simukraft.util.NbtUuid;
-
 import common.cn.kafei.simukraft.SimuKraft;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
@@ -82,17 +81,17 @@ public final class CityPoiSqliteRepository {
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM city_pois WHERE dimension_id = ? ORDER BY poi_id")) {
             statement.setString(1, normalizeDimensionId(dimensionId));
             try (ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                CompoundTag poi = new CompoundTag();
-                NbtUuid.put(poi, "PoiId", java.util.UUID.fromString(resultSet.getString("poi_id")));
-                NbtUuid.put(poi, "CityId", java.util.UUID.fromString(resultSet.getString("city_id")));
-                poi.putLong("Pos", resultSet.getLong("pos_long"));
-                poi.putString("Type", resultSet.getString("type"));
-                poi.putInt("Capacity", resultSet.getInt("capacity"));
-                poi.putBoolean("Active", resultSet.getInt("active") != 0);
-                SqliteNbtHelper.putNullableUuid(poi, "UnitId", resultSet.getString("unit_id"));
-                pois.add(poi);
-            }
+                while (resultSet.next()) {
+                    CompoundTag poi = new CompoundTag();
+                    NbtUuid.put(poi, "PoiId", java.util.UUID.fromString(resultSet.getString("poi_id")));
+                    NbtUuid.put(poi, "CityId", java.util.UUID.fromString(resultSet.getString("city_id")));
+                    poi.putLong("Pos", resultSet.getLong("pos_long"));
+                    poi.putString("Type", resultSet.getString("type"));
+                    poi.putInt("Capacity", resultSet.getInt("capacity"));
+                    poi.putBoolean("Active", resultSet.getInt("active") != 0);
+                    SqliteNbtHelper.putNullableUuid(poi, "UnitId", resultSet.getString("unit_id"));
+                    pois.add(poi);
+                }
             }
             tag.put("Pois", pois);
             return pois.isEmpty() ? null : tag;

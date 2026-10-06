@@ -150,7 +150,9 @@ public class SimuChunkScanner {
         return new ColumnSample((short) surfaceY, color, !lava, readLight(level, pos, worldX, surfaceY, worldZ));
     }
 
-    /** shouldSkipSurfaceBlock: 花草等装饰不作为地图地表，避免把草地盖成杂色噪点。 */
+    /**
+     * shouldSkipSurfaceBlock: 花草等装饰不作为地图地表，避免把草地盖成杂色噪点。
+     */
     private static boolean shouldSkipSurfaceBlock(BlockState state) {
         if (state.isAir()) {
             return true;
@@ -164,7 +166,9 @@ public class SimuChunkScanner {
                 || state.getBlock() instanceof TallGrassBlock;
     }
 
-    /** isLiquidSurface: 真正的水面/岩浆面，不含含水箱子这类方块。 */
+    /**
+     * isLiquidSurface: 真正的水面/岩浆面，不含含水箱子这类方块。
+     */
     private static boolean isLiquidSurface(BlockState state, FluidState fluidState) {
         if (fluidState.isEmpty()) {
             return false;
@@ -174,7 +178,9 @@ public class SimuChunkScanner {
                 || state.isAir();
     }
 
-    /** shouldBlendWithBelow: 玻璃叠在下层地形上，树叶保持不透明以形成树冠。 */
+    /**
+     * shouldBlendWithBelow: 玻璃叠在下层地形上，树叶保持不透明以形成树冠。
+     */
     private static boolean shouldBlendWithBelow(BlockState state) {
         return state.is(BlockTags.IMPERMEABLE);
     }
@@ -191,12 +197,16 @@ public class SimuChunkScanner {
     private record ColumnSample(short height, int color, boolean water, int light) {
     }
 
-    /** 判断客户端是否已经持有指定 FULL chunk。 */
+    /**
+     * 判断客户端是否已经持有指定 FULL chunk。
+     */
     public static boolean isChunkLoaded(Level level, int chunkX, int chunkZ) {
         return getLoadedChunk(level, chunkX, chunkZ) != null;
     }
 
-    /** 获取客户端缓存中的 FULL chunk，不触发新 chunk 加载。 */
+    /**
+     * 获取客户端缓存中的 FULL chunk，不触发新 chunk 加载。
+     */
     public static ChunkAccess getLoadedChunk(Level level, int chunkX, int chunkZ) {
         try {
             return level.getChunk(chunkX, chunkZ, Objects.requireNonNull(ChunkStatus.FULL), false);

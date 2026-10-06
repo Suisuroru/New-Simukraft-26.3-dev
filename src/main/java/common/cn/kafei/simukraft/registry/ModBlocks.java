@@ -1,37 +1,19 @@
 package common.cn.kafei.simukraft.registry;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.block.BankControlBoxBlock;
-import common.cn.kafei.simukraft.block.BuildBoxBlock;
-import common.cn.kafei.simukraft.block.CommercialControlBoxBlock;
-import common.cn.kafei.simukraft.block.CityCoreBlock;
-import common.cn.kafei.simukraft.block.ExchangeControlBoxBlock;
-import common.cn.kafei.simukraft.block.FarmlandBoxBlock;
-import common.cn.kafei.simukraft.block.IndustrialControlBoxBlock;
-import common.cn.kafei.simukraft.block.LogisticsClientBoxBlock;
-import common.cn.kafei.simukraft.block.LogisticsServerBoxBlock;
-import common.cn.kafei.simukraft.block.MedicalControlBoxBlock;
-import common.cn.kafei.simukraft.block.MineralDrillingControlBoxBlock;
-import common.cn.kafei.simukraft.block.MilkLiquidBlock;
-import common.cn.kafei.simukraft.block.IndustrialHousingTrapdoorBlock;
-import common.cn.kafei.simukraft.block.ResidentialControlBoxBlock;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LiquidBlock;
+import common.cn.kafei.simukraft.block.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.core.BlockPos;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -57,7 +39,9 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_SLAB = registerBlock("industrial_housing_slab", SlabBlock::new, () -> industrialHousingProperties());
     public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_STAIRS = registerBlock("industrial_housing_stairs",
             props -> new StairBlock(Blocks.IRON_BLOCK.defaultBlockState(), props), () -> industrialHousingProperties());
-    /** INDUSTRIAL_HOUSING_TRAPDOOR: 黄色铁质栈道，仅水平上/下置，不可打开 */
+    /**
+     * INDUSTRIAL_HOUSING_TRAPDOOR: 黄色铁质栈道，仅水平上/下置，不可打开
+     */
     public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_TRAPDOOR = registerBlock("industrial_housing_trapdoor", IndustrialHousingTrapdoorBlock::new,
             () -> industrialHousingProperties().noOcclusion()
                     .isViewBlocking((s, b, pos, aabb) -> false)
@@ -118,7 +102,9 @@ public final class ModBlocks {
         return p -> p.mapColor(MapColor.WOOD).strength(0.8F).sound(SoundType.WOOD);
     }
 
-    /** industrialHousingProperties: 创建工业外壳系列的共用方块属性。 */
+    /**
+     * industrialHousingProperties: 创建工业外壳系列的共用方块属性。
+     */
     @SuppressWarnings("deprecation")
     private static BlockBehaviour.Properties industrialHousingProperties() {
         return BlockBehaviour.Properties.ofLegacyCopy(Blocks.IRON_BLOCK);
@@ -133,44 +119,46 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noLootTable().randomTicks();
     }
 
-    /** metalRailing: 金属栏杆，属性与铁块一致，需铁镐采集。水平朝向，碰撞箱跟随朝向旋转。 */
+    /**
+     * metalRailing: 金属栏杆，属性与铁块一致，需铁镐采集。水平朝向，碰撞箱跟随朝向旋转。
+     */
     private static Block metalRailing(BlockBehaviour.Properties properties) {
         // 碰撞形状：与模型的6个element精确对应（单位1/16）
         // 朝向NORTH时的形状（默认，模型z轴薄面朝南北）
         VoxelShape shapeNorth = Shapes.or(
-            Shapes.box(2.0 / 16, 0.0 / 16, 0.0 / 16, 4.0 / 16, 13.0 / 16, 2.0 / 16),   // 左柱
-            Shapes.box(12.0 / 16, 0.0 / 16, 0.0 / 16, 14.0 / 16, 13.0 / 16, 2.0 / 16), // 右柱
-            Shapes.box(0.0 / 16, 13.0 / 16, 0.0 / 16, 16.0 / 16, 15.0 / 16, 2.0 / 16), // 顶部横梁
-            Shapes.box(4.0 / 16, 3.0 / 16, 0.0 / 16, 12.0 / 16, 4.0 / 16, 1.0 / 16),   // 下横杠
-            Shapes.box(4.0 / 16, 6.0 / 16, 0.0 / 16, 12.0 / 16, 7.0 / 16, 1.0 / 16),   // 中横杠
-            Shapes.box(4.0 / 16, 9.0 / 16, 0.0 / 16, 12.0 / 16, 10.0 / 16, 1.0 / 16)   // 上横杠
+                Shapes.box(2.0 / 16, 0.0 / 16, 0.0 / 16, 4.0 / 16, 13.0 / 16, 2.0 / 16),   // 左柱
+                Shapes.box(12.0 / 16, 0.0 / 16, 0.0 / 16, 14.0 / 16, 13.0 / 16, 2.0 / 16), // 右柱
+                Shapes.box(0.0 / 16, 13.0 / 16, 0.0 / 16, 16.0 / 16, 15.0 / 16, 2.0 / 16), // 顶部横梁
+                Shapes.box(4.0 / 16, 3.0 / 16, 0.0 / 16, 12.0 / 16, 4.0 / 16, 1.0 / 16),   // 下横杠
+                Shapes.box(4.0 / 16, 6.0 / 16, 0.0 / 16, 12.0 / 16, 7.0 / 16, 1.0 / 16),   // 中横杠
+                Shapes.box(4.0 / 16, 9.0 / 16, 0.0 / 16, 12.0 / 16, 10.0 / 16, 1.0 / 16)   // 上横杠
         );
         // EAST: 绕Y轴旋转90°，box(z1, y1, 16-x2, z2, y2, 16-x1)
         VoxelShape shapeEast = Shapes.or(
-            Shapes.box(0.0 / 16, 0.0 / 16, 12.0 / 16, 2.0 / 16, 13.0 / 16, 14.0 / 16),
-            Shapes.box(0.0 / 16, 0.0 / 16, 2.0 / 16, 2.0 / 16, 13.0 / 16, 4.0 / 16),
-            Shapes.box(0.0 / 16, 13.0 / 16, 0.0 / 16, 2.0 / 16, 15.0 / 16, 16.0 / 16),
-            Shapes.box(0.0 / 16, 3.0 / 16, 4.0 / 16, 1.0 / 16, 4.0 / 16, 12.0 / 16),
-            Shapes.box(0.0 / 16, 6.0 / 16, 4.0 / 16, 1.0 / 16, 7.0 / 16, 12.0 / 16),
-            Shapes.box(0.0 / 16, 9.0 / 16, 4.0 / 16, 1.0 / 16, 10.0 / 16, 12.0 / 16)
+                Shapes.box(0.0 / 16, 0.0 / 16, 12.0 / 16, 2.0 / 16, 13.0 / 16, 14.0 / 16),
+                Shapes.box(0.0 / 16, 0.0 / 16, 2.0 / 16, 2.0 / 16, 13.0 / 16, 4.0 / 16),
+                Shapes.box(0.0 / 16, 13.0 / 16, 0.0 / 16, 2.0 / 16, 15.0 / 16, 16.0 / 16),
+                Shapes.box(0.0 / 16, 3.0 / 16, 4.0 / 16, 1.0 / 16, 4.0 / 16, 12.0 / 16),
+                Shapes.box(0.0 / 16, 6.0 / 16, 4.0 / 16, 1.0 / 16, 7.0 / 16, 12.0 / 16),
+                Shapes.box(0.0 / 16, 9.0 / 16, 4.0 / 16, 1.0 / 16, 10.0 / 16, 12.0 / 16)
         );
         // SOUTH: 绕Y轴旋转180°，box(16-x2, y1, 16-z2, 16-x1, y2, 16-z1)
         VoxelShape shapeSouth = Shapes.or(
-            Shapes.box(12.0 / 16, 0.0 / 16, 14.0 / 16, 14.0 / 16, 13.0 / 16, 16.0 / 16),
-            Shapes.box(2.0 / 16, 0.0 / 16, 14.0 / 16, 4.0 / 16, 13.0 / 16, 16.0 / 16),
-            Shapes.box(0.0 / 16, 13.0 / 16, 14.0 / 16, 16.0 / 16, 15.0 / 16, 16.0 / 16),
-            Shapes.box(4.0 / 16, 3.0 / 16, 15.0 / 16, 12.0 / 16, 4.0 / 16, 16.0 / 16),
-            Shapes.box(4.0 / 16, 6.0 / 16, 15.0 / 16, 12.0 / 16, 7.0 / 16, 16.0 / 16),
-            Shapes.box(4.0 / 16, 9.0 / 16, 15.0 / 16, 12.0 / 16, 10.0 / 16, 16.0 / 16)
+                Shapes.box(12.0 / 16, 0.0 / 16, 14.0 / 16, 14.0 / 16, 13.0 / 16, 16.0 / 16),
+                Shapes.box(2.0 / 16, 0.0 / 16, 14.0 / 16, 4.0 / 16, 13.0 / 16, 16.0 / 16),
+                Shapes.box(0.0 / 16, 13.0 / 16, 14.0 / 16, 16.0 / 16, 15.0 / 16, 16.0 / 16),
+                Shapes.box(4.0 / 16, 3.0 / 16, 15.0 / 16, 12.0 / 16, 4.0 / 16, 16.0 / 16),
+                Shapes.box(4.0 / 16, 6.0 / 16, 15.0 / 16, 12.0 / 16, 7.0 / 16, 16.0 / 16),
+                Shapes.box(4.0 / 16, 9.0 / 16, 15.0 / 16, 12.0 / 16, 10.0 / 16, 16.0 / 16)
         );
         // WEST: 绕Y轴旋转270°，box(16-z2, y1, x1, 16-z1, y2, x2)
         VoxelShape shapeWest = Shapes.or(
-            Shapes.box(14.0 / 16, 0.0 / 16, 2.0 / 16, 16.0 / 16, 13.0 / 16, 4.0 / 16),
-            Shapes.box(14.0 / 16, 0.0 / 16, 12.0 / 16, 16.0 / 16, 13.0 / 16, 14.0 / 16),
-            Shapes.box(14.0 / 16, 13.0 / 16, 0.0 / 16, 16.0 / 16, 15.0 / 16, 16.0 / 16),
-            Shapes.box(15.0 / 16, 3.0 / 16, 4.0 / 16, 16.0 / 16, 4.0 / 16, 12.0 / 16),
-            Shapes.box(15.0 / 16, 6.0 / 16, 4.0 / 16, 16.0 / 16, 7.0 / 16, 12.0 / 16),
-            Shapes.box(15.0 / 16, 9.0 / 16, 4.0 / 16, 16.0 / 16, 10.0 / 16, 12.0 / 16)
+                Shapes.box(14.0 / 16, 0.0 / 16, 2.0 / 16, 16.0 / 16, 13.0 / 16, 4.0 / 16),
+                Shapes.box(14.0 / 16, 0.0 / 16, 12.0 / 16, 16.0 / 16, 13.0 / 16, 14.0 / 16),
+                Shapes.box(14.0 / 16, 13.0 / 16, 0.0 / 16, 16.0 / 16, 15.0 / 16, 16.0 / 16),
+                Shapes.box(15.0 / 16, 3.0 / 16, 4.0 / 16, 16.0 / 16, 4.0 / 16, 12.0 / 16),
+                Shapes.box(15.0 / 16, 6.0 / 16, 4.0 / 16, 16.0 / 16, 7.0 / 16, 12.0 / 16),
+                Shapes.box(15.0 / 16, 9.0 / 16, 4.0 / 16, 16.0 / 16, 10.0 / 16, 12.0 / 16)
         );
 
         return new Block(properties) {

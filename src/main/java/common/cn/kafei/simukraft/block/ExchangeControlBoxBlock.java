@@ -13,22 +13,23 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 
-/** ExchangeControlBoxBlock: 交易所控制箱，打开股市界面。 */
+/**
+ * ExchangeControlBoxBlock: 交易所控制箱，打开股市界面。
+ */
 public final class ExchangeControlBoxBlock extends Block {
     public ExchangeControlBoxBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
 
-    /** getStateForPlacement: 放置时让控制箱正面朝向玩家。 */
+    /**
+     * getStateForPlacement: 放置时让控制箱正面朝向玩家。
+     */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return defaultBlockState().setValue(
@@ -36,7 +37,9 @@ public final class ExchangeControlBoxBlock extends Block {
                 context.getHorizontalDirection().getOpposite());
     }
 
-    /** rotate: 结构旋转时同步水平朝向。 */
+    /**
+     * rotate: 结构旋转时同步水平朝向。
+     */
     @Override
     protected BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(
@@ -44,7 +47,9 @@ public final class ExchangeControlBoxBlock extends Block {
                 rotation.rotate(state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
     }
 
-    /** mirror: 结构镜像时同步水平朝向。 */
+    /**
+     * mirror: 结构镜像时同步水平朝向。
+     */
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror) {
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
@@ -64,7 +69,9 @@ public final class ExchangeControlBoxBlock extends Block {
         ExchangeControlBoxService.onRemoved(level, pos);
     }
 
-    /** createBlockStateDefinition: 注册控制箱的水平朝向属性。 */
+    /**
+     * createBlockStateDefinition: 注册控制箱的水平朝向属性。
+     */
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(BlockStateProperties.HORIZONTAL_FACING);

@@ -1,7 +1,7 @@
 package common.cn.kafei.simukraft.citizen;
 
-import common.cn.kafei.simukraft.commercial.CommercialFoodMarketService;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
+import common.cn.kafei.simukraft.commercial.CommercialFoodMarketService;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.medical.MedicalMealService;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
@@ -46,7 +46,9 @@ public final class CitizenSelfFeedingService {
     private CitizenSelfFeedingService() {
     }
 
-    /** tick: 驱动饥饿 NPC 自动去商业店购买食物。 */
+    /**
+     * tick: 驱动饥饿 NPC 自动去商业店购买食物。
+     */
     public static void tick(ServerLevel level) {
         if (level == null || level.isClientSide() || level.getGameTime() % SERVICE_INTERVAL_TICKS != 0L) {
             return;
@@ -79,12 +81,16 @@ public final class CitizenSelfFeedingService {
         }
     }
 
-    /** isSelfFeeding: 判断指定 NPC 是否正被买饭流程抢占。 */
+    /**
+     * isSelfFeeding: 判断指定 NPC 是否正被买饭流程抢占。
+     */
     public static boolean isSelfFeeding(ServerLevel level, UUID citizenId) {
         return level != null && citizenId != null && runtime(level).active.containsKey(citizenId);
     }
 
-    /** isOnHungerStrike: 仅有饱食度归零时才视为因饥饿而罢工。 */
+    /**
+     * isOnHungerStrike: 仅有饱食度归零时才视为因饥饿而罢工。
+     */
     public static boolean isOnHungerStrike(ServerLevel level, UUID citizenId) {
         if (level == null || citizenId == null) {
             return false;
@@ -97,7 +103,9 @@ public final class CitizenSelfFeedingService {
         return hunger <= 0.0D;
     }
 
-    /** effectiveStatusLabel: 买饭活跃时返回运行时覆盖状态，否则返回主职业状态。 */
+    /**
+     * effectiveStatusLabel: 买饭活跃时返回运行时覆盖状态，否则返回主职业状态。
+     */
     public static String effectiveStatusLabel(ServerLevel level, UUID citizenId, String fallbackStatusLabel) {
         if (level == null || citizenId == null) {
             return fallbackStatusLabel != null ? fallbackStatusLabel : "";
@@ -109,7 +117,9 @@ public final class CitizenSelfFeedingService {
         return fallbackStatusLabel != null ? fallbackStatusLabel : "";
     }
 
-    /** clearServerCaches: 清理指定存档的买饭运行时缓存。 */
+    /**
+     * clearServerCaches: 清理指定存档的买饭运行时缓存。
+     */
     public static void clearServerCaches(MinecraftServer server) {
         String serverKey = SaveScopedCacheKey.serverKey(server).toLowerCase(Locale.ROOT);
         RUNTIMES.keySet().removeIf(key -> key.startsWith(serverKey + "|"));
@@ -259,7 +269,9 @@ public final class CitizenSelfFeedingService {
         }
     }
 
-    /** 购物完成后，IDLE市民立即离开商店区域：优先回家，无家则随机闲逛 */
+    /**
+     * 购物完成后，IDLE市民立即离开商店区域：优先回家，无家则随机闲逛
+     */
     private static void leaveShopArea(ServerLevel level, CitizenData citizen) {
         var homePoi = citizen.homeId() != null ? CityPoiManager.lookupPoi(citizen.homeId()) : null;
         if (homePoi != null) {
@@ -276,7 +288,9 @@ public final class CitizenSelfFeedingService {
         }
     }
 
-    /** tryEatFromBackpack：hunger低于阈值时先消耗背包存粮，直到吃饱为止。 */
+    /**
+     * tryEatFromBackpack：hunger低于阈值时先消耗背包存粮，直到吃饱为止。
+     */
     private static boolean tryEatFromBackpack(ServerLevel level, CitizenManager manager, CitizenData citizen, CitizenEntity entity) {
         boolean ate = false;
         while (entity.getHungerValue() < FULL_HUNGER) {
@@ -289,9 +303,11 @@ public final class CitizenSelfFeedingService {
         return ate;
     }
 
-    /** buyExtraForBackpack：购买成功后额外多买若干份存入背包，供下次饥饿时直接取用。 */
+    /**
+     * buyExtraForBackpack：购买成功后额外多买若干份存入背包，供下次饥饿时直接取用。
+     */
     private static void buyExtraForBackpack(ServerLevel level, CitizenData citizen, CitizenEntity entity,
-            CommercialFoodMarketService.PurchasePlan plan, int maxCount) {
+                                            CommercialFoodMarketService.PurchasePlan plan, int maxCount) {
         CitizenInventory inventory = entity.getCitizenInventory();
         List<ItemStack> extras = new ArrayList<>();
         for (int i = 0; i < maxCount; i++) {
@@ -345,7 +361,9 @@ public final class CitizenSelfFeedingService {
         runtime.active.clear();
     }
 
-    /** clearStaleFoodStatus: 清理已吃饱 NPC 身上残留的买饭临时状态。 */
+    /**
+     * clearStaleFoodStatus: 清理已吃饱 NPC 身上残留的买饭临时状态。
+     */
     private static boolean clearStaleFoodStatus(ServerLevel level, CitizenManager manager, CitizenData citizen) {
         CitizenEntity entity = CitizenTeleportService.findCitizenEntity(level, citizen.uuid());
         if (entity != null && entity.getHungerValue() <= START_HUNGER_THRESHOLD) {
@@ -363,7 +381,9 @@ public final class CitizenSelfFeedingService {
         return true;
     }
 
-    /** restoreOwnOverlay: 流程结束时只撤销买饭覆盖层，不回滚主职业状态。 */
+    /**
+     * restoreOwnOverlay: 流程结束时只撤销买饭覆盖层，不回滚主职业状态。
+     */
     private static void restoreOwnOverlay(ServerLevel level, CitizenManager manager, CitizenData citizen, FeedingRuntime feeding) {
         boolean changed = false;
         if (isSelfFeedingStatus(citizen.statusLabel())) {
@@ -379,17 +399,23 @@ public final class CitizenSelfFeedingService {
         }
     }
 
-    /** restorableStatusLabel: 自喂食状态是临时状态，不能作为完成后的恢复目标。 */
+    /**
+     * restorableStatusLabel: 自喂食状态是临时状态，不能作为完成后的恢复目标。
+     */
     private static String restorableStatusLabel(String statusLabel) {
         return isSelfFeedingStatus(statusLabel) ? "" : statusLabel != null ? statusLabel : "";
     }
 
-    /** restorableWorkNeedDetail: 自喂食详情只服务头顶状态，流程结束后必须移除。 */
+    /**
+     * restorableWorkNeedDetail: 自喂食详情只服务头顶状态，流程结束后必须移除。
+     */
     private static String restorableWorkNeedDetail(String workNeedDetail) {
         return isFoodNeedDetail(workNeedDetail) ? "" : workNeedDetail != null ? workNeedDetail : "";
     }
 
-    /** isSelfFeedingStatus: 判断状态是否来自自动买饭流程。 */
+    /**
+     * isSelfFeedingStatus: 判断状态是否来自自动买饭流程。
+     */
     private static boolean isSelfFeedingStatus(String statusLabel) {
         return GOING_TO_BUY_FOOD_STATUS.equals(statusLabel)
                 || BUYING_FOOD_STATUS.equals(statusLabel)
@@ -397,12 +423,16 @@ public final class CitizenSelfFeedingService {
                 || TOO_HUNGRY_STRIKE_STATUS.equals(statusLabel);
     }
 
-    /** isFoodNeedDetail: 判断详情是否来自自动买饭流程。 */
+    /**
+     * isFoodNeedDetail: 判断详情是否来自自动买饭流程。
+     */
     private static boolean isFoodNeedDetail(String workNeedDetail) {
         return workNeedDetail != null && workNeedDetail.startsWith(FOOD_NEED_PREFIX);
     }
 
-    /** isSelfFeedingStatusLabel: 暴露给显示层判断买饭临时状态是否应覆盖主状态。 */
+    /**
+     * isSelfFeedingStatusLabel: 暴露给显示层判断买饭临时状态是否应覆盖主状态。
+     */
     public static boolean isSelfFeedingStatusLabel(String statusLabel) {
         return isSelfFeedingStatus(statusLabel);
     }

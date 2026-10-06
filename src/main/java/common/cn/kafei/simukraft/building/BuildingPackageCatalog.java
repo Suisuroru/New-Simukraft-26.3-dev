@@ -13,17 +13,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -39,18 +30,24 @@ public final class BuildingPackageCatalog {
     private BuildingPackageCatalog() {
     }
 
-    /** ensurePrepared: 确保官方建筑包已复制到游戏目录并完成索引。 */
+    /**
+     * ensurePrepared: 确保官方建筑包已复制到游戏目录并完成索引。
+     */
     public static CatalogSnapshot ensurePrepared() {
         return snapshot(rootDirectory());
     }
 
-    /** snapshot: 获取指定建筑包根目录的缓存快照。 */
+    /**
+     * snapshot: 获取指定建筑包根目录的缓存快照。
+     */
     public static CatalogSnapshot snapshot(Path rootDirectory) {
         Path normalizedRoot = normalizeRoot(rootDirectory);
         return SNAPSHOTS.computeIfAbsent(cacheKey(normalizedRoot), ignored -> scan(normalizedRoot, true));
     }
 
-    /** reload: 重新扫描指定建筑包根目录。 */
+    /**
+     * reload: 重新扫描指定建筑包根目录。
+     */
     public static CatalogSnapshot reload(Path rootDirectory) {
         Path normalizedRoot = normalizeRoot(rootDirectory);
         CatalogSnapshot snapshot = scan(normalizedRoot, true);
@@ -58,12 +55,16 @@ public final class BuildingPackageCatalog {
         return snapshot;
     }
 
-    /** scanPackages: 只扫描给定目录内的 zip 包，不复制内置官方包。 */
+    /**
+     * scanPackages: 只扫描给定目录内的 zip 包，不复制内置官方包。
+     */
     public static CatalogSnapshot scanPackages(Path rootDirectory) {
         return scan(normalizeRoot(rootDirectory), false);
     }
 
-    /** clearCache: 清理全部建筑包索引缓存。 */
+    /**
+     * clearCache: 清理全部建筑包索引缓存。
+     */
     public static void clearCache() {
         SNAPSHOTS.clear();
         BuildingBuiltinResourceService.clearCache();
@@ -255,7 +256,9 @@ public final class BuildingPackageCatalog {
         );
     }
 
-    /** readBuildingType: 从工业/公共建筑配套 JSON 读取子类声明。 */
+    /**
+     * readBuildingType: 从工业/公共建筑配套 JSON 读取子类声明。
+     */
     private static BuildingCatalog.BuildingType readBuildingType(Path packagePath,
                                                                  ZipFile zipFile,
                                                                  String category,
@@ -297,7 +300,9 @@ public final class BuildingPackageCatalog {
         return BuildingCatalog.BuildingType.STANDARD;
     }
 
-    /** readPublicBuildingType: 公共目录与医院相同，用同名 JSON 的 type 区分子类。 */
+    /**
+     * readPublicBuildingType: 公共目录与医院相同，用同名 JSON 的 type 区分子类。
+     */
     private static BuildingCatalog.BuildingType readPublicBuildingType(Path packagePath,
                                                                        ZipFile zipFile,
                                                                        String category,
@@ -341,7 +346,9 @@ public final class BuildingPackageCatalog {
         }
     }
 
-    /** fallbackPublicType: .sk 显式写了 medical/bank/exchange 时，JSON 缺 type 仍按该类别。 */
+    /**
+     * fallbackPublicType: .sk 显式写了 medical/bank/exchange 时，JSON 缺 type 仍按该类别。
+     */
     private static BuildingCatalog.BuildingType fallbackPublicType(String declaredKey) {
         if ("bank".equals(declaredKey)) {
             return BuildingCatalog.BuildingType.BANK;
@@ -355,7 +362,9 @@ public final class BuildingPackageCatalog {
         return BuildingCatalog.BuildingType.STANDARD;
     }
 
-    /** publicTypeFromJson: 解析公共建筑 JSON 的 type；旧医院包可用 serviceRangeRings 推断。 */
+    /**
+     * publicTypeFromJson: 解析公共建筑 JSON 的 type；旧医院包可用 serviceRangeRings 推断。
+     */
     static BuildingCatalog.BuildingType publicTypeFromJson(JsonObject root) {
         if (root == null) {
             return BuildingCatalog.BuildingType.STANDARD;
@@ -391,12 +400,14 @@ public final class BuildingPackageCatalog {
         return false;
     }
 
-    /** readDedicatedDrillingType: 读取 drilling: 指向的专用钻井 JSON。 */
+    /**
+     * readDedicatedDrillingType: 读取 drilling: 指向的专用钻井 JSON。
+     */
     private static BuildingCatalog.BuildingType readDedicatedDrillingType(Path packagePath,
-                                                                            ZipFile zipFile,
-                                                                            String category,
-                                                                            String configuredFile,
-                                                                            Map<String, String> packageFiles) {
+                                                                          ZipFile zipFile,
+                                                                          String category,
+                                                                          String configuredFile,
+                                                                          Map<String, String> packageFiles) {
         String actualFile = isSafePackageFileName(configuredFile)
                 ? actualFileName(packageFiles, configuredFile)
                 : null;
@@ -420,7 +431,9 @@ public final class BuildingPackageCatalog {
         }
     }
 
-    /** isDedicatedDrillingType: 判断专用 JSON 是否声明为钻井类型。 */
+    /**
+     * isDedicatedDrillingType: 判断专用 JSON 是否声明为钻井类型。
+     */
     private static boolean isDedicatedDrillingType(JsonObject root) {
         JsonElement element = root.get("type");
         if (element == null || !element.isJsonPrimitive()) {
@@ -430,7 +443,9 @@ public final class BuildingPackageCatalog {
         return "drilling".equalsIgnoreCase(type) || "simukraft:drilling".equalsIgnoreCase(type);
     }
 
-    /** isDrillingPlatformType: 兼容驼峰与下划线形式的钻井平台类型字段。 */
+    /**
+     * isDrillingPlatformType: 兼容驼峰与下划线形式的钻井平台类型字段。
+     */
     private static boolean isDrillingPlatformType(JsonObject root) {
         JsonElement element = root.has("buildingType") ? root.get("buildingType") : root.get("building_type");
         return element != null
@@ -438,7 +453,9 @@ public final class BuildingPackageCatalog {
                 && "drilling_platform".equalsIgnoreCase(element.getAsString().trim());
     }
 
-    /** booleanValue: 安全读取可选 JSON 布尔声明，非法值按 false 处理。 */
+    /**
+     * booleanValue: 安全读取可选 JSON 布尔声明，非法值按 false 处理。
+     */
     private static boolean booleanValue(JsonObject root, String key) {
         JsonElement element = root.get(key);
         return element != null && element.isJsonPrimitive() && element.getAsBoolean();
@@ -523,7 +540,9 @@ public final class BuildingPackageCatalog {
         return null;
     }
 
-    /** readUnlockLevel: 读取建筑解锁等级；仅缺失或空白表示不限制。 */
+    /**
+     * readUnlockLevel: 读取建筑解锁等级；仅缺失或空白表示不限制。
+     */
     static int readUnlockLevel(String text) {
         String value = findDeclaredValue(text, "unlockLevel");
         if (value == null || value.isBlank()) {
@@ -630,7 +649,8 @@ public final class BuildingPackageCatalog {
         }
     }
 
-    public record PackageSource(Path packagePath, String packageName, Map<String, Map<String, String>> allowedFilesByCategory) {
+    public record PackageSource(Path packagePath, String packageName,
+                                Map<String, Map<String, String>> allowedFilesByCategory) {
         public boolean isAllowed(String category, String fileName) {
             if (fileName == null || fileName.isBlank()) {
                 return false;

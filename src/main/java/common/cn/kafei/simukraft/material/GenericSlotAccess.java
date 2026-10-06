@@ -22,7 +22,9 @@ public final class GenericSlotAccess {
     private GenericSlotAccess() {
     }
 
-    /** slotCount: 返回指定容器暴露的真实槽位数量。 */
+    /**
+     * slotCount: 返回指定容器暴露的真实槽位数量。
+     */
     public static int slotCount(ServerLevel level, BlockPos pos) {
         if (level == null || pos == null || !level.isLoaded(pos)) {
             return 0;
@@ -52,7 +54,9 @@ public final class GenericSlotAccess {
         }
     }
 
-    /** canPlace: 判断物品能否放入指定真实槽位。 */
+    /**
+     * canPlace: 判断物品能否放入指定真实槽位。
+     */
     public static boolean canPlace(ServerLevel level, BlockPos pos, int slot, ItemStack stack) {
         if (level == null || pos == null || slot < 0 || stack == null || stack.isEmpty() || !level.isLoaded(pos)) {
             return false;
@@ -66,7 +70,9 @@ public final class GenericSlotAccess {
         }
     }
 
-    /** slotLimit: 返回指定真实槽位对该物品的最大堆叠上限。 */
+    /**
+     * slotLimit: 返回指定真实槽位对该物品的最大堆叠上限。
+     */
     public static int slotLimit(ServerLevel level, BlockPos pos, int slot, ItemStack stack) {
         if (level == null || pos == null || slot < 0 || !level.isLoaded(pos)) {
             return 0;
@@ -112,7 +118,9 @@ public final class GenericSlotAccess {
         }
     }
 
-    /** extract: 从指定真实槽位取出物品。 */
+    /**
+     * extract: 从指定真实槽位取出物品。
+     */
     public static ItemStack extract(ServerLevel level, BlockPos pos, int slot, int amount) {
         if (level == null || pos == null || slot < 0 || amount <= 0 || !level.isLoaded(pos)) {
             return ItemStack.EMPTY;
@@ -129,7 +137,9 @@ public final class GenericSlotAccess {
         }
     }
 
-    /** setStack: 设置指定真实槽位内容。 */
+    /**
+     * setStack: 设置指定真实槽位内容。
+     */
     public static void setStack(ServerLevel level, BlockPos pos, int slot, ItemStack stack) {
         if (level == null || pos == null || slot < 0 || stack == null || !level.isLoaded(pos)) {
             return;

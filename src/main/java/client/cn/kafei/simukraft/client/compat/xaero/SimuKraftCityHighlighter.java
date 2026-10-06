@@ -32,7 +32,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
     private volatile int cachedDataVersion = -1;
     private final ConcurrentHashMap<Long, Integer> regionHashCache = new ConcurrentHashMap<>();
 
-    /** regionHasHighlights: O(1) lookup via prebuilt region set in ClientCityChunkCache. */
+    /**
+     * regionHasHighlights: O(1) lookup via prebuilt region set in ClientCityChunkCache.
+     */
     @Override
     public boolean regionHasHighlights(ResourceKey<Level> dimension, int regionX, int regionZ) {
         if (!isCurrentDimension(dimension)) {
@@ -41,7 +43,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         return ClientCityChunkCache.getInstance().regionHasOwnedChunks(regionX, regionZ);
     }
 
-    /** getColors: 返回中心填充和四边边框颜色，边界只画不同城市/未认领相邻处。 */
+    /**
+     * getColors: 返回中心填充和四边边框颜色，边界只画不同城市/未认领相邻处。
+     */
     @Override
     protected int[] getColors(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
         if (!isCurrentDimension(dimension)) {
@@ -65,7 +69,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         return this.resultStore;
     }
 
-    /** calculateRegionHash: version-aware cache — recomputes only when city data changes. */
+    /**
+     * calculateRegionHash: version-aware cache — recomputes only when city data changes.
+     */
     @Override
     public int calculateRegionHash(ResourceKey<Level> dimension, int regionX, int regionZ) {
         if (!isCurrentDimension(dimension)) {
@@ -100,25 +106,33 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         return (int) (hash ^ (hash >>> 32));
     }
 
-    /** chunkIsHighlit: 判断指定区块是否被任意城市认领。 */
+    /**
+     * chunkIsHighlit: 判断指定区块是否被任意城市认领。
+     */
     @Override
     public boolean chunkIsHighlit(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
         return isCurrentDimension(dimension) && ClientCityChunkCache.getInstance().isChunkOwned(ChunkPos.pack(chunkX, chunkZ));
     }
 
-    /** getChunkHighlightSubtleTooltip: 鼠标悬停时显示城市名称。 */
+    /**
+     * getChunkHighlightSubtleTooltip: 鼠标悬停时显示城市名称。
+     */
     @Override
     public Component getChunkHighlightSubtleTooltip(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
         return tooltip(dimension, ChunkPos.pack(chunkX, chunkZ));
     }
 
-    /** getChunkHighlightBluntTooltip: 复用轻提示，避免重复文案。 */
+    /**
+     * getChunkHighlightBluntTooltip: 复用轻提示，避免重复文案。
+     */
     @Override
     public Component getChunkHighlightBluntTooltip(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
         return null;
     }
 
-    /** addMinimapBlockHighlightTooltips: 给 Xaero 小地图区块提示补充城市名称。 */
+    /**
+     * addMinimapBlockHighlightTooltips: 给 Xaero 小地图区块提示补充城市名称。
+     */
     @Override
     public void addMinimapBlockHighlightTooltips(List<Component> list, ResourceKey<Level> dimension, int blockX, int blockZ, int width) {
         Component tooltip = tooltip(dimension, ChunkPos.pack(blockX >> 4, blockZ >> 4));
@@ -127,7 +141,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         }
     }
 
-    /** tooltip: 按区块归属生成当前城市/其它城市提示。 */
+    /**
+     * tooltip: 按区块归属生成当前城市/其它城市提示。
+     */
     private static Component tooltip(ResourceKey<Level> dimension, long chunkLong) {
         if (!isCurrentDimension(dimension)) {
             return null;
@@ -146,7 +162,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         return Component.translatable(key, cityName).withStyle(currentCity ? ChatFormatting.AQUA : ChatFormatting.YELLOW);
     }
 
-    /** xaeroColor: Xaero 高亮器使用 ABGR 排列，这里从 ARGB 常量转换。 */
+    /**
+     * xaeroColor: Xaero 高亮器使用 ABGR 排列，这里从 ARGB 常量转换。
+     */
     private static int xaeroColor(int argb, int alpha) {
         int red = (argb >> 16) & 0xFF;
         int green = (argb >> 8) & 0xFF;
@@ -154,7 +172,9 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         return blue << 24 | green << 16 | red << 8 | alpha;
     }
 
-    /** isCurrentDimension: 城市区块缓存按当前客户端维度同步，只渲染同维度地图。 */
+    /**
+     * isCurrentDimension: 城市区块缓存按当前客户端维度同步，只渲染同维度地图。
+     */
     private static boolean isCurrentDimension(ResourceKey<Level> dimension) {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft.level != null && minecraft.level.dimension().equals(dimension);

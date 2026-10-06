@@ -10,7 +10,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/** GeologicalSurveyHintPacket: 向客户端传递地质锤的短文本提示。 */
+/**
+ * GeologicalSurveyHintPacket: 向客户端传递地质锤的短文本提示。
+ */
 
 public record GeologicalSurveyHintPacket(Component message) implements CustomPacketPayload {
     public static final Type<GeologicalSurveyHintPacket> TYPE = new Type<>(
@@ -27,17 +29,23 @@ public record GeologicalSurveyHintPacket(Component message) implements CustomPac
         return TYPE;
     }
 
-    /** encode: 编码勘探提示文本。 */
+    /**
+     * encode: 编码勘探提示文本。
+     */
     private static void encode(RegistryFriendlyByteBuf buffer, GeologicalSurveyHintPacket packet) {
         ComponentSerialization.STREAM_CODEC.encode(buffer, packet.message());
     }
 
-    /** decode: 解码勘探提示文本。 */
+    /**
+     * decode: 解码勘探提示文本。
+     */
     private static GeologicalSurveyHintPacket decode(RegistryFriendlyByteBuf buffer) {
         return new GeologicalSurveyHintPacket(ComponentSerialization.STREAM_CODEC.decode(buffer));
     }
 
-    /** handle: 将网络包切换到客户端线程处理。 */
+    /**
+     * handle: 将网络包切换到客户端线程处理。
+     */
     public static void handle(GeologicalSurveyHintPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> ClientboundNetworkBridge.handleGeologicalSurveyHint(packet));
     }

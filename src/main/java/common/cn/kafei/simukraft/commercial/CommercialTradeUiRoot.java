@@ -1,7 +1,6 @@
 package common.cn.kafei.simukraft.commercial;
 
 import com.lowdragmc.lowdraglib2.gui.slot.LocalSlot;
-import net.minecraft.world.entity.player.Player;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
@@ -21,6 +20,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
@@ -99,7 +99,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         updateDisplaySlots();
     }
 
-    /** refreshActive: 刷新当前打开的商业交易界面快照。 */
+    /**
+     * refreshActive: 刷新当前打开的商业交易界面快照。
+     */
     public static void refreshActive(CommercialTradeOpenResponsePacket packet) {
         CommercialTradeUiRoot root = activeRoot.get();
         if (root != null && root.isSameSession(packet)) {
@@ -107,7 +109,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         }
     }
 
-    /** drawBackgroundAdditional: 绘制原版村民风格交易内容和左侧 Tab。 */
+    /**
+     * drawBackgroundAdditional: 绘制原版村民风格交易内容和左侧 Tab。
+     */
     @Override
     public void drawBackgroundAdditional(IGUIContext context) {
         GUIContext guiContext = (GUIContext) context;
@@ -125,7 +129,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         renderScroller(guiContext, frameLeft, top);
     }
 
-    /** onTabMouseDown: 只在左侧 Tab 命中区切换交易分类。 */
+    /**
+     * onTabMouseDown: 只在左侧 Tab 命中区切换交易分类。
+     */
     private void renderLeftPanelBackground(GUIContext guiContext, int left, int top) {
         guiContext.graphics.fill(left + ROW_X, top + CommercialTradeTabStrip.HIT_Y,
                 left + CommercialTradeTabStrip.HIT_X + CommercialTradeTabStrip.HIT_WIDTH, top + ROW_Y, LEFT_PANEL_BACKGROUND);
@@ -148,7 +154,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         consume(event);
     }
 
-    /** onOfferListMouseDown: 只处理报价列表行点击，避免抢占玩家背包槽位。 */
+    /**
+     * onOfferListMouseDown: 只处理报价列表行点击，避免抢占玩家背包槽位。
+     */
     private void onOfferListMouseDown(UIEvent event) {
         if (event.button != 0) {
             release(event);
@@ -166,7 +174,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         consume(event);
     }
 
-    /** onOfferListMouseWheel: 滚动当前 Tab 的报价列表。 */
+    /**
+     * onOfferListMouseWheel: 滚动当前 Tab 的报价列表。
+     */
     private void onOfferListMouseWheel(UIEvent event) {
         if (!canScroll()) {
             release(event);
@@ -176,7 +186,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         consume(event);
     }
 
-    /** onScrollerMouseDown: 点击或拖拽滚动条时定位报价列表。 */
+    /**
+     * onScrollerMouseDown: 点击或拖拽滚动条时定位报价列表。
+     */
     private void onScrollerMouseDown(UIEvent event) {
         if (event.button != 0 || !canScroll()) {
             release(event);
@@ -187,7 +199,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         consume(event);
     }
 
-    /** onScrollerDragUpdate: 拖动滚动条时同步列表偏移。 */
+    /**
+     * onScrollerDragUpdate: 拖动滚动条时同步列表偏移。
+     */
     private void onScrollerDragUpdate(UIEvent event) {
         if (!canScroll()) {
             release(event);
@@ -197,7 +211,9 @@ public final class CommercialTradeUiRoot extends UIElement {
         consume(event);
     }
 
-    /** onResultSlotMouseDown: 点击结果槽时执行一次当前报价。 */
+    /**
+     * onResultSlotMouseDown: 点击结果槽时执行一次当前报价。
+     */
     private void onResultSlotMouseDown(UIEvent event) {
         CommercialTradeOpenResponsePacket.OfferEntry offer = selectedOffer();
         if (event.button != 0 || offer == null || !canTrade(offer)) {

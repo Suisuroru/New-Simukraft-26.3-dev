@@ -4,28 +4,28 @@ import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.bank.BankControlBoxService;
 import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.citizen.CitizenService;
+import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.commercial.CommercialConstants;
 import common.cn.kafei.simukraft.commercial.CommercialControlBoxService;
-import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
-import common.cn.kafei.simukraft.network.bank.BankControlBoxOpenRequestPacket;
-import common.cn.kafei.simukraft.network.commercial.CommercialControlBoxOpenResponsePacket;
-import common.cn.kafei.simukraft.network.exchange.ExchangeControlBoxOpenRequestPacket;
 import common.cn.kafei.simukraft.exchange.ExchangeControlBoxService;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.logistics.LogisticsConstants;
 import common.cn.kafei.simukraft.logistics.LogisticsControlBoxService;
-import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.medical.MedicalControlBoxService;
 import common.cn.kafei.simukraft.medical.MedicalService;
 import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingConstants;
 import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingControlBoxService;
 import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingMenuProvider;
+import common.cn.kafei.simukraft.network.bank.BankControlBoxOpenRequestPacket;
+import common.cn.kafei.simukraft.network.commercial.CommercialControlBoxOpenResponsePacket;
+import common.cn.kafei.simukraft.network.exchange.ExchangeControlBoxOpenRequestPacket;
+import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.medical.MedicalControlBoxOpenResponsePacket;
 import common.cn.kafei.simukraft.network.toast.InfoToastService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -37,7 +37,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-public record NpcHireFirePacket(BlockPos sourcePos, String sourceType, String role, UUID citizenId) implements CustomPacketPayload {
+public record NpcHireFirePacket(BlockPos sourcePos, String sourceType, String role,
+                                UUID citizenId) implements CustomPacketPayload {
     public static final Type<NpcHireFirePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "npc_hire_fire"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NpcHireFirePacket> STREAM_CODEC = StreamCodec.of(NpcHireFirePacket::encode, NpcHireFirePacket::decode);
 

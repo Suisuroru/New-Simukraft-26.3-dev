@@ -2,8 +2,8 @@ package common.cn.kafei.simukraft.commercial;
 
 import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.economy.EconomyService;
+import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -31,7 +31,9 @@ public final class CommercialFoodMarketService {
     private CommercialFoodMarketService() {
     }
 
-    /** findPurchasePlan: 为饥饿 NPC 查找最合适的商业食物报价。 */
+    /**
+     * findPurchasePlan: 为饥饿 NPC 查找最合适的商业食物报价。
+     */
     public static PurchasePlan findPurchasePlan(ServerLevel level, CitizenData citizen, CitizenEntity entity) {
         if (level == null || citizen == null || entity == null || citizen.cityId() == null) {
             return null;
@@ -47,7 +49,9 @@ public final class CommercialFoodMarketService {
                 .orElse(null);
     }
 
-    /** executePurchase: 执行 NPC 自主买饭，不检查也不扣城市资金。 */
+    /**
+     * executePurchase: 执行 NPC 自主买饭，不检查也不扣城市资金。
+     */
     public static PurchaseResult executePurchase(ServerLevel level, CitizenData citizen, PurchasePlan plan) {
         if (level == null || citizen == null || plan == null || citizen.cityId() == null) {
             return PurchaseResult.fail("message.simukraft.commercial.invalid_trade");
@@ -84,7 +88,9 @@ public final class CommercialFoodMarketService {
                 : PurchaseResult.success(foodStack);
     }
 
-    /** foodDetailKey: 获取 NPC 状态中展示的食物翻译键。 */
+    /**
+     * foodDetailKey: 获取 NPC 状态中展示的食物翻译键。
+     */
     public static String foodDetailKey(@Nullable PurchasePlan plan) {
         if (plan == null || plan.itemId().isBlank()) {
             return "";
@@ -93,7 +99,9 @@ public final class CommercialFoodMarketService {
         return location != null ? "item." + location.getNamespace() + "." + location.getPath().replace('/', '.') : "";
     }
 
-    /** clearServerCaches: 清理指定存档的食品候选缓存。 */
+    /**
+     * clearServerCaches: 清理指定存档的食品候选缓存。
+     */
     public static void clearServerCaches(MinecraftServer server) {
         String serverKey = SaveScopedCacheKey.serverKey(server).toLowerCase(Locale.ROOT);
         CACHES.keySet().removeIf(key -> key.startsWith(serverKey + "|"));
@@ -210,16 +218,21 @@ public final class CommercialFoodMarketService {
         }
     }
 
-    public record PurchasePlan(BlockPos boxPos, String definitionId, String offerId, String itemId, int nutrition, double price, int resultCount) {
+    public record PurchasePlan(BlockPos boxPos, String definitionId, String offerId, String itemId, int nutrition,
+                               double price, int resultCount) {
     }
 
     public record PurchaseResult(boolean success, ItemStack foodStack, String messageKey) {
-        /** success: 创建买饭成功结果。 */
+        /**
+         * success: 创建买饭成功结果。
+         */
         public static PurchaseResult success(ItemStack foodStack) {
             return new PurchaseResult(true, foodStack != null ? foodStack.copy() : ItemStack.EMPTY, "message.simukraft.commercial.npc_food_done");
         }
 
-        /** fail: 创建买饭失败结果。 */
+        /**
+         * fail: 创建买饭失败结果。
+         */
         public static PurchaseResult fail(String messageKey) {
             return new PurchaseResult(false, ItemStack.EMPTY, messageKey);
         }

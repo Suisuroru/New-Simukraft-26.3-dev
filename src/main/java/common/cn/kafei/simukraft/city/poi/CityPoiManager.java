@@ -1,9 +1,9 @@
 package common.cn.kafei.simukraft.city.poi;
 
+import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -33,6 +33,7 @@ public final class CityPoiManager extends SavedData {
     private CompoundTag serializeToTag() {
         return save(new CompoundTag());
     }
+
     private static final ConcurrentHashMap<UUID, CityPoiData> GLOBAL_POI_CACHE = new ConcurrentHashMap<>();
 
     public static CityPoiData lookupPoi(UUID poiId) {

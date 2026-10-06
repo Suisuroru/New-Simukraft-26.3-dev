@@ -1,11 +1,16 @@
 package client.cn.kafei.simukraft.client.toast;
 
 import common.cn.kafei.simukraft.config.ClientConfig;
+
 import java.util.Locale;
 
-/** ClientToastConfig: 解析通知布局的客户端配置。 */
+/**
+ * ClientToastConfig: 解析通知布局的客户端配置。
+ */
 public final class ClientToastConfig {
-    /** 通知布局使用的六个屏幕锚点。 */
+    /**
+     * 通知布局使用的六个屏幕锚点。
+     */
     public enum Anchor {
         TOP_LEFT,
         TOP_RIGHT,
@@ -18,7 +23,9 @@ public final class ClientToastConfig {
     private ClientToastConfig() {
     }
 
-    /** getAnchor: 获取当前通知锚点。 */
+    /**
+     * getAnchor: 获取当前通知锚点。
+     */
     public static Anchor getAnchor() {
         try {
             return Anchor.valueOf(ClientConfig.toastAnchorName().toUpperCase(Locale.ROOT));
@@ -27,17 +34,23 @@ public final class ClientToastConfig {
         }
     }
 
-    /** width: 获取当前通知宽度。 */
+    /**
+     * width: 获取当前通知宽度。
+     */
     public static int width() {
         return ClientConfig.toastWidth();
     }
 
-    /** height: 获取当前通知高度。 */
+    /**
+     * height: 获取当前通知高度。
+     */
     public static int height() {
         return ClientConfig.toastHeight();
     }
 
-    /** calculatePosition: 按锚点与偏移计算首个通知的位置。 */
+    /**
+     * calculatePosition: 按锚点与偏移计算首个通知的位置。
+     */
     public static int[] calculatePosition(int screenWidth, int screenHeight, int toastWidth, int toastHeight) {
         return calculatePosition(
                 getAnchor(),
@@ -49,9 +62,11 @@ public final class ClientToastConfig {
                 toastHeight);
     }
 
-    /** calculatePosition: 用编辑器中的临时布局计算首个通知的位置。 */
+    /**
+     * calculatePosition: 用编辑器中的临时布局计算首个通知的位置。
+     */
     public static int[] calculatePosition(Anchor anchor, int offsetX, int offsetY, int screenWidth,
-            int screenHeight, int toastWidth, int toastHeight) {
+                                          int screenHeight, int toastWidth, int toastHeight) {
         Anchor safeAnchor = anchor != null ? anchor : Anchor.TOP_RIGHT;
         int x;
         int y;
@@ -85,10 +100,12 @@ public final class ClientToastConfig {
                 y = offsetY;
             }
         }
-        return new int[] {x, y};
+        return new int[]{x, y};
     }
 
-    /** reset: 重置通知布局配置。 */
+    /**
+     * reset: 重置通知布局配置。
+     */
     public static void reset() {
         ClientConfig.resetToastDefaults();
     }

@@ -19,7 +19,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** ExchangeCompanyLoader: 加载 exchange_companies 数据包，缺省回落到内置九家公司。 */
+/**
+ * ExchangeCompanyLoader: 加载 exchange_companies 数据包，缺省回落到内置九家公司。
+ */
 public final class ExchangeCompanyLoader implements PreparableReloadListener {
     public static final ExchangeCompanyLoader INSTANCE = new ExchangeCompanyLoader();
     private static final String DIRECTORY = "exchange_companies";
@@ -67,7 +69,9 @@ public final class ExchangeCompanyLoader implements PreparableReloadListener {
         return new ExchangeCompany(id, name, sector, price, volatility);
     }
 
-    /** defaults: 内置九家公司。 */
+    /**
+     * defaults: 内置九家公司。
+     */
     public static List<ExchangeCompany> defaults() {
         return List.of(
                 new ExchangeCompany("xiaoliang_media", "小亮传媒", "media", 1.20D, 0.028D),

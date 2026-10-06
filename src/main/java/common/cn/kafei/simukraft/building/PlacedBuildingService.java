@@ -1,10 +1,10 @@
 package common.cn.kafei.simukraft.building;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.storage.BuildingStructureRepository;
-import common.cn.kafei.simukraft.storage.BuildingStructureSqliteDatabase;
 import common.cn.kafei.simukraft.citizen.CitizenHousingService;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
+import common.cn.kafei.simukraft.storage.BuildingStructureRepository;
+import common.cn.kafei.simukraft.storage.BuildingStructureSqliteDatabase;
 import common.cn.kafei.simukraft.util.SaveScopedCacheKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -31,7 +31,7 @@ public final class PlacedBuildingService {
         if (level == null) {
             return List.of();
         }
-        String dimensionId = level.dimension().registry().toString();
+        String dimensionId = level.dimension().identifier().toString();
         String cacheKey = SaveScopedCacheKey.levelKey(level);
         List<PlacedBuildingRecord> records = BY_DIMENSION.computeIfAbsent(cacheKey, ignored -> load(level, dimensionId));
         // 加载失败返回 null 时不落缓存（computeIfAbsent 不存 null），本次按空列表兜底，下次访问重试；

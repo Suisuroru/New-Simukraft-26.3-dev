@@ -1,11 +1,11 @@
 package common.cn.kafei.simukraft.city;
 
+import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.CitizenManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.logistics.LogisticsManager;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -382,7 +382,9 @@ public final class CityManager extends SavedData {
         return true;
     }
 
-    /** persistUpgrade: 单次持久化升级后的等级、资金和财政流水。 */
+    /**
+     * persistUpgrade: 单次持久化升级后的等级、资金和财政流水。
+     */
     synchronized boolean persistUpgrade(CityData city) {
         ServerLevel targetLevel = level;
         if (city == null || cities.get(city.cityId()) != city || targetLevel == null

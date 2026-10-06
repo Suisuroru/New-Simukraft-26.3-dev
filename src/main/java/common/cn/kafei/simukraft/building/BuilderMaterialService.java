@@ -1,12 +1,8 @@
 package common.cn.kafei.simukraft.building;
 
-import common.cn.kafei.simukraft.material.NpcWorkMaterialService;
-import common.cn.kafei.simukraft.material.WorkMaterialCache;
-import common.cn.kafei.simukraft.material.WorkMaterialPolicy;
-import common.cn.kafei.simukraft.material.WorkMaterialRequest;
-import common.cn.kafei.simukraft.material.WorkMaterialResult;
-import net.minecraft.world.item.ItemStack;
+import common.cn.kafei.simukraft.material.*;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class BuilderMaterialService {

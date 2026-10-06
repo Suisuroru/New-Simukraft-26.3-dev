@@ -1,13 +1,13 @@
 package common.cn.kafei.simukraft.crafting;
 
-import common.cn.kafei.simukraft.registry.ModItems;
 import com.mojang.serialization.MapCodec;
+import common.cn.kafei.simukraft.registry.ModItems;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;

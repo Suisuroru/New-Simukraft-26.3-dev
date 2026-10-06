@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.medical;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -26,9 +24,11 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-/** 医疗控制箱 LDLib 单页界面。 */
+/**
+ * 医疗控制箱 LDLib 单页界面。
+ */
 
 public final class MedicalControlBoxScreenOpener {
     private static final int PANEL_WIDTH = 340;
@@ -39,12 +39,16 @@ public final class MedicalControlBoxScreenOpener {
     private MedicalControlBoxScreenOpener() {
     }
 
-    /** request：请求服务端刷新医疗控制箱视图。 */
+    /**
+     * request：请求服务端刷新医疗控制箱视图。
+     */
     public static void request(BlockPos pos) {
         ClientPacketDistributor.sendToServer(new MedicalControlBoxOpenRequestPacket(pos));
     }
 
-    /** open：打开医疗控制箱界面。 */
+    /**
+     * open：打开医疗控制箱界面。
+     */
     public static void open(MedicalControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
@@ -110,7 +114,7 @@ public final class MedicalControlBoxScreenOpener {
         } else {
             for (MedicalControlBoxView.PatientEntry patient : packet.patients()) {
                 content.addChild(label(Component.translatable("gui.simukraft.medical.patient_line", patient.name(),
-                        Component.translatable(patient.conditionKey()), String.format(java.util.Locale.ROOT, "%.1f/20", patient.health())),
+                                Component.translatable(patient.conditionKey()), String.format(java.util.Locale.ROOT, "%.1f/20", patient.health())),
                         Horizontal.LEFT, 0xFFFFFFFF, 13));
             }
         }

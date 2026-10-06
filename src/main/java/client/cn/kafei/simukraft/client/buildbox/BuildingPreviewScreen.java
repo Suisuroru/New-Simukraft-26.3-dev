@@ -1,13 +1,5 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.minecraft.world.level.block.Blocks;
-
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-
-import net.minecraft.client.input.KeyEvent;
-
-import net.minecraft.client.input.MouseButtonEvent;
-
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraScreen;
 import client.cn.kafei.simukraft.client.input.SimuKraftKeyMappings;
@@ -15,22 +7,25 @@ import client.cn.kafei.simukraft.client.rts.RtsSelectionManager;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import client.cn.kafei.simukraft.client.ui.SlidingInfoPanel;
+import com.mojang.blaze3d.platform.InputConstants;
 import common.cn.kafei.simukraft.building.BuildingCatalog;
 import common.cn.kafei.simukraft.building.BuildingMetadataReader;
 import common.cn.kafei.simukraft.building.BuildingStructure;
 import common.cn.kafei.simukraft.config.ServerConfig;
-import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.state.properties.BedPart;
 import common.cn.kafei.simukraft.network.building.BuildBoxStartConstructionPacket;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.network.PacketDistributor;
-import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 public final class BuildingPreviewScreen extends Screen implements FreeCameraScreen {
     private final Screen parent;
@@ -150,14 +145,14 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         panel.drawSectionTitle(g, Component.translatable("gui.building_preview.section.preview_move"), curY);
         curY += font.lineHeight + 8;
         int arrowCX = pX + 30;
-        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_FORWARD),  arrowCX,        curY,        kw, kh);
-        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_LEFT),    arrowCX - step, curY + step, kw, kh);
-        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_BACKWARD),arrowCX,        curY + step, kw, kh);
-        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_RIGHT),   arrowCX + step, curY + step, kw, kh);
+        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_FORWARD), arrowCX, curY, kw, kh);
+        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_LEFT), arrowCX - step, curY + step, kw, kh);
+        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_BACKWARD), arrowCX, curY + step, kw, kh);
+        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_RIGHT), arrowCX + step, curY + step, kw, kh);
         g.centeredText(font, Component.translatable("gui.building_preview.label.move"),
                 arrowCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
         int heightCX = pX + 62;
-        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_UP),   heightCX, curY,        kw, kh);
+        panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_UP), heightCX, curY, kw, kh);
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_DOWN), heightCX, curY + step, kw, kh);
         g.centeredText(font, Component.translatable("gui.building_preview.label.height"),
                 heightCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
@@ -167,24 +162,25 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         g.centeredText(font, Component.translatable("gui.building_preview.label.rotate"),
                 rotateCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
         curY += step * 2 + font.lineHeight + 5;
-        panel.drawSeparator(g, curY); curY += 8;
+        panel.drawSeparator(g, curY);
+        curY += 8;
         // ── 摄像机移动 ──
         panel.drawSectionTitle(g, Component.translatable("gui.building_preview.section.camera"), curY);
         curY += font.lineHeight + 8;
         var mc = this.minecraft;
         if (mc != null) {
             int wasdCX = pX + 30;
-            panel.drawKeyCap(g, mc.options.keyUp.getTranslatedKeyMessage(),    wasdCX,        curY,        kw, kh);
-            panel.drawKeyCap(g, mc.options.keyLeft.getTranslatedKeyMessage(),  wasdCX - step, curY + step, kw, kh);
-            panel.drawKeyCap(g, mc.options.keyDown.getTranslatedKeyMessage(),  wasdCX,        curY + step, kw, kh);
+            panel.drawKeyCap(g, mc.options.keyUp.getTranslatedKeyMessage(), wasdCX, curY, kw, kh);
+            panel.drawKeyCap(g, mc.options.keyLeft.getTranslatedKeyMessage(), wasdCX - step, curY + step, kw, kh);
+            panel.drawKeyCap(g, mc.options.keyDown.getTranslatedKeyMessage(), wasdCX, curY + step, kw, kh);
             panel.drawKeyCap(g, mc.options.keyRight.getTranslatedKeyMessage(), wasdCX + step, curY + step, kw, kh);
             g.centeredText(font, Component.translatable("gui.building_preview.label.move"),
                     wasdCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
             int modX = pX + 58;
             int shiftCapW = Math.max(14, font.width(mc.options.keyShift.getTranslatedKeyMessage()) + 6);
             int spaceCapW = pW - 16 - (modX - iX);
-            panel.drawKeyCapAt(g, mc.options.keyShift.getTranslatedKeyMessage(), modX, curY,        shiftCapW, kh);
-            panel.drawKeyCapAt(g, mc.options.keyJump.getTranslatedKeyMessage(),  modX, curY + step, spaceCapW, kh);
+            panel.drawKeyCapAt(g, mc.options.keyShift.getTranslatedKeyMessage(), modX, curY, shiftCapW, kh);
+            panel.drawKeyCapAt(g, mc.options.keyJump.getTranslatedKeyMessage(), modX, curY + step, spaceCapW, kh);
             int ctrlCapW = Math.max(kw, font.width(Component.literal("Ctrl")) + 6);
             panel.drawKeyCapAt(g, Component.literal("Ctrl"), modX, curY + step * 2 + 2, ctrlCapW, kh);
             g.text(font, Component.translatable("gui.building_preview.label.boost"),
@@ -192,7 +188,8 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
                     SimuKraftUiTheme.TEXT_MUTED_COLOR, false);
         }
         curY += step * 2 + font.lineHeight + 5;
-        panel.drawSeparator(g, curY); curY += 8;
+        panel.drawSeparator(g, curY);
+        curY += 8;
         // ── 坐标与方块数 ──
         panel.drawSectionTitle(g, Component.translatable("gui.building_preview.section.data"), curY);
         curY += font.lineHeight + 8;
@@ -208,7 +205,8 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
             g.text(font, line, iX, curY, SimuKraftUiTheme.TEXT_INFO_COLOR, false);
             curY += font.lineHeight + 2;
         }
-        panel.drawSeparator(g, curY); curY += 8;
+        panel.drawSeparator(g, curY);
+        curY += 8;
         // ── 操作键 ──
         curY = panel.drawKeyAction(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_CONFIRM),
                 iX, curY, kh, Component.translatable("gui.building_preview.action.start"),
@@ -276,7 +274,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         return super.keyPressed(event);
     }
 
-    /** tick: RTS 预览中按每帧光标落点更新已抓取建筑的位置。 */
+    /**
+     * tick: RTS 预览中按每帧光标落点更新已抓取建筑的位置。
+     */
     @Override
     public void tick() {
         super.tick();
@@ -285,7 +285,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         }
     }
 
-    /** mouseClicked: RTS 预览中左键确认建造，右键取消当前抓取预览。 */
+    /**
+     * mouseClicked: RTS 预览中左键确认建造，右键取消当前抓取预览。
+     */
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double mouseX = event.x();
@@ -308,7 +310,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         return true;
     }
 
-    /** mouseScrolled: 在 RTS 建筑预览中将 Alt 滚轮交给俯视相机缩放。 */
+    /**
+     * mouseScrolled: 在 RTS 建筑预览中将 Alt 滚轮交给俯视相机缩放。
+     */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (rtsPreviewMode && RtsSelectionManager.handleRtsCameraScroll(verticalAmount)) {
@@ -317,7 +321,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
-    /** movePreviewRelativeToCamera: 按当前模式移动预览建筑的手动偏移。 */
+    /**
+     * movePreviewRelativeToCamera: 按当前模式移动预览建筑的手动偏移。
+     */
     private void movePreviewRelativeToCamera(int right, int forward) {
         if (rtsPreviewMode) {
             BuildingPreviewManager.moveRtsPreviewRelativeToCamera(right, forward);
@@ -326,7 +332,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         }
     }
 
-    /** movePreviewVertical: 按当前模式调整预览建筑的高度偏移。 */
+    /**
+     * movePreviewVertical: 按当前模式调整预览建筑的高度偏移。
+     */
     private void movePreviewVertical(int dy) {
         if (rtsPreviewMode) {
             BuildingPreviewManager.moveRtsPreviewVertical(dy);
@@ -335,7 +343,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         }
     }
 
-    /** confirmPreview: 校验领地后确认当前预览建筑的位置。 */
+    /**
+     * confirmPreview: 校验领地后确认当前预览建筑的位置。
+     */
     private void confirmPreview() {
         if (rtsPreviewMode && !BuildingPreviewManager.isRtsSurfaceReady()) {
             ClientInfoToast.show(
@@ -376,7 +386,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         minecraft.gui.setScreen(null);
     }
 
-    /** clearPreviewState: 清理建筑预览，RTS 中保留已启用的俯视相机。 */
+    /**
+     * clearPreviewState: 清理建筑预览，RTS 中保留已启用的俯视相机。
+     */
     private void clearPreviewState() {
         BuildingPreviewManager.clearPreview();
         if (rtsPreviewSession) {

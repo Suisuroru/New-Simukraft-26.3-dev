@@ -1,7 +1,6 @@
 package common.cn.kafei.simukraft.storage;
 
 import common.cn.kafei.simukraft.util.NbtUuid;
-
 import net.minecraft.nbt.CompoundTag;
 
 import java.sql.PreparedStatement;
