@@ -2,13 +2,13 @@ package common.cn.kafei.simukraft.citizen;
 
 import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.building.BuildingAbandonmentService;
+import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
-import common.cn.kafei.simukraft.time.CitizenCalendar;
-import common.cn.kafei.simukraft.time.MinecraftDay;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import common.cn.kafei.simukraft.time.CitizenCalendar;
+import common.cn.kafei.simukraft.time.MinecraftDay;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
@@ -438,7 +438,9 @@ public final class CitizenManager extends SavedData {
         }
     }
 
-    /** rebaseCalendarsAfterTimeRollback：日号回退时平移居民、废弃度和企业税日期，当天不重复掷概率。 */
+    /**
+     * rebaseCalendarsAfterTimeRollback：日号回退时平移居民、废弃度和企业税日期，当天不重复掷概率。
+     */
     private void rebaseCalendarsAfterTimeRollback(ServerLevel level, long deltaDays, long currentDay) {
         int shifted = 0;
         for (CitizenData citizen : citizens.values()) {

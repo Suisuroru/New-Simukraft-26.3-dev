@@ -1,13 +1,15 @@
 package common.cn.kafei.simukraft.city;
 
+import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
-import net.minecraft.core.HolderLookup;
+import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.SavedData;
-import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -17,15 +19,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public final class DistrictManager extends SavedData {
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_districts";
-    private static final Factory<DistrictManager> FACTORY = new Factory<>(DistrictManager::new, DistrictManager::load, null);
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "districts");
+    private static final SavedDataType<DistrictManager> TYPE = createType();
+
+    private static SavedDataType<DistrictManager> createType() {
+        Codec<DistrictManager> codec = CompoundTag.CODEC.xmap(DistrictManager::load, DistrictManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, DistrictManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        return save(new CompoundTag());
+    }
+
     private final ConcurrentMap<UUID, DistrictData> districts = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, UUID> chunkIndex = new ConcurrentHashMap<>();
     private volatile boolean sqliteLoaded;
     private volatile ServerLevel level;
 
     public static DistrictManager get(ServerLevel level) {
-        DistrictManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        DistrictManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
@@ -38,103 +50,160 @@ public final class DistrictManager extends SavedData {
         // SQLite is authoritative only when it returned actual district rows. An empty or
         // unavailable read must not erase SavedData loaded from the world.
         if (sqlite == null || sqlite.isEmpty() || !sqlite.contains("Districts")) return;
-        DistrictManager loaded = load(sqlite, level.registryAccess());
-        districts.clear(); chunkIndex.clear(); districts.putAll(loaded.districts); chunkIndex.putAll(loaded.chunkIndex);
+        DistrictManager loaded = load(sqlite);
+        districts.clear();
+        chunkIndex.clear();
+        districts.putAll(loaded.districts);
+        chunkIndex.putAll(loaded.chunkIndex);
     }
 
     private void persist() {
         ServerLevel target = level();
-        if (target != null) SimuSqliteStorage.saveDistricts(target, save(new CompoundTag(), target.registryAccess()));
+        if (target != null) SimuSqliteStorage.saveDistricts(target, save(new CompoundTag()));
     }
 
-    private ServerLevel level() { return level; }
+    private ServerLevel level() {
+        return level;
+    }
 
-    private static DistrictManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static DistrictManager load(CompoundTag tag) {
         DistrictManager manager = new DistrictManager();
-        ListTag list = tag.getList("Districts", CompoundTag.TAG_COMPOUND);
+        ListTag list = tag.getList("Districts").orElse(new ListTag());
         for (int i = 0; i < list.size(); i++) {
-            DistrictData district = DistrictData.fromTag(list.getCompound(i));
+            DistrictData district = DistrictData.fromTag(list.getCompound(i).orElse(new CompoundTag()));
             manager.districts.put(district.districtId(), district);
             district.chunks().forEach(chunk -> manager.chunkIndex.put(chunk, district.districtId()));
         }
         return manager;
     }
 
-    @Override public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        ListTag list = new ListTag(); districts.values().forEach(d -> list.add(d.toTag())); tag.put("Districts", list); return tag;
+    public CompoundTag save(CompoundTag tag) {
+        ListTag list = new ListTag();
+        districts.values().forEach(d -> list.add(d.toTag()));
+        tag.put("Districts", list);
+        return tag;
     }
 
-    public Collection<DistrictData> all() { return Set.copyOf(districts.values()); }
-    public Optional<DistrictData> get(UUID id) { return Optional.ofNullable(districts.get(id)); }
-    public Optional<DistrictData> byChunk(long chunk) { UUID id = chunkIndex.get(chunk); return id == null ? Optional.empty() : get(id); }
-    public Optional<DistrictData> byChunk(ChunkPos chunk) { return chunk == null ? Optional.empty() : byChunk(chunk.toLong()); }
-    public boolean nameExists(UUID cityId, String name) { return districts.values().stream().anyMatch(d -> d.parentCityId().equals(cityId) && d.name().equalsIgnoreCase(name)); }
+    public Collection<DistrictData> all() {
+        return Set.copyOf(districts.values());
+    }
+
+    public Optional<DistrictData> get(UUID id) {
+        return Optional.ofNullable(districts.get(id));
+    }
+
+    public Optional<DistrictData> byChunk(long chunk) {
+        UUID id = chunkIndex.get(chunk);
+        return id == null ? Optional.empty() : get(id);
+    }
+
+    public Optional<DistrictData> byChunk(ChunkPos chunk) {
+        return chunk == null ? Optional.empty() : byChunk(chunk.pack());
+    }
+
+    public boolean nameExists(UUID cityId, String name) {
+        return districts.values().stream().anyMatch(d -> d.parentCityId().equals(cityId) && d.name().equalsIgnoreCase(name));
+    }
 
     public synchronized DistrictData create(UUID cityId, String name, UUID mayorId, String mayorName, Set<Long> chunks) {
         name = normalizeDistrictName(name);
-        if (cityId == null || !CityService.isValidCityName(name) || chunks == null || chunks.isEmpty() || nameExists(cityId, name)) return null;
+        if (cityId == null || !CityService.isValidCityName(name) || chunks == null || chunks.isEmpty() || nameExists(cityId, name))
+            return null;
         // A chunk can only belong to one district. Core chunks remain protected even
         // though they are still part of the parent city's claimed area.
         if (chunks.stream().anyMatch(chunk -> chunkIndex.containsKey(chunk))) return null;
-        if (level != null && chunks.stream().anyMatch(chunk -> CityService.allCities(level).stream().anyMatch(city -> new ChunkPos(city.cityCorePos()).toLong() == chunk))) return null;
+        if (level != null && chunks.stream().anyMatch(chunk -> CityService.allCities(level).stream().anyMatch(city -> ChunkPos.containing(city.cityCorePos()).pack() == chunk)))
+            return null;
         if (level != null && chunks.stream().anyMatch(chunk -> districts.values().stream()
                 .flatMap(district -> district.cores().stream())
-                .anyMatch(core -> new ChunkPos(net.minecraft.core.BlockPos.of(core)).toLong() == chunk))) return null;
+                .anyMatch(core -> ChunkPos.containing(net.minecraft.core.BlockPos.of(core)).pack() == chunk)))
+            return null;
         UUID id = UUID.randomUUID();
         int color = stableColor(id);
         DistrictData district = new DistrictData(id, cityId, name, color);
         district.addOrUpdateMember(mayorId, mayorName, DistrictRole.MAYOR);
-        for (long chunk : chunks) { district.addChunk(chunk); chunkIndex.put(chunk, id); }
-        districts.put(id, district); setDirty(); persist(); return district;
+        for (long chunk : chunks) {
+            district.addChunk(chunk);
+            chunkIndex.put(chunk, id);
+        }
+        districts.put(id, district);
+        setDirty();
+        persist();
+        return district;
     }
 
     public synchronized boolean assignChunks(UUID districtId, Set<Long> chunks) {
-        DistrictData target = districts.get(districtId); if (target == null || chunks == null || chunks.isEmpty()) return false;
+        DistrictData target = districts.get(districtId);
+        if (target == null || chunks == null || chunks.isEmpty()) return false;
         for (long chunk : chunks) {
-            if (level != null && CityService.allCities(level).stream().anyMatch(city -> new ChunkPos(city.cityCorePos()).toLong() == chunk)) return false;
-            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> new ChunkPos(net.minecraft.core.BlockPos.of(core)).toLong() == chunk))) return false;
+            if (level != null && CityService.allCities(level).stream().anyMatch(city -> ChunkPos.containing(city.cityCorePos()).pack() == chunk))
+                return false;
+            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> ChunkPos.containing(net.minecraft.core.BlockPos.of(core)).pack() == chunk)))
+                return false;
         }
         for (long chunk : chunks) {
-            if (level != null && CityService.allCities(level).stream().anyMatch(city -> new ChunkPos(city.cityCorePos()).toLong() == chunk)) return false;
-            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> new ChunkPos(net.minecraft.core.BlockPos.of(core)).toLong() == chunk))) return false;
+            if (level != null && CityService.allCities(level).stream().anyMatch(city -> ChunkPos.containing(city.cityCorePos()).pack() == chunk))
+                return false;
+            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> ChunkPos.containing(net.minecraft.core.BlockPos.of(core)).pack() == chunk)))
+                return false;
             UUID oldId = chunkIndex.get(chunk);
             if (oldId != null && !oldId.equals(districtId)) districts.get(oldId).removeChunk(chunk);
-            target.addChunk(chunk); chunkIndex.put(chunk, districtId);
+            target.addChunk(chunk);
+            chunkIndex.put(chunk, districtId);
         }
-        setDirty(); persist(); return true;
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean moveToCity(UUID cityId, Set<Long> chunks) {
         if (cityId == null || chunks == null || chunks.isEmpty()) return false;
         for (long chunk : chunks) {
-            if (level != null && CityService.allCities(level).stream().anyMatch(city -> new ChunkPos(city.cityCorePos()).toLong() == chunk)) return false;
-            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> new ChunkPos(net.minecraft.core.BlockPos.of(core)).toLong() == chunk))) return false;
+            if (level != null && CityService.allCities(level).stream().anyMatch(city -> ChunkPos.containing(city.cityCorePos()).pack() == chunk))
+                return false;
+            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> ChunkPos.containing(net.minecraft.core.BlockPos.of(core)).pack() == chunk)))
+                return false;
         }
         for (long chunk : chunks) {
-            if (level != null && CityService.allCities(level).stream().anyMatch(city -> new ChunkPos(city.cityCorePos()).toLong() == chunk)) return false;
-            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> new ChunkPos(net.minecraft.core.BlockPos.of(core)).toLong() == chunk))) return false;
+            if (level != null && CityService.allCities(level).stream().anyMatch(city -> ChunkPos.containing(city.cityCorePos()).pack() == chunk))
+                return false;
+            if (districts.values().stream().anyMatch(d -> d.cores().stream().mapToLong(Long::longValue).anyMatch(core -> ChunkPos.containing(net.minecraft.core.BlockPos.of(core)).pack() == chunk)))
+                return false;
             UUID oldId = chunkIndex.remove(chunk);
             if (oldId != null && districts.containsKey(oldId)) districts.get(oldId).removeChunk(chunk);
         }
-        setDirty(); persist(); return true;
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean bindCore(UUID districtId, ChunkPos chunk, long corePosLong) {
         DistrictData district = districts.get(districtId);
-        if (district == null || chunk == null || !district.chunks().contains(chunk.toLong())) return false;
-        district.cores().forEach(existing -> { });
-        district.addCore(net.minecraft.core.BlockPos.of(corePosLong)); setDirty(); persist(); return true;
+        if (district == null || chunk == null || !district.chunks().contains(chunk.pack())) return false;
+        district.cores().forEach(existing -> {
+        });
+        district.addCore(net.minecraft.core.BlockPos.of(corePosLong));
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean unbindCore(UUID districtId, long corePosLong) {
-        DistrictData district = districts.get(districtId); if (district == null) return false;
-        district.removeCore(net.minecraft.core.BlockPos.of(corePosLong)); setDirty(); persist(); return true;
+        DistrictData district = districts.get(districtId);
+        if (district == null) return false;
+        district.removeCore(net.minecraft.core.BlockPos.of(corePosLong));
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean addMember(UUID districtId, UUID playerId, String playerName, DistrictRole role) {
         DistrictData district = districts.get(districtId);
         if (district == null || playerId == null || role == DistrictRole.MAYOR) return false;
-        district.addOrUpdateMember(playerId, playerName, role); setDirty(); persist(); return true;
+        district.addOrUpdateMember(playerId, playerName, role);
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean removeMember(UUID districtId, UUID playerId) {
@@ -142,7 +211,12 @@ public final class DistrictManager extends SavedData {
         if (district == null || playerId == null) return false;
         DistrictMemberData member = district.member(playerId);
         if (member == null || member.role() == DistrictRole.MAYOR) return false;
-        boolean removed = district.removeMember(playerId); if (removed) { setDirty(); persist(); } return removed;
+        boolean removed = district.removeMember(playerId);
+        if (removed) {
+            setDirty();
+            persist();
+        }
+        return removed;
     }
 
     public synchronized boolean setMemberRole(UUID districtId, UUID playerId, DistrictRole role) {
@@ -150,7 +224,10 @@ public final class DistrictManager extends SavedData {
         if (district == null || playerId == null || role == null || role == DistrictRole.MAYOR) return false;
         DistrictMemberData member = district.member(playerId);
         if (member == null) return false;
-        member.setRole(role); setDirty(); persist(); return true;
+        member.setRole(role);
+        setDirty();
+        persist();
+        return true;
     }
 
     public synchronized boolean setMayor(UUID districtId, UUID playerId, String playerName) {
@@ -159,7 +236,10 @@ public final class DistrictManager extends SavedData {
         for (DistrictMemberData member : district.members()) {
             if (member.role() == DistrictRole.MAYOR) member.setRole(DistrictRole.RESIDENT);
         }
-        district.addOrUpdateMember(playerId, playerName, DistrictRole.MAYOR); setDirty(); persist(); return true;
+        district.addOrUpdateMember(playerId, playerName, DistrictRole.MAYOR);
+        setDirty();
+        persist();
+        return true;
     }
 
     public boolean isEnabled(DistrictData district, ServerLevel level) {
@@ -170,8 +250,12 @@ public final class DistrictManager extends SavedData {
     public synchronized boolean rename(UUID districtId, UUID cityId, String name) {
         DistrictData district = districts.get(districtId);
         name = normalizeDistrictName(name);
-        if (district == null || !district.parentCityId().equals(cityId) || !CityService.isValidCityName(name) || nameExistsExcept(cityId, name, districtId)) return false;
-        district.setName(name); setDirty(); persist(); return true;
+        if (district == null || !district.parentCityId().equals(cityId) || !CityService.isValidCityName(name) || nameExistsExcept(cityId, name, districtId))
+            return false;
+        district.setName(name);
+        setDirty();
+        persist();
+        return true;
     }
 
     private boolean nameExistsExcept(UUID cityId, String name, UUID ignored) {
@@ -184,7 +268,9 @@ public final class DistrictManager extends SavedData {
         return value;
     }
 
-    /** Normalize using an ASCII source escape so the Chinese suffix survives source-file encoding. */
+    /**
+     * Normalize using an ASCII source escape so the Chinese suffix survives source-file encoding.
+     */
     public static String normalizeDistrictName(String raw) {
         String value = raw == null ? "" : raw.trim();
         if (!value.endsWith("\u533a")) value += "\u533a";
@@ -195,7 +281,10 @@ public final class DistrictManager extends SavedData {
         DistrictData district = districts.get(districtId);
         if (district == null || !district.parentCityId().equals(cityId)) return false;
         district.chunks().forEach(chunkIndex::remove);
-        districts.remove(districtId); setDirty(); persist(); return true;
+        districts.remove(districtId);
+        setDirty();
+        persist();
+        return true;
     }
 
     public static int stableColor(UUID id) {

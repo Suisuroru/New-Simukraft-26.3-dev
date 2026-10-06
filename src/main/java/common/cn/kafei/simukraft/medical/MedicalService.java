@@ -4,7 +4,6 @@ import common.cn.kafei.simukraft.building.MedicalBedPoiService;
 import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.building.PlacedBuildingService;
 import common.cn.kafei.simukraft.citizen.*;
-import common.cn.kafei.simukraft.citizen.CitizenPanicService;
 import common.cn.kafei.simukraft.city.CityRuntimeService;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
@@ -623,7 +622,9 @@ public final class MedicalService {
         return "medical.recovering";
     }
 
-    /** applyAdmittedStatus：把头顶状态改成当前病因。返回值表示标签是否变化。 */
+    /**
+     * applyAdmittedStatus：把头顶状态改成当前病因。返回值表示标签是否变化。
+     */
     private static boolean applyAdmittedStatus(CitizenData citizen, long currentDay) {
         String statusKey = conditionKey(citizen, currentDay);
         if (statusKey.equals(citizen.statusLabel())) {

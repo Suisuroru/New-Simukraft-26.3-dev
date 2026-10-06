@@ -139,7 +139,9 @@ public final class CitizenNavigationService {
         return queued != null && queued.intent() == MovementIntent.SELF_FEEDING;
     }
 
-    /** hasIntent: 判断该市民是否已有指定意图的排队、计算中或执行中导航。 */
+    /**
+     * hasIntent: 判断该市民是否已有指定意图的排队、计算中或执行中导航。
+     */
     public static boolean hasIntent(ServerLevel level, UUID citizenId, MovementIntent intent) {
         if (level == null || citizenId == null || intent == null) {
             return false;
@@ -160,9 +162,11 @@ public final class CitizenNavigationService {
         return queued != null && queued.intent() == intent;
     }
 
-    /** clearNonMatchingNavigation: 高优先级意图开始时清掉其它意图，避免两套路径抢控制。 */
+    /**
+     * clearNonMatchingNavigation: 高优先级意图开始时清掉其它意图，避免两套路径抢控制。
+     */
     private static void clearNonMatchingNavigation(ServerLevel level, LevelRuntime runtime, UUID citizenId,
-            CitizenEntity citizen, MovementIntent keep) {
+                                                   CitizenEntity citizen, MovementIntent keep) {
         ActiveNavigation active = runtime.active.get(citizenId);
         if (active != null && active.intent != keep) {
             runtime.active.remove(citizenId);
@@ -206,7 +210,9 @@ public final class CitizenNavigationService {
         stopInternal(level, citizenId, false);
     }
 
-    /** stopForced：死亡、卡墙救援或玩家强制调遣时连逃跑路径一起取消。 */
+    /**
+     * stopForced：死亡、卡墙救援或玩家强制调遣时连逃跑路径一起取消。
+     */
     public static void stopForced(ServerLevel level, UUID citizenId) {
         stopInternal(level, citizenId, true);
     }

@@ -33,7 +33,8 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                                          boolean canCreateCity, boolean canManageCity,
                                          List<FinanceEntry> financeEntries, List<PoiStat> poiStats,
                                          List<JobStat> jobStats, List<UpgradeTarget> upgradeTargets,
-                                         UpgradeProgress upgradeProgress, List<DistrictSummary> districts, boolean districtContext, String districtName) implements CustomPacketPayload {
+                                         UpgradeProgress upgradeProgress, List<DistrictSummary> districts,
+                                         boolean districtContext, String districtName) implements CustomPacketPayload {
     private static final int MAX_FINANCE_ENTRIES = 128;
     private static final int MAX_POI_STATS = 64;
     private static final int MAX_JOB_STATS = 128;
@@ -345,7 +346,8 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
         return UpgradeTarget.NONE;
     }
 
-    public record DistrictSummary(UUID districtId, String name, int color, int chunkCount, int coreCount, String mayorName) {
+    public record DistrictSummary(UUID districtId, String name, int color, int chunkCount, int coreCount,
+                                  String mayorName) {
         public DistrictSummary {
             name = name == null ? "" : name;
             mayorName = mayorName == null ? "" : mayorName;

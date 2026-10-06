@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
-import common.cn.kafei.simukraft.citizen.CitizenPanicService;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;

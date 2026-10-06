@@ -122,7 +122,9 @@ public final class MedicalPatientData {
         this.lastHospitalMealDay = Math.max(-1L, lastHospitalMealDay);
     }
 
-    /** shiftDays：时间回退时平移产后、住院吃饭和发病日，治疗 tick 保持不变。 */
+    /**
+     * shiftDays：时间回退时平移产后、住院吃饭和发病日，治疗 tick 保持不变。
+     */
     public boolean shiftDays(long deltaDays) {
         if (deltaDays <= 0L) {
             return false;

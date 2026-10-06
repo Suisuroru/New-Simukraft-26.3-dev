@@ -1,12 +1,7 @@
 package common.cn.kafei.simukraft.network.city.core;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.city.CityChunkManager;
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityPermissionLevel;
-import common.cn.kafei.simukraft.city.CityService;
-import common.cn.kafei.simukraft.city.DistrictData;
-import common.cn.kafei.simukraft.city.DistrictManager;
+import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;
@@ -84,9 +79,9 @@ public record CityCoreManageCityPacket(BlockPos pos, Action action, String value
     }
 
     private static void handleDistrictAction(ServerLevel level,
-                                              ServerPlayer player,
-                                              CityCoreManageCityPacket packet,
-                                              DistrictData district) {
+                                             ServerPlayer player,
+                                             CityCoreManageCityPacket packet,
+                                             DistrictData district) {
         if (!CityService.hasPermission(level, district.parentCityId(), player.getUUID(), CityPermissionLevel.MAYOR)) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.district.no_permission"));
             return;

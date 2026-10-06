@@ -1,11 +1,7 @@
 package common.cn.kafei.simukraft.block;
 
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityService;
-import common.cn.kafei.simukraft.city.DistrictData;
-import common.cn.kafei.simukraft.city.DistrictManager;
-import common.cn.kafei.simukraft.city.DistrictRole;
 import common.cn.kafei.simukraft.building.PlacedBuildingService;
+import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.network.city.core.CityCoreOpenRequestPacket;
 import common.cn.kafei.simukraft.network.toast.InfoToastService;
 import common.cn.kafei.simukraft.registry.ModBlocks;
@@ -19,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,7 +37,7 @@ public final class CityCoreBlock extends Block {
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         Vec3 origin = params.getOptionalParameter(LootContextParams.ORIGIN);
         if (origin != null && (CityService.findCityByCorePos(params.getLevel(), BlockPos.containing(origin)).isPresent()
-                || DistrictManager.get(params.getLevel()).byChunk(new net.minecraft.world.level.ChunkPos(BlockPos.containing(origin))).flatMap(d -> d.cores().stream().filter(v -> v == BlockPos.containing(origin).asLong()).findAny().map(v -> d)).isPresent())) {
+                || DistrictManager.get(params.getLevel()).byChunk(ChunkPos.containing(BlockPos.containing(origin))).flatMap(d -> d.cores().stream().filter(v -> v == BlockPos.containing(origin).asLong()).findAny().map(v -> d)).isPresent())) {
             return List.of();
         }
         return super.getDrops(state, params);
@@ -50,18 +47,18 @@ public final class CityCoreBlock extends Block {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             level.playSound(null, pos, ModSoundEvents.CITY_CORE_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-            DistrictData district = DistrictManager.get(serverLevel).byChunk(new net.minecraft.world.level.ChunkPos(pos)).orElse(null);
+            DistrictData district = DistrictManager.get(serverLevel).byChunk(ChunkPos.containing(pos)).orElse(null);
             if (district != null && district.cores().stream().noneMatch(v -> v == pos.asLong())) {
                 boolean allowed = CityService.hasPermission(serverLevel, district.parentCityId(), serverPlayer.getUUID(), common.cn.kafei.simukraft.city.CityPermissionLevel.MAYOR)
                         || district.hasPermission(serverPlayer.getUUID(), DistrictRole.OFFICIAL);
                 if (allowed && PlacedBuildingService.findByContainedPos(serverLevel, pos) == null
-                        && DistrictManager.get(serverLevel).bindCore(district.districtId(), new net.minecraft.world.level.ChunkPos(pos), pos.asLong())) {
+                        && DistrictManager.get(serverLevel).bindCore(district.districtId(), ChunkPos.containing(pos), pos.asLong())) {
                     InfoToastService.success(serverPlayer, Component.translatable("message.simukraft.district.core_bound", district.name()));
                     CityCoreOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
                 } else if (!allowed) {
                     InfoToastService.warning(serverPlayer, Component.translatable("message.simukraft.district.no_permission"));
                 }
-                return InteractionResult.sidedSuccess(level.isClientSide());
+                return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
             }
             CityCoreOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
@@ -79,7 +76,7 @@ public final class CityCoreBlock extends Block {
     @Override
     protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         CityData city = CityService.findCityByCorePos(level, pos).orElse(null);
-        DistrictData district = DistrictManager.get(serverLevel).byChunk(new net.minecraft.world.level.ChunkPos(pos)).orElse(null);
+        DistrictData district = DistrictManager.get(level).byChunk(ChunkPos.containing(pos)).orElse(null);
         boolean districtCore = district != null && district.cores().stream().anyMatch(v -> v == pos.asLong());
         if (city == null && !districtCore) {
             return;

@@ -1111,7 +1111,9 @@ public final class IndustrialWorkService {
         return new ContainerMoveTarget(Vec3.atBottomCenterOf(bestContainer), false);
     }
 
-    /** standNearDrop：在搜索半径内选离工人最近的可站立格，避免停在围栏内的第一圈。 */
+    /**
+     * standNearDrop：在搜索半径内选离工人最近的可站立格，避免停在围栏内的第一圈。
+     */
     private static BlockPos standNearDrop(ServerLevel level, BlockPos dropPos, Vec3 origin, int maxRadius) {
         int radiusLimit = Math.max(2, Math.min(maxRadius, 8));
         BlockPos best = null;

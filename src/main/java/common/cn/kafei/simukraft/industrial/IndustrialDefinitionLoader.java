@@ -15,7 +15,9 @@ import java.nio.file.Path;
 import java.util.*;
 
 public final class IndustrialDefinitionLoader {
-    /** 未写 timeoutTicks 时的默认值。短于该值视为配方显式要求超时跳过。 */
+    /**
+     * 未写 timeoutTicks 时的默认值。短于该值视为配方显式要求超时跳过。
+     */
     static final int DEFAULT_STEP_TIMEOUT_TICKS = 12_000;
     private static final int MAX_POSITIONS = 64;
     private static final int MAX_RECIPES = 64;

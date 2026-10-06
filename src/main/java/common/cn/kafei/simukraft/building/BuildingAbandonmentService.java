@@ -45,7 +45,9 @@ public final class BuildingAbandonmentService {
         persist(level, buildingId, cityId);
     }
 
-    /** noteTimeRollback：日号回退后把废弃度游标拉回当天，否则会一直跳过每日结算。 */
+    /**
+     * noteTimeRollback：日号回退后把废弃度游标拉回当天，否则会一直跳过每日结算。
+     */
     public static void noteTimeRollback(ServerLevel level, long currentDay) {
         if (level == null) {
             return;

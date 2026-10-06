@@ -516,7 +516,9 @@ public final class SimuSqliteStorage {
         return storage != null ? storage.commercial.loadUntaxedIncomeBefore(dayExclusive) : Map.of();
     }
 
-    /** shiftCommercialIncomeDays：日号回退时平移商业收入所属日。 */
+    /**
+     * shiftCommercialIncomeDays：日号回退时平移商业收入所属日。
+     */
     public static void shiftCommercialIncomeDays(ServerLevel level, long deltaDays) {
         SimuSqliteStorage storage = openSafely(level);
         if (storage != null && !storage.database.isDegraded()) {
@@ -524,7 +526,9 @@ public final class SimuSqliteStorage {
         }
     }
 
-    /** markCommercialIncomeTaxCollected: 标记指定城市在日期前的企业税已结算。 */
+    /**
+     * markCommercialIncomeTaxCollected: 标记指定城市在日期前的企业税已结算。
+     */
     public static boolean markCommercialIncomeTaxCollected(ServerLevel level, UUID cityId, long dayExclusive) {
         SimuSqliteStorage storage = openSafely(level);
         return storage != null && !storage.database.isDegraded() && storage.commercial.markIncomeTaxCollectedBefore(cityId, dayExclusive);

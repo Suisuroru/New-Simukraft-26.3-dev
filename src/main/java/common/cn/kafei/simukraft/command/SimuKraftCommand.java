@@ -10,8 +10,6 @@ import common.cn.kafei.simukraft.building.BuildingCatalog;
 import common.cn.kafei.simukraft.building.BuildingPackageCatalog;
 import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.city.*;
-import common.cn.kafei.simukraft.city.CityLevelDefinition;
-import common.cn.kafei.simukraft.city.CityUpgradeService;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiService;
@@ -141,15 +139,15 @@ public final class SimuKraftCommand {
                                                         context.getSource(),
                                                         DoubleArgumentType.getDouble(context, "amount"),
                                                         EntityArgument.getPlayer(context, "player")))))))
-        .then(Commands.literal("lv")
-                        .requires(source -> source.hasPermission(2))
+                .then(Commands.literal("lv")
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("level", IntegerArgumentType.integer(
                                         CityLevelDefinition.MIN_LEVEL,
                                         CityLevelDefinition.MAX_LEVEL))
                                 .executes(context -> upgradeSelfCity(
                                         context.getSource(),
                                         IntegerArgumentType.getInteger(context, "level")))))
-);
+        );
         root.then(Commands.literal("path")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("test")
@@ -816,7 +814,7 @@ public final class SimuKraftCommand {
             source.sendFailure(Component.translatable("message.simukraft.command.city_funds.player_required"));
             return 0;
         }
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         Optional<CityData> city = CityService.findPlayerCity(level, player.getUUID());
         if (city.isEmpty()) {
             source.sendFailure(Component.translatable("message.simukraft.command.city_required"));

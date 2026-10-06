@@ -1,15 +1,5 @@
 package common.cn.kafei.simukraft.network.city;
 
-import common.cn.kafei.simukraft.city.CityChunkManager;
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityMemberData;
-import common.cn.kafei.simukraft.city.CityLevelDefinitionLoader;
-import common.cn.kafei.simukraft.city.CityPermissionLevel;
-import common.cn.kafei.simukraft.city.CityPopulationStats;
-import common.cn.kafei.simukraft.city.DistrictManager;
-import common.cn.kafei.simukraft.city.DistrictData;
-import common.cn.kafei.simukraft.city.DistrictRole;
-import common.cn.kafei.simukraft.city.CityService;
 import common.cn.kafei.simukraft.building.PlacedBuildingService;
 import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.network.city.core.CityCoreOpenResponsePacket;
@@ -142,7 +132,8 @@ public final class CityNetworkViewFactory {
         List<CityCoreMapResponsePacket.DistrictEntry> districts = DistrictManager.get(level).all().stream()
                 .filter(district -> district.parentCityId().equals(city.cityId()))
                 .map(district -> new CityCoreMapResponsePacket.DistrictEntry(district.districtId(), district.name(), district.color(), district.chunks().stream().map(value -> {
-                    ChunkPos chunk = new ChunkPos(value); return new CityCoreMapResponsePacket.ChunkEntry(chunk.x, chunk.z);
+                    ChunkPos chunk = ChunkPos.unpack(value);
+                    return new CityCoreMapResponsePacket.ChunkEntry(chunk.x(), chunk.z());
                 }).toList()))
                 .toList();
         return new CityCoreMapResponsePacket(pos, city.cityId(), city.cityName(), city.funds(), city.cityLevel(), city.members().size(), permissionLevel, CityService.canManageCity(city, viewerId), centerChunk.x(), centerChunk.z(), entries, districts);

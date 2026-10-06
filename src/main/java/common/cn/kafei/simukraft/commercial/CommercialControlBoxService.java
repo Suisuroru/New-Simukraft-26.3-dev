@@ -205,7 +205,9 @@ public final class CommercialControlBoxService {
         return level != null && pos != null && level.isLoaded(pos) && level.getBlockState(pos).is(ModBlocks.COMMERCIAL_CONTROL_BOX.get());
     }
 
-    /** synchronizeBoxMetadata：按已放置建筑和商业定义回写盒子缓存，界面和工作 tick 共用。 */
+    /**
+     * synchronizeBoxMetadata：按已放置建筑和商业定义回写盒子缓存，界面和工作 tick 共用。
+     */
     static void synchronizeBoxMetadata(ServerLevel level, CommercialBoxData data, PlacedBuildingRecord building, CommercialDefinition definition) {
         if (data == null) {
             return;

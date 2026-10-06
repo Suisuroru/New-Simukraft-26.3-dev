@@ -154,7 +154,7 @@ public final class CitizenSqliteRepository {
             citizenStatement.setString(14, citizen.getStringOr("SkinPath", ""));
             SqliteNbtHelper.setNullableString(citizenStatement, 15, NbtUuid.toStringOrNull(citizen, "CityId"));
             SqliteNbtHelper.setNullableString(citizenStatement, 16, NbtUuid.toStringOrNull(citizen, "HomeId"));
-            SqliteNbtHelper.setNullableString(citizenStatement, 17, citizen.hasUUID("HomeId") ? citizen.getUUID("HomeId").toString() : null);
+            SqliteNbtHelper.putNullableUuid(citizen, "DistrictId", citizen.getStringOr("district_id", ""));
             SqliteNbtHelper.setNullableString(citizenStatement, 17, NbtUuid.toStringOrNull(citizen, "WorkplaceId"));
             if (citizen.contains("WorkplacePos")) {
                 citizenStatement.setLong(19, citizen.getLongOr("WorkplacePos", 0L));

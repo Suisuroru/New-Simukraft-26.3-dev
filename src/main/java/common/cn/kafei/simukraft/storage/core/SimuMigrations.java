@@ -222,11 +222,22 @@ public final class SimuMigrations {
         }
     }
 
-    /** v8: district tables and ownership columns for databases created before districts existed. */
+    /**
+     * v8: district tables and ownership columns for databases created before districts existed.
+     */
     private static final class DistrictTables implements Migration {
-        @Override public int version() { return 8; }
-        @Override public String description() { return "add city district tables and ownership columns"; }
-        @Override public void apply(Connection connection) throws SQLException {
+        @Override
+        public int version() {
+            return 8;
+        }
+
+        @Override
+        public String description() {
+            return "add city district tables and ownership columns";
+        }
+
+        @Override
+        public void apply(Connection connection) throws SQLException {
             try (Statement s = connection.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS districts(district_id TEXT PRIMARY KEY, parent_city_id TEXT NOT NULL, name TEXT NOT NULL, color INTEGER NOT NULL, dimension_id TEXT NOT NULL DEFAULT 'minecraft:overworld', FOREIGN KEY(parent_city_id) REFERENCES cities(city_id) ON DELETE CASCADE)");
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS district_chunks(district_id TEXT NOT NULL, chunk_long INTEGER NOT NULL, dimension_id TEXT NOT NULL DEFAULT 'minecraft:overworld', PRIMARY KEY(district_id, chunk_long), FOREIGN KEY(district_id) REFERENCES districts(district_id) ON DELETE CASCADE)");
@@ -239,11 +250,14 @@ public final class SimuMigrations {
             addColumnIfMissing(connection, "citizens", "district_id", "TEXT");
             addColumnIfMissing(connection, "building_tasks", "district_id", "TEXT");
         }
+
         private static void addColumnIfMissing(Connection c, String table, String column, String definition) throws SQLException {
             try (Statement s = c.createStatement(); ResultSet rs = s.executeQuery("PRAGMA table_info(" + table + ")")) {
                 while (rs.next()) if (column.equalsIgnoreCase(rs.getString("name"))) return;
             }
-            try (Statement s = c.createStatement()) { s.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition); }
+            try (Statement s = c.createStatement()) {
+                s.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+            }
         }
     }
 }

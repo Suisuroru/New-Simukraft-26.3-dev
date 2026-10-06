@@ -8,6 +8,7 @@
     "MixinContainerStackLimit",
     "MixinExtraCodecsStackRange",
     "MixinCoinSlotLimit",
+    "MixinCoinSingleSlotLimit",
     "MixinChunkMap",
     "MixinChunkMapAccessor",
     "MixinChestMenu",

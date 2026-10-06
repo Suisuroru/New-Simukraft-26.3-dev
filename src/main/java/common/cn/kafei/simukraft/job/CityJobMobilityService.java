@@ -2,13 +2,6 @@ package common.cn.kafei.simukraft.job;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenPanicService;
-import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
-import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
 import common.cn.kafei.simukraft.city.CityRuntimeService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.entity.CitizenEntity;

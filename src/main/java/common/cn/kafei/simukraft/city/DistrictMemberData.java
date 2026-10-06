@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.city;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.UUID;
@@ -16,21 +17,35 @@ public final class DistrictMemberData {
     }
 
     public static DistrictMemberData fromTag(CompoundTag tag) {
-        return new DistrictMemberData(tag.getUUID("PlayerId"), tag.getString("PlayerName"),
-                DistrictRole.fromPower(tag.getInt("Role")));
+        return new DistrictMemberData(NbtUuid.readOrNull(tag, "PlayerId"), tag.getString("PlayerName").get(),
+                DistrictRole.fromPower(tag.getInt("Role").get()));
     }
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("PlayerId", playerId);
+        NbtUuid.put(tag, "PlayerId", playerId);
         tag.putString("PlayerName", playerName);
         tag.putInt("Role", role.power());
         return tag;
     }
 
-    public UUID playerId() { return playerId; }
-    public String playerName() { return playerName; }
-    public DistrictRole role() { return role; }
-    public void setPlayerName(String value) { if (value != null && !value.isBlank()) playerName = value; }
-    public void setRole(DistrictRole value) { if (value != null) role = value; }
+    public UUID playerId() {
+        return playerId;
+    }
+
+    public String playerName() {
+        return playerName;
+    }
+
+    public DistrictRole role() {
+        return role;
+    }
+
+    public void setPlayerName(String value) {
+        if (value != null && !value.isBlank()) playerName = value;
+    }
+
+    public void setRole(DistrictRole value) {
+        if (value != null) role = value;
+    }
 }

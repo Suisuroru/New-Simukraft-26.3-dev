@@ -1,6 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
 import common.cn.kafei.simukraft.SimuKraft;
+import common.cn.kafei.simukraft.util.NbtUuid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
@@ -12,7 +13,9 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-/** SQLite persistence for district metadata. The NBT shape mirrors DistrictData.toTag(). */
+/**
+ * SQLite persistence for district metadata. The NBT shape mirrors DistrictData.toTag().
+ */
 public final class DistrictSqliteRepository {
     private final SimuSqliteDatabase database;
 
@@ -29,23 +32,45 @@ public final class DistrictSqliteRepository {
              PreparedStatement chunk = connection.prepareStatement("INSERT INTO district_chunks(district_id, chunk_long, dimension_id) VALUES(?, ?, ?)");
              PreparedStatement core = connection.prepareStatement("INSERT INTO district_cores(district_id, pos_long, dimension_id) VALUES(?, ?, ?)");
              PreparedStatement member = connection.prepareStatement("INSERT INTO district_members(district_id, player_id, player_name, role, dimension_id) VALUES(?, ?, ?, ?, ?)");) {
-            ListTag districts = tag.getList("Districts", CompoundTag.TAG_COMPOUND);
+            ListTag districts = tag.getList("Districts").get();
             for (int i = 0; i < districts.size(); i++) {
-                CompoundTag value = districts.getCompound(i);
-                String districtId = value.getUUID("DistrictId").toString();
-                district.setString(1, districtId); district.setString(2, value.getUUID("ParentCityId").toString());
-                district.setString(3, value.getString("Name")); district.setInt(4, value.getInt("Color")); district.setString(5, dimensionId); district.addBatch();
-                ListTag chunks = value.getList("Chunks", LongTag.TAG_LONG);
-                for (int j = 0; j < chunks.size(); j++) { chunk.setString(1, districtId); chunk.setLong(2, ((LongTag) chunks.get(j)).getAsLong()); chunk.setString(3, dimensionId); chunk.addBatch(); }
-                ListTag cores = value.getList("Cores", LongTag.TAG_LONG);
-                for (int j = 0; j < cores.size(); j++) { core.setString(1, districtId); core.setLong(2, ((LongTag) cores.get(j)).getAsLong()); core.setString(3, dimensionId); core.addBatch(); }
-                ListTag members = value.getList("Members", CompoundTag.TAG_COMPOUND);
+                CompoundTag value = districts.getCompound(i).get();
+                String districtId = NbtUuid.readOrNull(value, "DistrictId").toString();
+                district.setString(1, districtId);
+                district.setString(2, NbtUuid.readOrNull(value, "ParentCityId").toString());
+                district.setString(3, value.getString("Name").get());
+                district.setInt(4, value.getInt("Color").get());
+                district.setString(5, dimensionId);
+                district.addBatch();
+                ListTag chunks = value.getList("Chunks").get();
+                for (int j = 0; j < chunks.size(); j++) {
+                    chunk.setString(1, districtId);
+                    chunk.setLong(2, ((LongTag) chunks.get(j)).longValue());
+                    chunk.setString(3, dimensionId);
+                    chunk.addBatch();
+                }
+                ListTag cores = value.getList("Cores").get();
+                for (int j = 0; j < cores.size(); j++) {
+                    core.setString(1, districtId);
+                    core.setLong(2, ((LongTag) cores.get(j)).longValue());
+                    core.setString(3, dimensionId);
+                    core.addBatch();
+                }
+                ListTag members = value.getList("Members").get();
                 for (int j = 0; j < members.size(); j++) {
-                    CompoundTag m = members.getCompound(j); member.setString(1, districtId); member.setString(2, m.getUUID("PlayerId").toString());
-                    member.setString(3, m.getString("PlayerName")); member.setInt(4, m.getInt("Role")); member.setString(5, dimensionId); member.addBatch();
+                    CompoundTag m = members.getCompound(j).get();
+                    member.setString(1, districtId);
+                    member.setString(2, NbtUuid.readOrNull(m, "PlayerId").toString());
+                    member.setString(3, m.getString("PlayerName").get());
+                    member.setInt(4, m.getInt("Role").get());
+                    member.setString(5, dimensionId);
+                    member.addBatch();
                 }
             }
-            district.executeBatch(); chunk.executeBatch(); core.executeBatch(); member.executeBatch();
+            district.executeBatch();
+            chunk.executeBatch();
+            core.executeBatch();
+            member.executeBatch();
         }
     }
 
@@ -57,10 +82,16 @@ public final class DistrictSqliteRepository {
             statement.setString(1, dimensionId);
             try (ResultSet rows = statement.executeQuery()) {
                 while (rows.next()) {
-                    CompoundTag tag = new CompoundTag(); UUID id = UUID.fromString(rows.getString("district_id"));
-                    tag.putUUID("DistrictId", id); tag.putUUID("ParentCityId", UUID.fromString(rows.getString("parent_city_id")));
-                    tag.putString("Name", rows.getString("name")); tag.putInt("Color", rows.getInt("color"));
-                    tag.put("Chunks", new ListTag()); tag.put("Cores", new ListTag()); tag.put("Members", new ListTag()); districts.put(id, tag);
+                    CompoundTag tag = new CompoundTag();
+                    UUID id = UUID.fromString(rows.getString("district_id"));
+                    NbtUuid.put(tag, "DistrictId", id);
+                    NbtUuid.put(tag, "ParentCityId", UUID.fromString(rows.getString("parent_city_id")));
+                    tag.putString("Name", rows.getString("name"));
+                    tag.putInt("Color", rows.getInt("color"));
+                    tag.put("Chunks", new ListTag());
+                    tag.put("Cores", new ListTag());
+                    tag.put("Members", new ListTag());
+                    districts.put(id, tag);
                 }
             }
             loadLongs(connection, "SELECT district_id, chunk_long FROM district_chunks WHERE dimension_id = ?", dimensionId, districts, "Chunks");
@@ -69,15 +100,24 @@ public final class DistrictSqliteRepository {
                 members.setString(1, dimensionId);
                 try (ResultSet rows = members.executeQuery()) {
                     while (rows.next()) {
-                        CompoundTag district = districts.get(UUID.fromString(rows.getString("district_id"))); if (district == null) continue;
-                        CompoundTag member = new CompoundTag(); member.putUUID("PlayerId", UUID.fromString(rows.getString("player_id")));
-                        member.putString("PlayerName", rows.getString("player_name")); member.putInt("Role", rows.getInt("role")); district.getList("Members", CompoundTag.TAG_COMPOUND).add(member);
+                        CompoundTag district = districts.get(UUID.fromString(rows.getString("district_id")));
+                        if (district == null) continue;
+                        CompoundTag member = new CompoundTag();
+                        NbtUuid.put(member, "PlayerId", UUID.fromString(rows.getString("player_id")));
+                        member.putString("PlayerName", rows.getString("player_name"));
+                        member.putInt("Role", rows.getInt("role"));
+                        district.getList("Members").get().add(member);
                     }
                 }
             }
-            ListTag list = new ListTag(); districts.values().forEach(list::add); result.put("Districts", list); return list.isEmpty() ? null : result;
+            ListTag list = new ListTag();
+            districts.values().forEach(list::add);
+            result.put("Districts", list);
+            return list.isEmpty() ? null : result;
         } catch (SQLException | IllegalArgumentException exception) {
-            database.markDegraded("loadAll(districts)", exception); SimuKraft.LOGGER.error("Failed to load districts from SQLite", exception); return null;
+            database.markDegraded("loadAll(districts)", exception);
+            SimuKraft.LOGGER.error("Failed to load districts from SQLite", exception);
+            return null;
         }
     }
 
@@ -85,7 +125,10 @@ public final class DistrictSqliteRepository {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, dimensionId);
             try (ResultSet rows = statement.executeQuery()) {
-                while (rows.next()) { CompoundTag district = districts.get(UUID.fromString(rows.getString("district_id"))); if (district != null) district.getList(key, LongTag.TAG_LONG).add(LongTag.valueOf(rows.getLong(2))); }
+                while (rows.next()) {
+                    CompoundTag district = districts.get(UUID.fromString(rows.getString("district_id")));
+                    if (district != null) district.getList(key).get().add(LongTag.valueOf(rows.getLong(2)));
+                }
             }
         }
     }

@@ -33,7 +33,9 @@ public final class CityUpgradeService {
     /**
      * tick: 在服务端主线程完成已到期的城市升级任务并同步解锁结果。
      */
-    /** debugSetLevel: 供管理员调试命令直接设置城市等级，不扣除资源也不等待升级耗时。 */
+    /**
+     * debugSetLevel: 供管理员调试命令直接设置城市等级，不扣除资源也不等待升级耗时。
+     */
     public static boolean debugSetLevel(ServerLevel level, CityData city, int targetLevel) {
         if (level == null || city == null
                 || targetLevel < CityLevelDefinition.MIN_LEVEL
@@ -60,6 +62,7 @@ public final class CityUpgradeService {
             return false;
         }
     }
+
     public static void tick(ServerLevel level) {
         if (level == null || SimuSqliteStorage.isDegraded(level)) {
             return;

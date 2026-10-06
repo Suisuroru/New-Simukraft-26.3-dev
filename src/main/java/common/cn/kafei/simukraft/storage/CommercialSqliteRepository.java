@@ -199,7 +199,9 @@ public final class CommercialSqliteRepository {
         return Map.copyOf(result);
     }
 
-    /** shiftIncomeDays：只平移该维度城市的收入日，已征税标记保持不变，事务交给写队列。 */
+    /**
+     * shiftIncomeDays：只平移该维度城市的收入日，已征税标记保持不变，事务交给写队列。
+     */
     public void shiftIncomeDays(String dimensionId, long deltaDays) {
         if (dimensionId == null || dimensionId.isBlank() || deltaDays <= 0L || database.isDegraded()) {
             return;
@@ -220,7 +222,9 @@ public final class CommercialSqliteRepository {
         }
     }
 
-    /** markIncomeTaxCollectedBefore: 标记指定城市在日期之前的商业收入已完成企业税结算。在写线程执行并同步等待结果。 */
+    /**
+     * markIncomeTaxCollectedBefore: 标记指定城市在日期之前的商业收入已完成企业税结算。在写线程执行并同步等待结果。
+     */
     public boolean markIncomeTaxCollectedBefore(UUID cityId, long dayExclusive) {
         if (cityId == null || dayExclusive <= 1L) {
             return false;

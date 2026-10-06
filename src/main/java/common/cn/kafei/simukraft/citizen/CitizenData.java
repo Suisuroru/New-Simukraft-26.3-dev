@@ -95,7 +95,7 @@ public final class CitizenData {
         data.npcId = tag.contains("NpcId") ? tag.getIntOr("NpcId", 0) : -1;
         data.skinPath = tag.getStringOr("SkinPath", "");
         data.cityId = NbtUuid.readOrNull(tag, "CityId");
-        data.districtId = tag.hasUUID("DistrictId") ? tag.getUUID("DistrictId") : null;
+        data.districtId = NbtUuid.readOrNull(tag, "DistrictId");
         data.homeId = NbtUuid.readOrNull(tag, "HomeId");
         data.workplaceId = NbtUuid.readOrNull(tag, "WorkplaceId");
         data.workplacePos = tag.contains("WorkplacePos") ? BlockPos.of(tag.getLongOr("WorkplacePos", 0L)) : null;
@@ -144,7 +144,7 @@ public final class CitizenData {
             NbtUuid.put(tag, "CityId", cityId);
         }
         if (districtId != null) {
-            tag.putUUID("DistrictId", districtId);
+            NbtUuid.put(tag, "DistrictId", districtId);
         }
         if (homeId != null) {
             NbtUuid.put(tag, "HomeId", homeId);

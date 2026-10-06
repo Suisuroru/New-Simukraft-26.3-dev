@@ -136,9 +136,9 @@ public class CitizenEntity extends PathfinderMob {
             addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0, false, false));
             if (isAlive()) {
                 if (wasSleeping) {
-                    CitizenBedSleepService.wakeUp(serverLevel, this, position());
+                    CitizenBedSleepService.wakeUp(level, this, position());
                 }
-                CitizenPanicService.onPlayerAttack(serverLevel, this, source);
+                CitizenPanicService.onPlayerAttack(level, this, source);
                 CitizenData data = CitizenManager.get(level).getCitizen(getUUID()).orElse(null);
                 if (data != null) {
                     data.setHealth(getHealth());
@@ -421,7 +421,9 @@ public class CitizenEntity extends PathfinderMob {
         this.stayInPlace = stayInPlace;
     }
 
-    /** isPanicking：原版受击记忆窗口尚未结束。 */
+    /**
+     * isPanicking：原版受击记忆窗口尚未结束。
+     */
     public boolean isPanicking() {
         return !level().isClientSide()
                 && level() instanceof ServerLevel serverLevel
@@ -429,13 +431,17 @@ public class CitizenEntity extends PathfinderMob {
                 && serverLevel.getGameTime() <= panicUntilGameTime;
     }
 
-    /** startPanic：记录攻击者并刷新逃跑窗口，不写入实体 NBT。 */
+    /**
+     * startPanic：记录攻击者并刷新逃跑窗口，不写入实体 NBT。
+     */
     public void startPanic(UUID threatId, long untilGameTime) {
         this.panicThreatId = threatId;
         this.panicUntilGameTime = untilGameTime;
     }
 
-    /** clearPanic：结束逃跑窗口并关掉冲刺动画。 */
+    /**
+     * clearPanic：结束逃跑窗口并关掉冲刺动画。
+     */
     public void clearPanic() {
         this.panicUntilGameTime = 0L;
         this.panicThreatId = null;
@@ -444,7 +450,9 @@ public class CitizenEntity extends PathfinderMob {
         }
     }
 
-    /** getPanicThreatId：返回当前逃跑要远离的玩家 UUID。 */
+    /**
+     * getPanicThreatId：返回当前逃跑要远离的玩家 UUID。
+     */
     public UUID getPanicThreatId() {
         return panicThreatId;
     }
