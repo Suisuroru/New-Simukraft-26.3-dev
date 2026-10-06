@@ -5,11 +5,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** MineralDrillingClientTextResolver: 在物理客户端将同步的物品 ID 解析为本地化显示名。 */
-@OnlyIn(Dist.CLIENT)
 final class MineralDrillingClientTextResolver {
     private MineralDrillingClientTextResolver() {
     }

@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import net.minecraft.nbt.CompoundTag;
 
 import java.sql.PreparedStatement;
@@ -20,7 +22,7 @@ final class SqliteNbtHelper {
 
     static void putNullableUuid(CompoundTag tag, String key, String value) {
         if (value != null && !value.isBlank()) {
-            tag.putUUID(key, java.util.UUID.fromString(value));
+            NbtUuid.put(tag, key, java.util.UUID.fromString(value));
         }
     }
 }

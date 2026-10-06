@@ -54,7 +54,7 @@ public final class CityNetworkViewFactory {
         if (level != null) {
             CityChunkManager chunkManager = CityChunkManager.get(level);
             cityChunkCount = chunkManager.getCityChunks(data.cityId()).size();
-            cityEnclaveCount = chunkManager.countEnclaves(data.cityId(), new ChunkPos(data.cityCorePos()).toLong());
+            cityEnclaveCount = chunkManager.countEnclaves(data.cityId(), ChunkPos.containing(data.cityCorePos()).pack());
         }
         List<CityCoreOpenResponsePacket.UpgradeTarget> upgradeTargets = CityCoreOpenResponsePacket.UpgradeTarget.from(
                 CityLevelDefinitionLoader.INSTANCE.futureLevels(data.cityLevel(), CityCoreOpenResponsePacket.MAX_UPGRADE_TARGETS));
@@ -112,11 +112,11 @@ public final class CityNetworkViewFactory {
         Set<Long> chunks = chunkManager.getCityChunks(city.cityId());
         List<CityCoreMapResponsePacket.ChunkEntry> entries = new ArrayList<>(chunks.size());
         for (long chunkLong : chunks) {
-            ChunkPos chunkPos = new ChunkPos(chunkLong);
-            entries.add(new CityCoreMapResponsePacket.ChunkEntry(chunkPos.x, chunkPos.z));
+            ChunkPos chunkPos = ChunkPos.unpack(chunkLong);
+            entries.add(new CityCoreMapResponsePacket.ChunkEntry(chunkPos.x(), chunkPos.z()));
         }
-        ChunkPos centerChunk = new ChunkPos(pos);
+        ChunkPos centerChunk = ChunkPos.containing(pos);
         CityPermissionLevel permissionLevel = CityService.getPlayerPermission(city, viewerId);
-        return new CityCoreMapResponsePacket(pos, city.cityId(), city.cityName(), city.funds(), city.cityLevel(), city.members().size(), permissionLevel, CityService.canManageCity(city, viewerId), centerChunk.x, centerChunk.z, entries);
+        return new CityCoreMapResponsePacket(pos, city.cityId(), city.cityName(), city.funds(), city.cityLevel(), city.members().size(), permissionLevel, CityService.canManageCity(city, viewerId), centerChunk.x(), centerChunk.z(), entries);
     }
 }

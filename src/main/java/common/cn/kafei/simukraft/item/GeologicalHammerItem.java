@@ -44,10 +44,8 @@ public final class GeologicalHammerItem extends Item {
             ItemTags.IRON_TOOL_MATERIALS
     );
 
-    public GeologicalHammerItem() {
-        super(new Item.Properties()
-                .stacksTo(1)
-                .pickaxe(HAMMER_MATERIAL, 1.0F, -2.8F));
+    public GeologicalHammerItem(Properties properties) {
+        super(properties.stacksTo(1).pickaxe(HAMMER_MATERIAL, 1.0F, -2.8F));
     }
 
     /** appendHoverText: 在物品提示中显示地质锤的叙述性描述。 */

@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.controlbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.building.BuildingIntegrityUi;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
@@ -30,8 +30,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.stream.Collectors;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class ResidentialControlBoxScreenOpener {
     private static final int PANEL_WIDTH = 320;
     private static final int PANEL_HEIGHT = 208;
@@ -45,7 +43,7 @@ public final class ResidentialControlBoxScreenOpener {
     }
 
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new ResidentialControlBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new ResidentialControlBoxOpenRequestPacket(pos));
     }
 
     public static void open(ResidentialControlBoxOpenResponsePacket packet) {
@@ -57,7 +55,7 @@ public final class ResidentialControlBoxScreenOpener {
             BuildingBoundsRenderer.setBuildingBoundsVisible(packet.controlBoxPos(), null, false);
         }
         openedControlBoxPos = packet.controlBoxPos().immutable();
-        minecraft.execute(() -> minecraft.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty())));
     }
 
     public static void refreshIfOpen(ResidentialControlBoxOpenResponsePacket packet) {
@@ -67,8 +65,8 @@ public final class ResidentialControlBoxScreenOpener {
         }
         openedControlBoxPos = packet.controlBoxPos().immutable();
         minecraft.execute(() -> {
-            if (openedControlBoxPos != null && openedControlBoxPos.equals(packet.controlBoxPos()) && minecraft.screen instanceof ResidentialControlBoxScreen) {
-                minecraft.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty()));
+            if (openedControlBoxPos != null && openedControlBoxPos.equals(packet.controlBoxPos()) && minecraft.gui.screen() instanceof ResidentialControlBoxScreen) {
+                minecraft.gui.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty()));
             }
         });
     }
@@ -252,26 +250,26 @@ public final class ResidentialControlBoxScreenOpener {
         BuildingBoundsRenderer.setBuildingBoundsVisible(packet.controlBoxPos(), bounds, packet.residentialPoiPositions(), next);
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty()));
+            minecraft.gui.setScreen(new ResidentialControlBoxScreen(createUi(packet), Component.empty()));
         }
     }
 
     private static void demolish(ResidentialControlBoxOpenResponsePacket packet) {
         BuildingBoundsRenderer.setBuildingBoundsVisible(packet.controlBoxPos(), null, false);
-        PacketDistributor.sendToServer(new ResidentialControlBoxDemolishPacket(packet.controlBoxPos()));
+        ClientPacketDistributor.sendToServer(new ResidentialControlBoxDemolishPacket(packet.controlBoxPos()));
     }
 
     private static void occupancy(ResidentialControlBoxOpenResponsePacket packet, ResidentialControlBoxOccupancyPacket.Action action) {
-        PacketDistributor.sendToServer(new ResidentialControlBoxOccupancyPacket(packet.controlBoxPos(), action));
+        ClientPacketDistributor.sendToServer(new ResidentialControlBoxOccupancyPacket(packet.controlBoxPos(), action));
     }
 
     private static void repair(ResidentialControlBoxOpenResponsePacket packet) {
-        PacketDistributor.sendToServer(new ResidentialControlBoxOccupancyPacket(packet.controlBoxPos(), ResidentialControlBoxOccupancyPacket.Action.REPAIR_BUILDING));
+        ClientPacketDistributor.sendToServer(new ResidentialControlBoxOccupancyPacket(packet.controlBoxPos(), ResidentialControlBoxOccupancyPacket.Action.REPAIR_BUILDING));
     }
 
     private static void close() {
         openedControlBoxPos = null;
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static final class ResidentialControlBoxScreen extends ModularUIScreen {
@@ -283,7 +281,7 @@ public final class ResidentialControlBoxScreenOpener {
         public void removed() {
             super.removed();
             Minecraft minecraft = Minecraft.getInstance();
-            if (!(minecraft.screen instanceof ResidentialControlBoxScreen)) {
+            if (!(minecraft.gui.screen() instanceof ResidentialControlBoxScreen)) {
                 openedControlBoxPos = null;
             }
         }

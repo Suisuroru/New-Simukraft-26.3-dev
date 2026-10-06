@@ -3,11 +3,8 @@ package common.cn.kafei.simukraft.commercial;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
-
 
 final class CommercialTradeTabStrip {
     static final int HIT_X = 5;
@@ -21,7 +18,6 @@ final class CommercialTradeTabStrip {
     }
 
     /** render: 绘制交易列表顶部的分类 Tab。 */
-    @OnlyIn(Dist.CLIENT)
     static void render(GUIContext guiContext, Font font, int left, int top, CommercialTradeOfferTab activeTab) {
         CommercialTradeOfferTab[] tabs = CommercialTradeOfferTab.values();
         for (int i = 0; i < tabs.length; i++) {
@@ -41,7 +37,6 @@ final class CommercialTradeTabStrip {
         return null;
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static void renderTab(GUIContext guiContext, Font font, int left, int top, CommercialTradeOfferTab tab, int index, boolean active) {
         int x = tabX(left, index);
         int y = top + HIT_Y;
@@ -80,7 +75,6 @@ final class CommercialTradeTabStrip {
         return baseWidth + (index < HIT_WIDTH % tabCount ? 1 : 0);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static String fitText(Font font, String text, int maxWidth) {
         if (font.width(text) <= maxWidth) {
             return text;

@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -25,7 +23,6 @@ import java.util.concurrent.Executors;
  * 客户端地图管理器。
  * 只扫描客户端已经加载的 FULL chunk，并将结果写入本地 region 缓存。
  */
-@OnlyIn(Dist.CLIENT)
 public class SimuMapManager {
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -138,8 +135,8 @@ public class SimuMapManager {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player != null) {
             instance.forceScanArea(
-                    minecraft.player.chunkPosition().x,
-                    minecraft.player.chunkPosition().z,
+                    minecraft.player.chunkPosition().x(),
+                    minecraft.player.chunkPosition().z(),
                     instance.getEffectiveScanRadius());
         }
         instance.forceRenderAll();
@@ -265,7 +262,7 @@ public class SimuMapManager {
         }
 
         updateScope(SimuMapStorage.getCurrentWorldId(), level.dimension());
-        scanLoadedChunk(level, chunk, chunk.getPos().x, chunk.getPos().z, false);
+        scanLoadedChunk(level, chunk, chunk.getPos().x(), chunk.getPos().z(), false);
     }
 
     /** onClientChunkUnloaded: 卸载后允许下次加载重新采样，建筑变化能反映到地图。 */
@@ -273,7 +270,7 @@ public class SimuMapManager {
         if (chunkPos == null) {
             return;
         }
-        scannedAtTick.remove(chunkPos.toLong());
+        scannedAtTick.remove(chunkPos.pack());
     }
 
     private void updateScope(String worldId, ResourceKey<Level> dimension) {
@@ -328,8 +325,8 @@ public class SimuMapManager {
             return;
         }
 
-        int playerChunkX = player.chunkPosition().x;
-        int playerChunkZ = player.chunkPosition().z;
+        int playerChunkX = player.chunkPosition().x();
+        int playerChunkZ = player.chunkPosition().z();
         int scanRadiusNow = getEffectiveScanRadius();
         if (scanCursorRadius != scanRadiusNow) {
             resetScanCursor(scanRadiusNow);
@@ -365,7 +362,7 @@ public class SimuMapManager {
     }
 
     private boolean scanLoadedChunk(Level level, ChunkAccess chunk, int chunkX, int chunkZ, boolean force) {
-        long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+        long chunkLong = ChunkPos.pack(chunkX, chunkZ);
         if (!force && !shouldScanChunk(chunkLong)) {
             return false;
         }

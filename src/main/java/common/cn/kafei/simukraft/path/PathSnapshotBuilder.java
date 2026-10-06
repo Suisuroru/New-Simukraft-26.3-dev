@@ -105,8 +105,8 @@ final class PathSnapshotBuilder {
         Long2ObjectOpenHashMap<VoxelShape> shapes = new Long2ObjectOpenHashMap<>();
         boolean complete = true;
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-        int scanMinY = Math.max(level.getMinBuildHeight(), bounds.minY() - 1);
-        int scanMaxY = Math.min(level.getMaxBuildHeight() - 1, bounds.maxY() + 1);
+        int scanMinY = Math.max(level.getMinY(), bounds.minY() - 1);
+        int scanMaxY = Math.min(level.getMaxY() + 1 - 1, bounds.maxY() + 1);
         for (int x = bounds.minX(); x <= bounds.maxX(); x++) {
             for (int z = bounds.minZ(); z <= bounds.maxZ(); z++) {
                 mutable.set(x, start.getY(), z);
@@ -120,7 +120,7 @@ final class PathSnapshotBuilder {
                 }
             }
         }
-        return new ChunkDataCapture(states, shapes, bounds, level.dimension().location(), level.getGameTime(), complete);
+        return new ChunkDataCapture(states, shapes, bounds, level.dimension().identifier(), level.getGameTime(), complete);
     }
 
     /** captureSection: 在主线程冻结一个区段的方块状态与实际碰撞形状。 */
@@ -146,7 +146,7 @@ final class PathSnapshotBuilder {
     static ChunkDataCapture composeCapture(ServerLevel level, SnapshotBounds bounds,
                                            Long2ObjectOpenHashMap<SectionDataCapture> sections, boolean complete) {
         return new ChunkDataCapture(null, null, sections, bounds,
-                level.dimension().location(), level.getGameTime(), complete);
+                level.dimension().identifier(), level.getGameTime(), complete);
     }
 
     /** captureBlock: 省略空气和空碰撞，保留异步构建所需的完整非空气状态。 */
@@ -246,8 +246,8 @@ final class PathSnapshotBuilder {
         int maxX = Math.min(Math.max(start.getX(), target.getX()) + HORIZONTAL_PADDING, start.getX() + safeRadius);
         int minZ = Math.max(Math.min(start.getZ(), target.getZ()) - HORIZONTAL_PADDING, start.getZ() - safeRadius);
         int maxZ = Math.min(Math.max(start.getZ(), target.getZ()) + HORIZONTAL_PADDING, start.getZ() + safeRadius);
-        int minY = Math.max(level.getMinBuildHeight(), Math.min(start.getY(), target.getY()) - VERTICAL_PADDING);
-        int maxY = Math.min(level.getMaxBuildHeight() - 2, Math.max(start.getY(), target.getY()) + VERTICAL_PADDING);
+        int minY = Math.max(level.getMinY(), Math.min(start.getY(), target.getY()) - VERTICAL_PADDING);
+        int maxY = Math.min(level.getMaxY() + 1 - 2, Math.max(start.getY(), target.getY()) + VERTICAL_PADDING);
         return new SnapshotBounds(minX, maxX, minZ, maxZ, minY, maxY);
     }
 

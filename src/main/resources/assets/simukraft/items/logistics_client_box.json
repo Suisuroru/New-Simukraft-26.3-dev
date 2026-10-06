@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "simukraft:item/logistics_client_box"
+  }
+}

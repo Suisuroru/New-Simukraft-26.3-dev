@@ -2,12 +2,16 @@ package common.cn.kafei.simukraft.mineraldrilling;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,12 +30,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class MineralDrillingBoxManager extends SavedData {
     private static final int MAX_WRITE_ATTEMPTS = 3;
     private static final long RETRY_DELAY_MILLIS = 50L;
-    private static final String DATA_NAME = SimuKraft.MOD_ID + "_mineral_drilling_boxes";
-    private static final Factory<MineralDrillingBoxManager> FACTORY = new Factory<>(
-            MineralDrillingBoxManager::new,
-            MineralDrillingBoxManager::load,
-            null
-    );
+    private static final Identifier DATA_ID = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "mineral_drilling_boxes");
+    private static final SavedDataType<MineralDrillingBoxManager> TYPE = createType();
+
+    private static SavedDataType<MineralDrillingBoxManager> createType() {
+        Codec<MineralDrillingBoxManager> codec = CompoundTag.CODEC.xmap(
+                MineralDrillingBoxManager::load,
+                MineralDrillingBoxManager::serializeToTag);
+        return new SavedDataType<>(DATA_ID, MineralDrillingBoxManager::new, codec);
+    }
+
+    private CompoundTag serializeToTag() {
+        HolderLookup.Provider registries = level != null ? level.registryAccess() : RegistryAccess.EMPTY;
+        return save(new CompoundTag(), registries);
+    }
     private static final ExecutorService IO_EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "simukraft-mineral-drilling-io");
         thread.setDaemon(true);
@@ -46,7 +58,7 @@ public final class MineralDrillingBoxManager extends SavedData {
 
     /** get: 获取当前维度管理器，并首次访问时从 SQLite 懒加载。 */
     public static MineralDrillingBoxManager get(ServerLevel level) {
-        MineralDrillingBoxManager manager = level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        MineralDrillingBoxManager manager = level.getDataStorage().computeIfAbsent(TYPE);
         manager.level = level;
         manager.loadFromSqlite(level);
         return manager;
@@ -58,12 +70,16 @@ public final class MineralDrillingBoxManager extends SavedData {
     }
 
     /** load: 从 SavedData 灾备 NBT 恢复当前维度的控制箱。 */
+    private static MineralDrillingBoxManager load(CompoundTag tag) {
+        return load(tag, RegistryAccess.EMPTY);
+    }
+
     private static MineralDrillingBoxManager load(CompoundTag tag, HolderLookup.Provider registries) {
         MineralDrillingBoxManager manager = new MineralDrillingBoxManager();
-        ListTag list = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag list = tag.getListOrEmpty("Boxes");
         for (int index = 0; index < list.size(); index++) {
             try {
-                MineralDrillingBoxData data = MineralDrillingBoxData.fromTag(list.getCompound(index), registries);
+                MineralDrillingBoxData data = MineralDrillingBoxData.fromTag(list.getCompoundOrEmpty(index), registries);
                 manager.boxes.put(data.boxPos(), manager.attach(data));
             } catch (RuntimeException exception) {
                 SimuKraft.LOGGER.error("Failed to load mineral drilling box {} from SavedData", index, exception);
@@ -73,7 +89,6 @@ public final class MineralDrillingBoxManager extends SavedData {
     }
 
     /** save: 生成线程安全的 SavedData 灾备快照。 */
-    @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (MineralDrillingBoxData data : boxes.values()) {
@@ -96,12 +111,12 @@ public final class MineralDrillingBoxManager extends SavedData {
         try {
             CompletableFuture.runAsync(
                     () -> retryWrite(() -> SimuSqliteStorage.saveMineralDrillingBoxes(level, snapshot),
-                            "full snapshot", level.dimension().location().toString()),
+                            "full snapshot", level.dimension().identifier().toString()),
                     IO_EXECUTOR
             ).join();
         } catch (CompletionException exception) {
             SimuKraft.LOGGER.error("Failed to flush mineral drilling boxes for dimension {}",
-                    level.dimension().location(), exception.getCause());
+                    level.dimension().identifier(), exception.getCause());
         }
     }
 
@@ -123,13 +138,13 @@ public final class MineralDrillingBoxManager extends SavedData {
         if (sqliteTag == null || sqliteTag.isEmpty()) {
             return;
         }
-        ListTag list = sqliteTag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag list = sqliteTag.getListOrEmpty("Boxes");
         boxes.values().forEach(data -> data.setChangeListener(null));
         boxes.clear();
         for (int index = 0; index < list.size(); index++) {
             try {
                 MineralDrillingBoxData data = MineralDrillingBoxData.fromTag(
-                        list.getCompound(index), level.registryAccess());
+                        list.getCompoundOrEmpty(index), level.registryAccess());
                 boxes.put(data.boxPos(), attach(data));
             } catch (RuntimeException exception) {
                 SimuKraft.LOGGER.error("Failed to load mineral drilling box {} from SQLite", index, exception);

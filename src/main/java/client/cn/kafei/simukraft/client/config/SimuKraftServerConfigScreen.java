@@ -312,13 +312,13 @@ public final class SimuKraftServerConfigScreen {
                 SimuKraftConfigWidgets.switchControl(draft.claimProtection, value -> draft.claimProtection = value)));
         page.addChild(SimuKraftConfigWidgets.section(Component.translatable("gui.simukraft.config.section.material_editors")));
         page.addChild(openMaterialEditorRow(Component.translatable("config.simukraft.materials.allModeBlockBlacklist"),
-                () -> Minecraft.getInstance().setScreen(SimuKraftMaterialConfigPage.createBlacklist(parent, draft))));
+                () -> Minecraft.getInstance().gui.setScreen(SimuKraftMaterialConfigPage.createBlacklist(parent, draft))));
         page.addChild(openMaterialEditorRow(Component.translatable("config.simukraft.materials.basicMaterials"),
-                () -> Minecraft.getInstance().setScreen(SimuKraftMaterialConfigPage.createBasic(parent, draft))));
+                () -> Minecraft.getInstance().gui.setScreen(SimuKraftMaterialConfigPage.createBasic(parent, draft))));
         page.addChild(openMaterialEditorRow(Component.translatable("config.simukraft.materials.materialCategoryGroups"),
-                () -> Minecraft.getInstance().setScreen(SimuKraftMaterialConfigPage.createCategory(parent, draft))));
+                () -> Minecraft.getInstance().gui.setScreen(SimuKraftMaterialConfigPage.createCategory(parent, draft))));
         page.addChild(openMaterialEditorRow(Component.translatable("config.simukraft.materials.expertModeSkipList"),
-                () -> Minecraft.getInstance().setScreen(SimuKraftMaterialConfigPage.createExpert(parent, draft))));
+                () -> Minecraft.getInstance().gui.setScreen(SimuKraftMaterialConfigPage.createExpert(parent, draft))));
         return SimuKraftConfigWidgets.scroller(page);
     }
 
@@ -339,14 +339,14 @@ public final class SimuKraftServerConfigScreen {
         footer.addChild(footerButton("gui.simukraft.config.save", () -> draft.saveToLive()));
         footer.addChild(footerButton("gui.simukraft.config.reload", () -> {
             draft.reloadFromLive();
-            Minecraft.getInstance().setScreen(create(parent, draft));
+            Minecraft.getInstance().gui.setScreen(create(parent, draft));
         }));
         footer.addChild(footerButton("gui.simukraft.config.reset", () -> {
             draft.resetToDefaults();
-            Minecraft.getInstance().setScreen(create(parent, draft));
+            Minecraft.getInstance().gui.setScreen(create(parent, draft));
         }));
-        footer.addChild(footerButton("gui.simukraft.config.cancel", () -> Minecraft.getInstance().setScreen(SimuKraftConfigSelectionScreen.create(parent))));
-        footer.addChild(footerButton("gui.simukraft.config.close", () -> Minecraft.getInstance().setScreen(parent)));
+        footer.addChild(footerButton("gui.simukraft.config.cancel", () -> Minecraft.getInstance().gui.setScreen(SimuKraftConfigSelectionScreen.create(parent))));
+        footer.addChild(footerButton("gui.simukraft.config.close", () -> Minecraft.getInstance().gui.setScreen(parent)));
         return footer;
     }
 

@@ -48,7 +48,7 @@ public final class SaveScopedCacheKey {
         if (level == null) {
             return "unknown_server|unknown_dimension";
         }
-        return serverKey(level.getServer()) + "|" + level.dimension().location();
+        return serverKey(level.getServer()) + "|" + level.dimension().identifier();
     }
 
     // 获取玩家在当前存档内的标识，用于 HUD 等玩家级缓存隔离。
@@ -56,6 +56,6 @@ public final class SaveScopedCacheKey {
         if (player == null) {
             return "unknown_server|unknown_player";
         }
-        return serverKey(player.getServer()) + "|player=" + player.getUUID();
+        return serverKey(player.level().getServer()) + "|player=" + player.getUUID();
     }
 }

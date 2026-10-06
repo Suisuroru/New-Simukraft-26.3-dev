@@ -1,6 +1,5 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
@@ -39,9 +38,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-
 @EventBusSubscriber(value = Dist.CLIENT)
-@OnlyIn(Dist.CLIENT)
 public final class BuildingListScreenOpener {
     private static final int CARD_TEXT_COLOR = SimuKraftUiTheme.CARD_TEXT_COLOR;
     private static final int MAX_BUILDINGS_PER_PAGE = 12;
@@ -107,7 +104,7 @@ public final class BuildingListScreenOpener {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(category, buildBoxPos), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(category, buildBoxPos), Component.empty())));
     }
 
     @SubscribeEvent
@@ -120,8 +117,8 @@ public final class BuildingListScreenOpener {
             pendingPreview = null;
             return;
         }
-        if (minecraft.screen == null || minecraft.screen instanceof com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen) {
-            minecraft.setScreen(new BuildingConfirmScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(currentCategory, currentBuildBoxPos), Component.empty()), pendingPreview.building(), pendingPreview.buildBoxPos(), pendingPreview.structure()));
+        if (minecraft.gui.screen() == null || minecraft.gui.screen() instanceof com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen) {
+            minecraft.gui.setScreen(new BuildingConfirmScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(currentCategory, currentBuildBoxPos), Component.empty()), pendingPreview.building(), pendingPreview.buildBoxPos(), pendingPreview.structure()));
             pendingPreview = null;
         }
     }
@@ -677,7 +674,7 @@ public final class BuildingListScreenOpener {
         Optional<BuildingStructure> structure = BuildingStructureService.loadStructure(building.category(), building.metaFileName());
         if (structure.isPresent()) {
             pendingPreview = new PendingPreview(building, currentBuildBoxPos, structure.get());
-            minecraft.setScreen(null);
+            minecraft.gui.setScreen(null);
         } else {
             ClientInfoToast.show(
                     Component.translatable("toast.simukraft.title"),

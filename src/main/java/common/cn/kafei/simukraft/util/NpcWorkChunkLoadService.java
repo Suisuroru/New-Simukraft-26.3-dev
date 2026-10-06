@@ -1,12 +1,12 @@
 package common.cn.kafei.simukraft.util;
 
+import common.cn.kafei.simukraft.registry.ModTicketTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,8 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class NpcWorkChunkLoadService {
     private static final int ANCHOR_TICKET_DISTANCE = 2;
     private static final int WORK_AREA_TICKET_DISTANCE = 0;
-    private static final TicketType<ChunkPos> WORK_AREA_TICKET = TicketType.create(
-            "simukraft_npc_work_area", Comparator.comparingLong(ChunkPos::toLong));
+    private static final TicketType WORK_AREA_TICKET = ModTicketTypes.NPC_WORK_AREA.get();
 
     private static final ConcurrentMap<String, WorkLease> WORK_LEASES = new ConcurrentHashMap<>();
     private static final ConcurrentMap<TicketKey, AtomicInteger> ANCHOR_TICKET_REFS = new ConcurrentHashMap<>();
@@ -34,7 +33,7 @@ public final class NpcWorkChunkLoadService {
         if (level == null || taskId == null || workPos == null) {
             return;
         }
-        ChunkPos anchor = new ChunkPos(workPos);
+        ChunkPos anchor = ChunkPos.containing(workPos);
         WorkLease previous = WORK_LEASES.putIfAbsent(leaseKey(level, taskId), new WorkLease(anchor));
         if (previous == null) {
             retainAnchorTicket(level, anchor);
@@ -52,10 +51,10 @@ public final class NpcWorkChunkLoadService {
             return;
         }
         for (long chunkLong : collectWorkAreaChunks(minPos, maxPos, horizontalPadding)) {
-            if (chunkLong == lease.anchor().toLong() || !lease.workAreaChunks().add(chunkLong)) {
+            if (chunkLong == lease.anchor().pack() || !lease.workAreaChunks().add(chunkLong)) {
                 continue;
             }
-            retainWorkAreaTicket(level, new ChunkPos(chunkLong));
+            retainWorkAreaTicket(level, ChunkPos.unpack(chunkLong));
         }
     }
 
@@ -69,7 +68,7 @@ public final class NpcWorkChunkLoadService {
             return;
         }
         releaseAnchorTicket(level, lease.anchor());
-        lease.workAreaChunks().forEach(chunkLong -> releaseWorkAreaTicket(level, new ChunkPos(chunkLong)));
+        lease.workAreaChunks().forEach(chunkLong -> releaseWorkAreaTicket(level, ChunkPos.unpack(chunkLong)));
     }
 
     /** clearServerCaches：关服时释放残留 ticket，避免静态运行时状态跨存档保留。 */
@@ -95,7 +94,7 @@ public final class NpcWorkChunkLoadService {
         Set<Long> chunks = ConcurrentHashMap.newKeySet();
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                chunks.add(ChunkPos.asLong(chunkX, chunkZ));
+                chunks.add(ChunkPos.pack(chunkX, chunkZ));
             }
         }
         return Set.copyOf(chunks);
@@ -106,8 +105,7 @@ public final class NpcWorkChunkLoadService {
         TicketKey ticketKey = ticketKey(level, chunkPos);
         ANCHOR_TICKET_REFS.compute(ticketKey, (ignored, counter) -> {
             if (counter == null) {
-                level.getChunkSource().addRegionTicket(
-                        TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE, chunkPos);
+                level.getChunkSource().addTicketWithRadius(TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE);
                 return new AtomicInteger(1);
             }
             counter.incrementAndGet();
@@ -122,8 +120,7 @@ public final class NpcWorkChunkLoadService {
             if (counter.decrementAndGet() > 0) {
                 return counter;
             }
-            level.getChunkSource().removeRegionTicket(
-                    TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE, chunkPos);
+            level.getChunkSource().removeTicketWithRadius(TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE);
             return null;
         });
     }
@@ -133,8 +130,7 @@ public final class NpcWorkChunkLoadService {
         TicketKey ticketKey = ticketKey(level, chunkPos);
         WORK_AREA_TICKET_REFS.compute(ticketKey, (ignored, counter) -> {
             if (counter == null) {
-                level.getChunkSource().addRegionTicket(
-                        WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE, chunkPos, false);
+                level.getChunkSource().addTicketWithRadius(WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE);
                 return new AtomicInteger(1);
             }
             counter.incrementAndGet();
@@ -149,8 +145,7 @@ public final class NpcWorkChunkLoadService {
             if (counter.decrementAndGet() > 0) {
                 return counter;
             }
-            level.getChunkSource().removeRegionTicket(
-                    WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE, chunkPos, false);
+            level.getChunkSource().removeTicketWithRadius(WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE);
             return null;
         });
     }
@@ -178,13 +173,11 @@ public final class NpcWorkChunkLoadService {
                     if (ticketRefs.remove(ticketKey) == null) {
                         return;
                     }
-                    ChunkPos chunkPos = new ChunkPos(ticketKey.chunkLong());
+                    ChunkPos chunkPos = ChunkPos.unpack(ticketKey.chunkLong());
                     if (forceTicks) {
-                        level.getChunkSource().removeRegionTicket(
-                                TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE, chunkPos);
+                        level.getChunkSource().removeTicketWithRadius(TicketType.FORCED, chunkPos, ANCHOR_TICKET_DISTANCE);
                     } else {
-                        level.getChunkSource().removeRegionTicket(
-                                WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE, chunkPos, false);
+                        level.getChunkSource().removeTicketWithRadius(WORK_AREA_TICKET, chunkPos, WORK_AREA_TICKET_DISTANCE);
                     }
                 });
     }
@@ -196,7 +189,7 @@ public final class NpcWorkChunkLoadService {
 
     /** ticketKey：生成指定维度区块的 ticket 引用键。 */
     private static TicketKey ticketKey(ServerLevel level, ChunkPos chunkPos) {
-        return new TicketKey(SaveScopedCacheKey.levelKey(level), chunkPos.toLong());
+        return new TicketKey(SaveScopedCacheKey.levelKey(level), chunkPos.pack());
     }
 
     private record TicketKey(String levelKey, long chunkLong) {

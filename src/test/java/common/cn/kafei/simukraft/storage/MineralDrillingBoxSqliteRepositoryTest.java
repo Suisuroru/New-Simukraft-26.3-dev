@@ -34,17 +34,17 @@ class MineralDrillingBoxSqliteRepositoryTest {
             CompoundTag nether = repository.loadAll("minecraft:the_nether");
             assertNotNull(overworld);
             assertNotNull(nether);
-            CompoundTag overworldBox = overworld.getList("Boxes", CompoundTag.TAG_COMPOUND).getCompound(0);
-            CompoundTag netherBox = nether.getList("Boxes", CompoundTag.TAG_COMPOUND).getCompound(0);
-            assertEquals(-20, overworldBox.getInt("DrillDepth"));
-            assertEquals(-30, overworldBox.getInt("LowestReachedDepth"));
-            assertEquals("overworld", overworldBox.getCompound("Inventory").getString("Marker"));
-            assertEquals(30, netherBox.getInt("DrillDepth"));
+            CompoundTag overworldBox = overworld.getListOrEmpty("Boxes").getCompoundOrEmpty(0);
+            CompoundTag netherBox = nether.getListOrEmpty("Boxes").getCompoundOrEmpty(0);
+            assertEquals(-20, overworldBox.getIntOr("DrillDepth", 0));
+            assertEquals(-30, overworldBox.getIntOr("LowestReachedDepth", 0));
+            assertEquals("overworld", overworldBox.getCompoundOrEmpty("Inventory").getStringOr("Marker", ""));
+            assertEquals(30, netherBox.getIntOr("DrillDepth", 0));
 
             assertTrue(repository.saveAll("minecraft:overworld", emptyRoot()));
             assertNull(repository.loadAll("minecraft:overworld"));
             assertEquals(1, repository.loadAll("minecraft:the_nether")
-                    .getList("Boxes", CompoundTag.TAG_COMPOUND).size());
+                    .getListOrEmpty("Boxes").size());
         }
     }
 

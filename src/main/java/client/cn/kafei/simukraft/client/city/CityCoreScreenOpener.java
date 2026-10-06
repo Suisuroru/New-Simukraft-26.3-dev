@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.city;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
@@ -44,22 +44,15 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
-import net.neoforged.neoforge.network.PacketDistributor;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
 import java.util.Collection;
@@ -74,8 +67,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CityCoreScreenOpener {
     private static final int BUTTON_WIDTH = 120;
     private static final int COLLAPSED_SIDEBAR_WIDTH = 18;
@@ -141,7 +132,7 @@ public final class CityCoreScreenOpener {
     public static void openMap(CityCoreMapResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         Set<Long> chunks = packet.chunks().stream()
-                .map(chunk -> ChunkPos.asLong(chunk.chunkX(), chunk.chunkZ()))
+                .map(chunk -> ChunkPos.pack(chunk.chunkX(), chunk.chunkZ()))
                 .collect(Collectors.toUnmodifiableSet());
         minecraft.execute(() -> {
             CityCoreWindow window = activeWindow;
@@ -162,7 +153,7 @@ public final class CityCoreScreenOpener {
     private static boolean isActiveScreen(Minecraft minecraft, CityCoreWindow window) {
         return window != null
                 && activeWindow == window
-                && minecraft.screen == activeScreen;
+                && minecraft.gui.screen() == activeScreen;
     }
 
     /** show: 记录并切换城市核心 Screen，供迟到响应进行精确身份校验。 */
@@ -170,7 +161,7 @@ public final class CityCoreScreenOpener {
         com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen screen =
                 new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(ui, Component.empty());
         activeScreen = screen;
-        minecraft.setScreen(screen);
+        minecraft.gui.setScreen(screen);
     }
 
     private static ModularUI createUi(CityCoreMapResponsePacket packet) {
@@ -276,7 +267,7 @@ public final class CityCoreScreenOpener {
             menu.addChild(menuButton("screen.simukraft.city_core.map_title", () -> requestMap(packet)));
             menu.addChild(menuButton("screen.simukraft.city_core.menu.edit", () -> window.openTab("edit", "screen.simukraft.city_core.menu.edit", editPanel(packet))));
             menu.addChild(menuButton("screen.simukraft.city_core.menu.upgrade", () -> window.openTab("upgrade", "screen.simukraft.city_core.menu.upgrade", upgradePanel(packet))));
-            menu.addChild(menuButton("screen.simukraft.city_core.menu.citizens", () -> PacketDistributor.sendToServer(new CityCitizenManageRequestPacket(packet.pos()))));
+            menu.addChild(menuButton("screen.simukraft.city_core.menu.citizens", () -> ClientPacketDistributor.sendToServer(new CityCitizenManageRequestPacket(packet.pos()))));
             menu.addChild(menuButton("screen.simukraft.city_core.menu.officials", () -> requestMembers(packet)));
             menu.addChild(menuButton("screen.simukraft.city_core.menu.finance", () -> window.openTab("finance", "screen.simukraft.city_core.menu.finance", financePanel(packet))));
         } else {
@@ -299,14 +290,14 @@ public final class CityCoreScreenOpener {
         panel.addChild(line(Component.translatable("screen.simukraft.city_core.edit.rename_title")));
         TextField renameField = textField(packet.cityName(), 200);
         panel.addChild(renameField);
-        panel.addChild(contentButton("screen.simukraft.city_core.edit.rename", () -> PacketDistributor.sendToServer(new CityCoreManageCityPacket(packet.pos(), CityCoreManageCityPacket.Action.RENAME, renameField.getValue()))));
+        panel.addChild(contentButton("screen.simukraft.city_core.edit.rename", () -> ClientPacketDistributor.sendToServer(new CityCoreManageCityPacket(packet.pos(), CityCoreManageCityPacket.Action.RENAME, renameField.getValue()))));
         panel.addChild(contentSpacer());
         panel.addChild(line(Component.translatable("screen.simukraft.city_core.edit.delete_title")));
         panel.addChild(line(Component.translatable("screen.simukraft.city_core.edit.delete_tip", packet.cityName())));
         TextField deleteField = textField("", 200);
         deleteField.getTextFieldStyle().placeholder(Component.translatable("screen.simukraft.city_core.edit.delete_placeholder"));
         panel.addChild(deleteField);
-        panel.addChild(contentButton("screen.simukraft.city_core.edit.delete", () -> PacketDistributor.sendToServer(new CityCoreManageCityPacket(packet.pos(), CityCoreManageCityPacket.Action.DELETE, deleteField.getValue()))));
+        panel.addChild(contentButton("screen.simukraft.city_core.edit.delete", () -> ClientPacketDistributor.sendToServer(new CityCoreManageCityPacket(packet.pos(), CityCoreManageCityPacket.Action.DELETE, deleteField.getValue()))));
         return scrollable(panel);
     }
 
@@ -460,22 +451,22 @@ public final class CityCoreScreenOpener {
         info.addChild(line(Component.literal(citizen.name() == null || citizen.name().isBlank() ? "-" : citizen.name())));
         row.addChild(info);
         row.addChild(memberActionButton("screen.simukraft.city_core.citizen_manage.family_graph", 52,
-                () -> PacketDistributor.sendToServer(new CityCitizenFamilyGraphRequestPacket(packet.pos(), citizen.citizenId()))));
+                () -> ClientPacketDistributor.sendToServer(new CityCitizenFamilyGraphRequestPacket(packet.pos(), citizen.citizenId()))));
         if (packet.canManage()) {
             row.addChild(memberActionButton("screen.simukraft.city_core.citizen_manage.dismiss", 52,
-                    () -> { PacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.DISMISS, citizen.citizenId())); close(); }));
+                    () -> { ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.DISMISS, citizen.citizenId())); close(); }));
             row.addChild(memberActionButton("screen.simukraft.city_core.citizen_manage.exile", 44,
-                    () -> { PacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.EXILE, citizen.citizenId())); close(); }));
+                    () -> { ClientPacketDistributor.sendToServer(new CityCitizenManageActionPacket(packet.pos(), CityCitizenManageActionPacket.Action.EXILE, citizen.citizenId())); close(); }));
         }
         return row;
     }
 
     private static void requestMembers(CityCoreOpenResponsePacket packet) {
-        PacketDistributor.sendToServer(new CityCoreMembersRequestPacket(packet.pos()));
+        ClientPacketDistributor.sendToServer(new CityCoreMembersRequestPacket(packet.pos()));
     }
 
     private static void requestMap(CityCoreOpenResponsePacket packet) {
-        PacketDistributor.sendToServer(new CityCoreMapRequestPacket(packet.pos()));
+        ClientPacketDistributor.sendToServer(new CityCoreMapRequestPacket(packet.pos()));
     }
 
     private static UIElement cityMapPanel(CityCoreMapResponsePacket packet) {
@@ -525,7 +516,8 @@ public final class CityCoreScreenOpener {
         UIElement row = addRow();
         UIElement searchContainer = new UIElement() {
             @Override
-            public void drawBackgroundAdditional(@Nonnull GUIContext guiContext) {
+            public void drawBackgroundAdditional(IGUIContext context) {
+                GUIContext guiContext = (GUIContext) context;
                 int w = Math.round(getSizeWidth());
                 int h = Math.round(getSizeHeight());
                 RecipeBookSearchUi.renderFrame(guiContext,
@@ -639,12 +631,12 @@ public final class CityCoreScreenOpener {
             UIElement row = addRow();
             row.addChild(memberLabel(member));
             if (viewerPermission == CityPermissionLevel.MAYOR && member.permissionLevel() != CityPermissionLevel.MAYOR) {
-                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_citizen", 56, () -> PacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.CITIZEN))));
-                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_official", 56, () -> PacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.OFFICIAL))));
-                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_mayor", 56, () -> PacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.MAYOR))));
+                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_citizen", 56, () -> ClientPacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.CITIZEN))));
+                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_official", 56, () -> ClientPacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.OFFICIAL))));
+                row.addChild(memberActionButton("screen.simukraft.city_core.members.set_mayor", 56, () -> ClientPacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.SET_PERMISSION, member.playerId(), member.playerName(), CityPermissionLevel.MAYOR))));
             }
             if (viewerPermission.atLeast(CityPermissionLevel.OFFICIAL) && member.permissionLevel() != CityPermissionLevel.MAYOR) {
-                row.addChild(memberActionButton("screen.simukraft.city_core.members.remove", 48, () -> PacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.REMOVE, member.playerId(), member.playerName(), CityPermissionLevel.CITIZEN))));
+                row.addChild(memberActionButton("screen.simukraft.city_core.members.remove", 48, () -> ClientPacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.REMOVE, member.playerId(), member.playerName(), CityPermissionLevel.CITIZEN))));
             }
             panel.addChild(row);
         }
@@ -691,7 +683,7 @@ public final class CityCoreScreenOpener {
     }
 
     private static void sendAddMember(BlockPos pos, java.util.UUID playerId, String playerName, CityPermissionLevel permissionLevel) {
-        PacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.ADD, playerId, playerName, permissionLevel));
+        ClientPacketDistributor.sendToServer(new CityCoreMemberActionPacket(pos, CityCoreMemberActionPacket.Action.ADD, playerId, playerName, permissionLevel));
     }
 
     private static String permissionText(CityPermissionLevel permissionLevel) {
@@ -727,7 +719,7 @@ public final class CityCoreScreenOpener {
         nameField.getTextFieldStyle().placeholder(Component.translatable("screen.simukraft.city_core.name_placeholder"));
         panel.addChild(nameField);
         if (packet.canCreateCity()) {
-            panel.addChild(contentButton("screen.simukraft.city_core.create", () -> PacketDistributor.sendToServer(new CityCoreCreateCityPacket(packet.pos(), nameField.getValue()))));
+            panel.addChild(contentButton("screen.simukraft.city_core.create", () -> ClientPacketDistributor.sendToServer(new CityCoreCreateCityPacket(packet.pos(), nameField.getValue()))));
         } else {
             panel.addChild(line(Component.translatable("screen.simukraft.city_core.cannot_create")));
         }
@@ -773,7 +765,7 @@ public final class CityCoreScreenOpener {
         Minecraft minecraft = Minecraft.getInstance();
         activeWindow = null;
         activeScreen = null;
-        minecraft.setScreen(null);
+        minecraft.gui.setScreen(null);
     }
 
     private record UpgradeRefreshExpectation(BlockPos pos, UUID cityId, long sourceWindowId) {
@@ -1099,7 +1091,8 @@ public final class CityCoreScreenOpener {
         }
 
         @Override
-        public void drawBackgroundAdditional(@Nonnull GUIContext guiContext) {
+        public void drawBackgroundAdditional(IGUIContext context) {
+            GUIContext guiContext = (GUIContext) context;
             int x = Math.round(getPositionX());
             int y = Math.round(getPositionY());
             int canvasWidth = Math.round(getSizeWidth());
@@ -1114,10 +1107,10 @@ public final class CityCoreScreenOpener {
             int mapHeight = canvasHeight - MAP_TOP_PADDING - MAP_SIDE_PADDING;
             guiContext.graphics.fill(mapStartX - 2, mapStartY - 2, mapStartX + mapWidth + 2, mapStartY + mapHeight + 2, 0xFFFFFFFF);
             guiContext.graphics.fill(mapStartX - 1, mapStartY - 1, mapStartX + mapWidth + 1, mapStartY + mapHeight + 1, 0x80000000);
-            guiContext.graphics.flush();
+            guiContext.graphics.nextStratum();
             guiContext.enableScissor(mapStartX, mapStartY, mapWidth, mapHeight);
             renderMap(guiContext, mapStartX, mapStartY, mapWidth, mapHeight);
-            guiContext.graphics.flush();
+            guiContext.graphics.nextStratum();
             guiContext.disableScissor();
         }
 
@@ -1147,14 +1140,13 @@ public final class CityCoreScreenOpener {
             if (!SimuMapManager.isAvailable()) {
                 return;
             }
-            guiContext.graphics.flush();
             Collection<SimuMapRegion> regions = mapManager.getAllRegions();
             for (SimuMapRegion region : regions) {
                 if (!region.isImageLoaded() && !region.hasData()) {
                     continue;
                 }
-                int textureId = region.getTextureId();
-                if (textureId == -1) {
+                Identifier textureLocation = region.getTextureLocation();
+                if (textureLocation == null) {
                     continue;
                 }
                 double regionWorldX = region.regionX * 512.0D;
@@ -1165,26 +1157,16 @@ public final class CityCoreScreenOpener {
                 if (screenX + regionSize < startX || screenX > startX + width || screenY + regionSize < startY || screenY > startY + height) {
                     continue;
                 }
-                drawRegionTexture(guiContext, textureId, screenX, screenY, regionSize);
+                drawRegionTexture(guiContext, textureLocation, screenX, screenY, regionSize);
             }
         }
 
-        private void drawRegionTexture(GUIContext guiContext, int textureId, double screenX, double screenY, double regionSize) {
-            RenderSystem.setShaderTexture(0, textureId);
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.enableBlend();
-            Matrix4f matrix = guiContext.graphics.pose().last().pose();
-            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-            float x0 = (float) screenX;
-            float y0 = (float) screenY;
-            float x1 = (float) (screenX + regionSize);
-            float y1 = (float) (screenY + regionSize);
-            buffer.addVertex(matrix, x0, y1, 0).setUv(0, 1);
-            buffer.addVertex(matrix, x1, y1, 0).setUv(1, 1);
-            buffer.addVertex(matrix, x1, y0, 0).setUv(1, 0);
-            buffer.addVertex(matrix, x0, y0, 0).setUv(0, 0);
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
-            RenderSystem.disableBlend();
+        private void drawRegionTexture(GUIContext guiContext, Identifier textureLocation, double screenX, double screenY, double regionSize) {
+            int x0 = (int) Math.round(screenX);
+            int y0 = (int) Math.round(screenY);
+            int x1 = (int) Math.round(screenX + regionSize);
+            int y1 = (int) Math.round(screenY + regionSize);
+            guiContext.graphics.blit(textureLocation, x0, y0, x1, y1, 0.0F, 1.0F, 0.0F, 1.0F);
         }
 
         private void forceInitialMapScan() {
@@ -1192,8 +1174,8 @@ public final class CityCoreScreenOpener {
             if (minecraft.player == null) {
                 return;
             }
-            int chunkX = minecraft.player.chunkPosition().x;
-            int chunkZ = minecraft.player.chunkPosition().z;
+            int chunkX = minecraft.player.chunkPosition().x();
+            int chunkZ = minecraft.player.chunkPosition().z();
             mapManager.forceScanArea(chunkX, chunkZ, Math.min(12, mapManager.getEffectiveScanRadius()));
             mapManager.forceRenderAll();
         }
@@ -1226,7 +1208,7 @@ public final class CityCoreScreenOpener {
         private void renderOwnedChunkBorders(GUIContext guiContext, int startX, int startY, int width, int height, double centerX, double centerY, double chunkSize, int startChunkX, int endChunkX, int startChunkZ, int endChunkZ) {
             for (int chunkX = startChunkX; chunkX <= endChunkX; chunkX++) {
                 for (int chunkZ = startChunkZ; chunkZ <= endChunkZ; chunkZ++) {
-                    long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+                    long chunkLong = ChunkPos.pack(chunkX, chunkZ);
                     if (!cache.isChunkOwned(chunkLong)) {
                         continue;
                     }
@@ -1262,16 +1244,16 @@ public final class CityCoreScreenOpener {
                 return;
             }
             int borderThickness = Math.max(1, Math.min(2, drawWidth / 4));
-            if (!cache.isChunkOwned(ChunkPos.asLong(chunkX, chunkZ - 1))) {
+            if (!cache.isChunkOwned(ChunkPos.pack(chunkX, chunkZ - 1))) {
                 guiContext.graphics.fill(drawX, drawY, drawX + drawWidth, drawY + borderThickness, borderColor);
             }
-            if (!cache.isChunkOwned(ChunkPos.asLong(chunkX, chunkZ + 1))) {
+            if (!cache.isChunkOwned(ChunkPos.pack(chunkX, chunkZ + 1))) {
                 guiContext.graphics.fill(drawX, drawY + drawHeight - borderThickness, drawX + drawWidth, drawY + drawHeight, borderColor);
             }
-            if (!cache.isChunkOwned(ChunkPos.asLong(chunkX - 1, chunkZ))) {
+            if (!cache.isChunkOwned(ChunkPos.pack(chunkX - 1, chunkZ))) {
                 guiContext.graphics.fill(drawX, drawY, drawX + borderThickness, drawY + drawHeight, borderColor);
             }
-            if (!cache.isChunkOwned(ChunkPos.asLong(chunkX + 1, chunkZ))) {
+            if (!cache.isChunkOwned(ChunkPos.pack(chunkX + 1, chunkZ))) {
                 guiContext.graphics.fill(drawX + drawWidth - borderThickness, drawY, drawX + drawWidth, drawY + drawHeight, borderColor);
             }
         }
@@ -1281,8 +1263,8 @@ public final class CityCoreScreenOpener {
                 return;
             }
             for (long chunkLong : batchClaimChunks) {
-                ChunkPos chunkPos = new ChunkPos(chunkLong);
-                drawChunkFill(guiContext, startX, startY, width, height, centerX, centerY, chunkSize, chunkPos.x, chunkPos.z, BATCH_CLAIM_PREVIEW_COLOR);
+                ChunkPos chunkPos = ChunkPos.unpack(chunkLong);
+                drawChunkFill(guiContext, startX, startY, width, height, centerX, centerY, chunkSize, chunkPos.x(), chunkPos.z(), BATCH_CLAIM_PREVIEW_COLOR);
             }
         }
 
@@ -1327,7 +1309,7 @@ public final class CityCoreScreenOpener {
             }
             int chunkX = screenToChunk(mouseX, centerX, offsetX, chunkSize);
             int chunkZ = screenToChunk(mouseY, centerY, offsetY, chunkSize);
-            long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+            long chunkLong = ChunkPos.pack(chunkX, chunkZ);
             Component ownerText = cache.isChunkInCurrentCity(chunkLong)
                     ? Component.translatable("screen.simukraft.city_core.map.current_city")
                     : cache.isChunkOwned(chunkLong) ? Component.translatable("screen.simukraft.city_core.map.other_city")
@@ -1348,7 +1330,7 @@ public final class CityCoreScreenOpener {
             }
             tooltipX = Math.max(startX + 4, Math.min(tooltipX, startX + width - tooltipWidth - 8));
             tooltipY = Math.max(startY + 4, Math.min(tooltipY, startY + height - tooltipHeight - 8));
-            guiContext.graphics.renderComponentTooltip(minecraft.font, lines, tooltipX, tooltipY);
+            guiContext.graphics.setComponentTooltipForNextFrame(minecraft.font, lines, tooltipX, tooltipY);
         }
 
         private void renderContextMenu(GUIContext guiContext, int startX, int startY, int width, int height) {
@@ -1360,7 +1342,7 @@ public final class CityCoreScreenOpener {
             Component title = hasBatch
                     ? Component.translatable("screen.simukraft.city_core.map.menu.batch_selected", batchClaimChunks.size())
                     : Component.translatable("screen.simukraft.city_core.map.menu.chunk", contextMenuChunkX, contextMenuChunkZ);
-            long singleChunkLong = ChunkPos.asLong(contextMenuChunkX, contextMenuChunkZ);
+            long singleChunkLong = ChunkPos.pack(contextMenuChunkX, contextMenuChunkZ);
             boolean singleOwned = !hasBatch && cache.isChunkOwned(singleChunkLong);
             boolean singleCurrentCity = !hasBatch && cache.isChunkInCurrentCity(singleChunkLong);
             boolean canClaim = packet.canManageCity() && (hasBatch || !singleOwned);
@@ -1390,9 +1372,9 @@ public final class CityCoreScreenOpener {
             guiContext.graphics.fill(menuX, menuY, menuX + contextMenuWidth, menuY + 1, 0xFFFFFFFF);
             guiContext.graphics.fill(menuX, menuY + 19, menuX + contextMenuWidth, menuY + 20, 0x80FFFFFF);
             guiContext.graphics.fill(menuX, menuY + 35, menuX + contextMenuWidth, menuY + 36, 0x80FFFFFF);
-            guiContext.graphics.drawString(minecraft.font, title, menuX + 6, menuY + 6, 0xFFFFFFFF, false);
-            guiContext.graphics.drawString(minecraft.font, claimAction, menuX + 6, menuY + 24, canClaim ? 0xFFFFFF55 : 0xFFAAAAAA, false);
-            guiContext.graphics.drawString(minecraft.font, abandonAction, menuX + 6, menuY + 40, canAbandon ? 0xFFFF5555 : 0xFFAAAAAA, false);
+            guiContext.graphics.text(minecraft.font, title, menuX + 6, menuY + 6, 0xFFFFFFFF, false);
+            guiContext.graphics.text(minecraft.font, claimAction, menuX + 6, menuY + 24, canClaim ? 0xFFFFFF55 : 0xFFAAAAAA, false);
+            guiContext.graphics.text(minecraft.font, abandonAction, menuX + 6, menuY + 40, canAbandon ? 0xFFFF5555 : 0xFFAAAAAA, false);
         }
 
         private boolean handleContextMenuClick(double mouseX, double mouseY) {
@@ -1411,36 +1393,36 @@ public final class CityCoreScreenOpener {
                 // 认领
                 if (!batchClaimChunks.isEmpty() && packet.canManageCity()) {
                     List<CityChunkBatchPurchasePacket.ChunkEntry> chunks = batchClaimChunks.stream()
-                            .map(ChunkPos::new)
-                            .map(chunkPos -> new CityChunkBatchPurchasePacket.ChunkEntry(chunkPos.x, chunkPos.z))
+                            .map(ChunkPos::unpack)
+                            .map(chunkPos -> new CityChunkBatchPurchasePacket.ChunkEntry(chunkPos.x(), chunkPos.z()))
                             .toList();
                     batchClaimChunks.clear();
-                    PacketDistributor.sendToServer(new CityChunkBatchPurchasePacket(packet.pos(), chunks));
+                    ClientPacketDistributor.sendToServer(new CityChunkBatchPurchasePacket(packet.pos(), chunks));
                 } else if (batchClaimChunks.isEmpty() && packet.canManageCity()) {
-                    long chunkLong = ChunkPos.asLong(contextMenuChunkX, contextMenuChunkZ);
+                    long chunkLong = ChunkPos.pack(contextMenuChunkX, contextMenuChunkZ);
                     if (!cache.isChunkOwned(chunkLong)) {
-                        PacketDistributor.sendToServer(new CityChunkPurchasePacket(packet.pos(), contextMenuChunkX, contextMenuChunkZ));
+                        ClientPacketDistributor.sendToServer(new CityChunkPurchasePacket(packet.pos(), contextMenuChunkX, contextMenuChunkZ));
                     }
                 }
             } else {
                 // 放弃区块
                 if (packet.canManageCity()) {
-                    long coreChunkLong = ChunkPos.asLong(packet.centerChunkX(), packet.centerChunkZ());
+                    long coreChunkLong = ChunkPos.pack(packet.centerChunkX(), packet.centerChunkZ());
                     if (!batchClaimChunks.isEmpty()) {
                         List<CityChunkBatchReleasePacket.ChunkEntry> releaseChunks = batchClaimChunks.stream()
                                 .filter(cache::isChunkInCurrentCity)
                                 .filter(c -> c != coreChunkLong)
-                                .map(ChunkPos::new)
-                                .map(cp -> new CityChunkBatchReleasePacket.ChunkEntry(cp.x, cp.z))
+                                .map(ChunkPos::unpack)
+                                .map(cp -> new CityChunkBatchReleasePacket.ChunkEntry(cp.x(), cp.z()))
                                 .toList();
                         batchClaimChunks.clear();
                         if (!releaseChunks.isEmpty()) {
-                            PacketDistributor.sendToServer(new CityChunkBatchReleasePacket(packet.pos(), releaseChunks));
+                            ClientPacketDistributor.sendToServer(new CityChunkBatchReleasePacket(packet.pos(), releaseChunks));
                         }
                     } else {
-                        long singleChunk = ChunkPos.asLong(contextMenuChunkX, contextMenuChunkZ);
+                        long singleChunk = ChunkPos.pack(contextMenuChunkX, contextMenuChunkZ);
                         if (singleChunk != coreChunkLong && cache.isChunkInCurrentCity(singleChunk)) {
-                            PacketDistributor.sendToServer(new CityChunkBatchReleasePacket(packet.pos(),
+                            ClientPacketDistributor.sendToServer(new CityChunkBatchReleasePacket(packet.pos(),
                                     List.of(new CityChunkBatchReleasePacket.ChunkEntry(contextMenuChunkX, contextMenuChunkZ))));
                         }
                     }
@@ -1455,7 +1437,7 @@ public final class CityCoreScreenOpener {
             }
             int chunkX = screenToChunk(mouseX, mapCenterX(), offsetX, 16.0D * zoomLevel);
             int chunkZ = screenToChunk(mouseY, mapCenterY(), offsetY, 16.0D * zoomLevel);
-            batchClaimChunks.add(ChunkPos.asLong(chunkX, chunkZ));
+            batchClaimChunks.add(ChunkPos.pack(chunkX, chunkZ));
         }
 
         private void finishBatchClaim() {

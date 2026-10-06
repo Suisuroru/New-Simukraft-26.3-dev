@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
@@ -33,7 +31,6 @@ import java.util.zip.CRC32;
 /**
  * 地图 region 的本地磁盘缓存。
  */
-@OnlyIn(Dist.CLIENT)
 public class SimuMapStorage {
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -95,7 +92,7 @@ public class SimuMapStorage {
     }
 
     public static String dimensionToDir(ResourceKey<Level> dimension) {
-        return sanitizeForPath(dimension.location().getNamespace() + "_" + dimension.location().getPath());
+        return sanitizeForPath(dimension.identifier().getNamespace() + "_" + dimension.identifier().getPath());
     }
 
     /** matchesCacheIdentity: 磁盘文件头必须与当前存档、维度一致。 */

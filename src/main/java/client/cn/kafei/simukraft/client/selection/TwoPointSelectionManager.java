@@ -1,14 +1,11 @@
 package client.cn.kafei.simukraft.client.selection;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import common.cn.kafei.simukraft.planner.PlanOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 
 import javax.annotation.Nullable;
 
-@OnlyIn(Dist.CLIENT)
 public final class TwoPointSelectionManager {
     private static volatile SelectionState state = SelectionState.inactive();
 

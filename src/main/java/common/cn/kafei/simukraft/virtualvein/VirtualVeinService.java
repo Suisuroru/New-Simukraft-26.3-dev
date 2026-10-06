@@ -16,6 +16,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.storage.LevelResource;
 
 import javax.annotation.Nullable;
@@ -172,7 +173,7 @@ public final class VirtualVeinService {
             ));
         }
         return new VirtualVeinFieldProfile(
-                level.dimension().location().toString(),
+                level.dimension().identifier().toString(),
                 key,
                 key.biomeId(),
                 level.getGameTime(),
@@ -202,7 +203,7 @@ public final class VirtualVeinService {
     private static FieldClimate sampleClimate(ServerLevel level, BlockPos position, VirtualVeinFieldKey key) {
         int sampleY = level.getSeaLevel();
         RandomState randomState = level.getChunkSource().randomState();
-        Climate.Sampler sampler = randomState.sampler();
+        Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
         int quartX = QuartPos.fromBlock(position.getX());
         int quartY = QuartPos.fromBlock(sampleY);
         int quartZ = QuartPos.fromBlock(position.getZ());
@@ -222,11 +223,11 @@ public final class VirtualVeinService {
     /** resolveFieldKey: 按当前位置噪声群系将空间矿区切分为独立档案。 */
     private static VirtualVeinFieldKey resolveFieldKey(ServerLevel level, BlockPos position) {
         var biomeSource = level.getChunkSource().getGenerator().getBiomeSource();
-        Climate.Sampler sampler = level.getChunkSource().randomState().sampler();
+        Climate.Sampler sampler = level.getChunkSource().randomState().createClimateSampler(SamplerContext.EMPTY_UNCACHED);
         int quartX = QuartPos.fromBlock(position.getX());
         int quartY = QuartPos.fromBlock(level.getSeaLevel());
         int quartZ = QuartPos.fromBlock(position.getZ());
-        String biomeId = biomeId(level.registryAccess(), biomeSource.getNoiseBiome(quartX, quartY, quartZ, sampler));
+        String biomeId = biomeId(level.registryAccess(), biomeSource.createResolver(sampler).getNoiseBiome(quartX, quartY, quartZ));
         return VirtualVeinFieldResolver.resolve(level.getSeed(), position.getX(), position.getZ(), biomeId);
     }
 
@@ -247,8 +248,8 @@ public final class VirtualVeinService {
             return accessor.simukraft$parameters().values();
         }
         return level.registryAccess()
-                .registryOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
-                .getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD)
+                .lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                .getValueOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD)
                 .parameters()
                 .values();
     }
@@ -304,9 +305,9 @@ public final class VirtualVeinService {
 
     private static String biomeId(RegistryAccess registryAccess, Holder<Biome> biome) {
         return biome.unwrapKey()
-                .map(ResourceKey::location)
+                .map(ResourceKey::identifier)
                 .map(Object::toString)
-                .orElseGet(() -> Optional.ofNullable(registryAccess.registryOrThrow(Registries.BIOME).getKey(biome.value()))
+                .orElseGet(() -> Optional.ofNullable(registryAccess.lookupOrThrow(Registries.BIOME).getKey(biome.value()))
                         .map(Object::toString)
                         .orElse("minecraft:unknown"));
     }

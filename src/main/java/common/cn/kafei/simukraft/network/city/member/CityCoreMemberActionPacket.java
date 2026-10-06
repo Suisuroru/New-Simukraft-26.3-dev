@@ -101,7 +101,7 @@ public record CityCoreMemberActionPacket(BlockPos pos, Action action, UUID targe
         }
         Optional<CityData> targetCity = CityService.findPlayerCity(level, target.getUUID());
         if (targetCity.isPresent() && !targetCity.get().cityId().equals(city.cityId())) {
-            return MemberActionResult.failed(Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().getName()));
+            return MemberActionResult.failed(Component.translatable("message.simukraft.city_core.target_has_city", target.getGameProfile().name()));
         }
         return requestPermissionInvite(level, operator, city, target, permissionLevel);
     }

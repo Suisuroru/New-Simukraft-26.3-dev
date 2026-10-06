@@ -26,9 +26,9 @@ public final class CommercialSqliteRepository {
      */
     public void saveBoxes(Connection connection, CompoundTag tag, String dimensionId) throws SQLException {
         String normalized = normalizeDimensionId(dimensionId);
-        ListTag boxes = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag boxes = tag.getListOrEmpty("Boxes");
         for (int i = 0; i < boxes.size(); i++) {
-            saveBox(connection, boxes.getCompound(i), normalized);
+            saveBox(connection, boxes.getCompoundOrEmpty(i), normalized);
         }
     }
 
@@ -89,9 +89,9 @@ public final class CommercialSqliteRepository {
      */
     public void saveStock(Connection connection, CompoundTag tag, String dimensionId) throws SQLException {
         String normalized = normalizeDimensionId(dimensionId);
-        ListTag stock = tag.getList("Stock", CompoundTag.TAG_COMPOUND);
+        ListTag stock = tag.getListOrEmpty("Stock");
         for (int i = 0; i < stock.size(); i++) {
-            saveStockEntry(connection, stock.getCompound(i), normalized);
+            saveStockEntry(connection, stock.getCompoundOrEmpty(i), normalized);
         }
     }
 
@@ -208,13 +208,13 @@ public final class CommercialSqliteRepository {
                         + "VALUES(?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(dimension_id, box_pos_long) DO UPDATE SET building_id = excluded.building_id, definition_id = excluded.definition_id, running = excluded.running, status_key = excluded.status_key, status_text = excluded.status_text, updated_at = excluded.updated_at")) {
             statement.setString(1, dimensionId);
-            statement.setLong(2, box.getLong("BoxPos"));
-            statement.setString(3, box.getString("BuildingId"));
-            statement.setString(4, box.getString("DefinitionId"));
-            statement.setInt(5, box.getBoolean("Running") ? 1 : 0);
-            statement.setString(6, box.getString("StatusKey"));
-            statement.setString(7, box.getString("StatusText"));
-            statement.setLong(8, box.getLong("UpdatedAt"));
+            statement.setLong(2, box.getLongOr("BoxPos", 0L));
+            statement.setString(3, box.getStringOr("BuildingId", ""));
+            statement.setString(4, box.getStringOr("DefinitionId", ""));
+            statement.setInt(5, box.getBooleanOr("Running", false) ? 1 : 0);
+            statement.setString(6, box.getStringOr("StatusKey", ""));
+            statement.setString(7, box.getStringOr("StatusText", ""));
+            statement.setLong(8, box.getLongOr("UpdatedAt", 0L));
             statement.executeUpdate();
         }
     }
@@ -225,12 +225,12 @@ public final class CommercialSqliteRepository {
                         + "VALUES(?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(dimension_id, box_pos_long, item_id) DO UPDATE SET current_stock = excluded.current_stock, max_stock = excluded.max_stock, last_restock_game_time = excluded.last_restock_game_time, updated_at = excluded.updated_at")) {
             statement.setString(1, dimensionId);
-            statement.setLong(2, stock.getLong("BoxPos"));
-            statement.setString(3, stock.getString("ItemId"));
-            statement.setInt(4, stock.getInt("CurrentStock"));
-            statement.setInt(5, stock.getInt("MaxStock"));
-            statement.setLong(6, stock.getLong("LastRestockGameTime"));
-            statement.setLong(7, stock.getLong("UpdatedAt"));
+            statement.setLong(2, stock.getLongOr("BoxPos", 0L));
+            statement.setString(3, stock.getStringOr("ItemId", ""));
+            statement.setInt(4, stock.getIntOr("CurrentStock", 0));
+            statement.setInt(5, stock.getIntOr("MaxStock", 0));
+            statement.setLong(6, stock.getLongOr("LastRestockGameTime", 0L));
+            statement.setLong(7, stock.getLongOr("UpdatedAt", 0L));
             statement.executeUpdate();
         }
     }

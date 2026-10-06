@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.ui;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -12,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-@OnlyIn(Dist.CLIENT)
 public final class SimuKraftClientUiPreferences {
     private static final String FILE_NAME = "simukraft_client_ui.properties";
     private static final Properties VALUES = new Properties();

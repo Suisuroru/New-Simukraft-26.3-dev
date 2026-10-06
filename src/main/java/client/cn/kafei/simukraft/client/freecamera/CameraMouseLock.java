@@ -1,11 +1,8 @@
 package client.cn.kafei.simukraft.client.freecamera;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.glfw.GLFW;
 
-@OnlyIn(Dist.CLIENT)
 public final class CameraMouseLock {
     private static boolean locked;
 
@@ -19,11 +16,16 @@ public final class CameraMouseLock {
             return;
         }
         minecraft.execute(() -> {
-            long window = minecraft.getWindow().getWindow();
-            if (window == 0L) {
+            if (minecraft.getWindow() == null) {
                 return;
             }
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, locked ? GLFW.GLFW_CURSOR_DISABLED : GLFW.GLFW_CURSOR_NORMAL);
+            double x = minecraft.mouseHandler.xpos();
+            double y = minecraft.mouseHandler.ypos();
+            if (locked) {
+                InputConstants.grabMouse(minecraft.getWindow(), x, y);
+            } else {
+                InputConstants.releaseMouse(minecraft.getWindow(), x, y);
+            }
         });
     }
 

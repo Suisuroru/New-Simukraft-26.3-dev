@@ -1,9 +1,11 @@
 package client.cn.kafei.simukraft.client.toast;
 
+import net.minecraft.client.renderer.RenderPipelines;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import java.util.List;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
@@ -113,11 +115,11 @@ final class ClientToastLayout {
     }
 
     /** render: 将布局缩放至配置的目标矩形。 */
-    void render(GuiGraphics graphics, Font font, int x, int y, int count, String style) {
-        graphics.pose().pushPose();
+    void render(GuiGraphicsExtractor graphics, Font font, int x, int y, int count, String style) {
+        graphics.pose().pushMatrix();
         // 通知必须位于其他 HUD 与屏幕元素之上，避免文本被后续图层覆盖。
-        graphics.pose().translate(x, y, RENDER_DEPTH);
-        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(scale, scale);
         int accentColor = accentColor(style);
         graphics.fill(0, 0, logicalWidth, logicalHeight, 0xE6101010);
         int accentWidth = Math.max(2, Math.round(4 * logicalWidth / (float) DEFAULT_WIDTH));
@@ -133,22 +135,20 @@ final class ClientToastLayout {
                 iconX + iconSize + backingPadding,
                 centeredIconY + iconSize + backingPadding,
                 accentColor);
-        graphics.blit(
+        graphics.blit(RenderPipelines.GUI_TEXTURED,
                 LOGO_TEXTURE,
                 iconX,
                 centeredIconY,
-                iconSize,
-                iconSize,
                 0.0F,
                 0.0F,
-                LOGO_TEXTURE_SIZE,
-                LOGO_TEXTURE_SIZE,
+                iconSize,
+                iconSize,
                 LOGO_TEXTURE_SIZE,
                 LOGO_TEXTURE_SIZE);
-        graphics.drawString(font, title, textX, titleY, 0xFFFFFFFF, false);
+        graphics.text(font, title, textX, titleY, 0xFFFFFFFF, false);
         if (count > 1) {
             String countText = "x" + count;
-            graphics.drawString(
+            graphics.text(
                     font,
                     countText,
                     logicalWidth - sidePadding - font.width(countText),
@@ -158,13 +158,13 @@ final class ClientToastLayout {
         }
 
         renderMessage(graphics, font);
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     /** renderMessage: 绘制文本和可选物品信息。 */
-    private void renderMessage(GuiGraphics graphics, Font font) {
+    private void renderMessage(GuiGraphicsExtractor graphics, Font font) {
         for (int index = 0; index < messageLines.size(); index++) {
-            graphics.drawString(
+            graphics.text(
                     font,
                     messageLines.get(index),
                     textX,
@@ -177,12 +177,12 @@ final class ClientToastLayout {
         }
 
         int itemY = messageY + Math.max(1, messageLines.size()) * BASE_LINE_HEIGHT + itemGap;
-        graphics.drawString(font, itemPrefix, textX, itemY + 4, 0xFFFFFFFF, false);
+        graphics.text(font, itemPrefix, textX, itemY + 4, 0xFFFFFFFF, false);
         int itemX = textX + itemPrefixWidth + 4;
-        graphics.renderItem(iconStack, itemX, itemY);
+        graphics.item(iconStack, itemX, itemY);
         int itemTextX = itemX + inlineItemSize + 4;
         for (int index = 0; index < itemNameLines.size(); index++) {
-            graphics.drawString(
+            graphics.text(
                     font,
                     itemNameLines.get(index),
                     itemTextX,

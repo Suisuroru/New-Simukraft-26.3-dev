@@ -98,6 +98,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -170,9 +171,14 @@ public final class SimuKraft {
     }
 
     private void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
+        if (!(event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)) {
+            return;
+        }
+        try {
             PlayerWelcomeService.handleLogin(player);
             CityChunkSyncService.syncToPlayer(player);
+        } catch (RuntimeException exception) {
+            LOGGER.error("Failed to handle player login for {}", player.getGameProfile().name(), exception);
         }
     }
 
@@ -224,7 +230,7 @@ public final class SimuKraft {
 
     private void onExplosionDetonate(ExplosionEvent.Detonate event) {
         if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel level) {
-            CitizenNavigationService.invalidate(level, level.getSharedSpawnPos());
+            CitizenNavigationService.invalidate(level, BlockPos.ZERO);
         }
     }
 
@@ -253,7 +259,7 @@ public final class SimuKraft {
                 || state.getBlock() instanceof net.minecraft.world.level.block.TrapDoorBlock) {
             CitizenNavigationService.invalidate(level, clickedPos);
         }
-        net.minecraft.core.BlockPos bedHeadPos = state.is(net.minecraft.world.level.block.Blocks.RED_BED)
+        net.minecraft.core.BlockPos bedHeadPos = state.is(net.minecraft.world.level.block.Blocks.BED.red())
                 ? ResidentialBedPoiService.resolveBedHeadPos(clickedPos, state)
                 : MedicalBedPoiService.resolveBedHeadPos(clickedPos, state);
         if (bedHeadPos == null) return;

@@ -305,7 +305,7 @@ final class SimuKraftMaterialListEditor {
 
     private void showInvalidItem(String itemId) {
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(Component.translatable("gui.simukraft.config.material.invalid_item", itemId), false);
+            Minecraft.getInstance().player.sendSystemMessage(Component.translatable("gui.simukraft.config.material.invalid_item", itemId));
         }
     }
 }

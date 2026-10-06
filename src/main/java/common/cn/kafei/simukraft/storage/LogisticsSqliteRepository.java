@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -29,17 +31,17 @@ public final class LogisticsSqliteRepository {
      * 按不完整的内存快照清表会在加载失败时抹掉整个存档的物流配置。
      */
     public void saveAll(Connection connection, CompoundTag tag) throws SQLException {
-        ListTag warehouses = tag.getList("Warehouses", CompoundTag.TAG_COMPOUND);
+        ListTag warehouses = tag.getListOrEmpty("Warehouses");
         for (int i = 0; i < warehouses.size(); i++) {
-            saveWarehouse(connection, warehouses.getCompound(i));
+            saveWarehouse(connection, warehouses.getCompoundOrEmpty(i));
         }
-        ListTag clients = tag.getList("Clients", CompoundTag.TAG_COMPOUND);
+        ListTag clients = tag.getListOrEmpty("Clients");
         for (int i = 0; i < clients.size(); i++) {
-            saveClient(connection, clients.getCompound(i));
+            saveClient(connection, clients.getCompoundOrEmpty(i));
         }
-        ListTag channels = tag.getList("Channels", CompoundTag.TAG_COMPOUND);
+        ListTag channels = tag.getListOrEmpty("Channels");
         for (int i = 0; i < channels.size(); i++) {
-            saveChannel(connection, channels.getCompound(i));
+            saveChannel(connection, channels.getCompoundOrEmpty(i));
         }
     }
 
@@ -71,25 +73,25 @@ public final class LogisticsSqliteRepository {
         // 不再 deleteDimension 后重写：删除只走各自的 delete 方法，这里只做 upsert。
         Set<String> warehouseIds = new HashSet<>();
         Set<String> clientIds = new HashSet<>();
-        ListTag warehouses = tag.getList("Warehouses", CompoundTag.TAG_COMPOUND);
+        ListTag warehouses = tag.getListOrEmpty("Warehouses");
         for (int i = 0; i < warehouses.size(); i++) {
-            CompoundTag warehouse = warehouses.getCompound(i);
+            CompoundTag warehouse = warehouses.getCompoundOrEmpty(i);
             if (sameDimension(warehouse, dimensionId)) {
                 saveWarehouse(connection, warehouse);
-                warehouseIds.add(warehouse.getUUID("WarehouseId").toString());
+                warehouseIds.add(NbtUuid.read(warehouse, "WarehouseId").toString());
             }
         }
-        ListTag clients = tag.getList("Clients", CompoundTag.TAG_COMPOUND);
+        ListTag clients = tag.getListOrEmpty("Clients");
         for (int i = 0; i < clients.size(); i++) {
-            CompoundTag client = clients.getCompound(i);
+            CompoundTag client = clients.getCompoundOrEmpty(i);
             if (sameDimension(client, dimensionId)) {
                 saveClient(connection, client);
-                clientIds.add(client.getUUID("ClientId").toString());
+                clientIds.add(NbtUuid.read(client, "ClientId").toString());
             }
         }
-        ListTag channels = tag.getList("Channels", CompoundTag.TAG_COMPOUND);
+        ListTag channels = tag.getListOrEmpty("Channels");
         for (int i = 0; i < channels.size(); i++) {
-            CompoundTag channel = channels.getCompound(i);
+            CompoundTag channel = channels.getCompoundOrEmpty(i);
             if (belongsToDimension(channel, warehouseIds, clientIds)) {
                 saveChannel(connection, channel);
             }
@@ -120,7 +122,7 @@ public final class LogisticsSqliteRepository {
     }
 
     public void upsertWarehouse(Connection connection, CompoundTag warehouseTag) throws SQLException {
-        String warehouseId = warehouseTag.getUUID("WarehouseId").toString();
+        String warehouseId = NbtUuid.read(warehouseTag, "WarehouseId").toString();
         try (PreparedStatement deleteContainers = connection.prepareStatement("DELETE FROM logistics_ports WHERE owner_id = ? AND owner_type = 'warehouse'")) {
             deleteContainers.setString(1, warehouseId);
             deleteContainers.executeUpdate();
@@ -129,7 +131,7 @@ public final class LogisticsSqliteRepository {
     }
 
     public void upsertClient(Connection connection, CompoundTag clientTag) throws SQLException {
-        String clientId = clientTag.getUUID("ClientId").toString();
+        String clientId = NbtUuid.read(clientTag, "ClientId").toString();
         try (PreparedStatement deletePorts = connection.prepareStatement("DELETE FROM logistics_ports WHERE owner_id = ? AND owner_type = 'client'")) {
             deletePorts.setString(1, clientId);
             deletePorts.executeUpdate();
@@ -236,59 +238,59 @@ public final class LogisticsSqliteRepository {
     }
 
     private boolean sameDimension(CompoundTag tag, String dimensionId) {
-        String tagDimension = tag.getString("DimensionId");
+        String tagDimension = tag.getStringOr("DimensionId", "");
         return tagDimension.isBlank() || dimensionId.equals(tagDimension);
     }
 
     private boolean belongsToDimension(CompoundTag channel, Set<String> warehouseIds, Set<String> clientIds) {
-        return channel.hasUUID("WarehouseId") && warehouseIds.contains(channel.getUUID("WarehouseId").toString())
-                || channel.hasUUID("ClientId") && clientIds.contains(channel.getUUID("ClientId").toString());
+        return NbtUuid.has(channel, "WarehouseId") && warehouseIds.contains(NbtUuid.read(channel, "WarehouseId").toString())
+                || NbtUuid.has(channel, "ClientId") && clientIds.contains(NbtUuid.read(channel, "ClientId").toString());
     }
 
     private void saveWarehouse(Connection connection, CompoundTag tag) throws SQLException {
-        String warehouseId = tag.getUUID("WarehouseId").toString();
+        String warehouseId = NbtUuid.read(tag, "WarehouseId").toString();
         // 同一位置被新仓库顶替时，旧行（连同其端口与通道）必须先清掉：
         // 表上有 UNIQUE(dimension_id, box_pos_long)，批量保存路径不做预清理会让 INSERT 撞约束、整条写入被丢弃。
-        deleteWarehousesAt(connection, tag.getLong("BoxPos"), warehouseId, tag.getString("DimensionId"));
+        deleteWarehousesAt(connection, tag.getLongOr("BoxPos", 0L), warehouseId, tag.getStringOr("DimensionId", ""));
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO logistics_warehouses(warehouse_id, box_pos_long, city_id, dimension_id, updated_at) VALUES(?, ?, ?, ?, ?) "
                         + "ON CONFLICT(warehouse_id) DO UPDATE SET box_pos_long = excluded.box_pos_long, city_id = excluded.city_id, dimension_id = excluded.dimension_id, updated_at = excluded.updated_at")) {
             statement.setString(1, warehouseId);
-            statement.setLong(2, tag.getLong("BoxPos"));
-            SqliteNbtHelper.setNullableString(statement, 3, tag.hasUUID("CityId") ? tag.getUUID("CityId").toString() : null);
-            statement.setString(4, tag.getString("DimensionId"));
-            statement.setLong(5, tag.getLong("UpdatedAt"));
+            statement.setLong(2, tag.getLongOr("BoxPos", 0L));
+            SqliteNbtHelper.setNullableString(statement, 3, NbtUuid.toStringOrNull(tag, "CityId"));
+            statement.setString(4, tag.getStringOr("DimensionId", ""));
+            statement.setLong(5, tag.getLongOr("UpdatedAt", 0L));
             statement.executeUpdate();
         }
-        ListTag containers = tag.getList("Containers", CompoundTag.TAG_COMPOUND);
+        ListTag containers = tag.getListOrEmpty("Containers");
         for (int i = 0; i < containers.size(); i++) {
-            CompoundTag container = containers.getCompound(i);
-            savePort(connection, warehouseId, "warehouse", "container_" + i, "container", "warehouse", BlockPos.of(container.getLong("Pos")));
+            CompoundTag container = containers.getCompoundOrEmpty(i);
+            savePort(connection, warehouseId, "warehouse", "container_" + i, "container", "warehouse", BlockPos.of(container.getLongOr("Pos", 0L)));
         }
     }
 
     private void saveClient(Connection connection, CompoundTag tag) throws SQLException {
-        String clientId = tag.getUUID("ClientId").toString();
+        String clientId = NbtUuid.read(tag, "ClientId").toString();
         // 同 saveWarehouse：同位置的旧客户端行不清理会连端口、通道一起残留成幽灵数据。
-        deleteClientsAt(connection, tag.getLong("BoxPos"), clientId, tag.getString("DimensionId"));
+        deleteClientsAt(connection, tag.getLongOr("BoxPos", 0L), clientId, tag.getStringOr("DimensionId", ""));
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO logistics_clients(client_id, box_pos_long, city_id, dimension_id, name, automatic, source_type, source_id, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(client_id) DO UPDATE SET box_pos_long = excluded.box_pos_long, city_id = excluded.city_id, dimension_id = excluded.dimension_id, name = excluded.name, automatic = excluded.automatic, source_type = excluded.source_type, source_id = excluded.source_id, updated_at = excluded.updated_at")) {
             statement.setString(1, clientId);
-            statement.setLong(2, tag.getLong("BoxPos"));
-            SqliteNbtHelper.setNullableString(statement, 3, tag.hasUUID("CityId") ? tag.getUUID("CityId").toString() : null);
-            statement.setString(4, tag.getString("DimensionId"));
-            statement.setString(5, tag.getString("Name"));
-            statement.setInt(6, tag.getBoolean("Automatic") ? 1 : 0);
-            statement.setString(7, tag.getString("SourceType"));
-            statement.setString(8, tag.getString("SourceId"));
-            statement.setLong(9, tag.getLong("UpdatedAt"));
+            statement.setLong(2, tag.getLongOr("BoxPos", 0L));
+            SqliteNbtHelper.setNullableString(statement, 3, NbtUuid.toStringOrNull(tag, "CityId"));
+            statement.setString(4, tag.getStringOr("DimensionId", ""));
+            statement.setString(5, tag.getStringOr("Name", ""));
+            statement.setInt(6, tag.getBooleanOr("Automatic", false) ? 1 : 0);
+            statement.setString(7, tag.getStringOr("SourceType", ""));
+            statement.setString(8, tag.getStringOr("SourceId", ""));
+            statement.setLong(9, tag.getLongOr("UpdatedAt", 0L));
             statement.executeUpdate();
         }
-        ListTag ports = tag.getList("Ports", CompoundTag.TAG_COMPOUND);
+        ListTag ports = tag.getListOrEmpty("Ports");
         for (int i = 0; i < ports.size(); i++) {
-            CompoundTag port = ports.getCompound(i);
-            savePort(connection, clientId, "client", port.getString("Id"), port.getString("Name"), port.getString("Kind"), BlockPos.of(port.getLong("Pos")));
+            CompoundTag port = ports.getCompoundOrEmpty(i);
+            savePort(connection, clientId, "client", port.getStringOr("Id", ""), port.getStringOr("Name", ""), port.getStringOr("Kind", ""), BlockPos.of(port.getLongOr("Pos", 0L)));
         }
     }
 
@@ -310,16 +312,16 @@ public final class LogisticsSqliteRepository {
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO logistics_channels(channel_id, warehouse_id, client_id, direction, name, enabled, filters, updated_at, keep_quantity, keep_source) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(channel_id) DO UPDATE SET warehouse_id = excluded.warehouse_id, client_id = excluded.client_id, direction = excluded.direction, name = excluded.name, enabled = excluded.enabled, filters = excluded.filters, updated_at = excluded.updated_at, keep_quantity = excluded.keep_quantity, keep_source = excluded.keep_source")) {
-            statement.setString(1, tag.getUUID("ChannelId").toString());
-            statement.setString(2, tag.hasUUID("WarehouseId") ? tag.getUUID("WarehouseId").toString() : "");
-            statement.setString(3, tag.hasUUID("ClientId") ? tag.getUUID("ClientId").toString() : "");
-            statement.setString(4, tag.getString("Direction"));
-            statement.setString(5, tag.getString("Name"));
-            statement.setInt(6, tag.getBoolean("Enabled") ? 1 : 0);
-            statement.setString(7, tag.getList("Filters", CompoundTag.TAG_COMPOUND).toString());
-            statement.setLong(8, tag.getLong("UpdatedAt"));
-            statement.setInt(9, tag.contains("KeepQuantity") ? tag.getInt("KeepQuantity") : 0);
-            statement.setInt(10, tag.contains("KeepSourceQuantity") ? tag.getInt("KeepSourceQuantity") : 0);
+            statement.setString(1, NbtUuid.read(tag, "ChannelId").toString());
+            statement.setString(2, NbtUuid.toStringOrEmpty(tag, "WarehouseId"));
+            statement.setString(3, NbtUuid.toStringOrEmpty(tag, "ClientId"));
+            statement.setString(4, tag.getStringOr("Direction", ""));
+            statement.setString(5, tag.getStringOr("Name", ""));
+            statement.setInt(6, tag.getBooleanOr("Enabled", false) ? 1 : 0);
+            statement.setString(7, tag.getListOrEmpty("Filters").toString());
+            statement.setLong(8, tag.getLongOr("UpdatedAt", 0L));
+            statement.setInt(9, tag.contains("KeepQuantity") ? tag.getIntOr("KeepQuantity", 0) : 0);
+            statement.setInt(10, tag.contains("KeepSourceQuantity") ? tag.getIntOr("KeepSourceQuantity", 0) : 0);
             statement.executeUpdate();
         }
     }
@@ -340,7 +342,7 @@ public final class LogisticsSqliteRepository {
                 while (resultSet.next()) {
                     CompoundTag tag = new CompoundTag();
                     String warehouseId = resultSet.getString("warehouse_id");
-                    tag.putUUID("WarehouseId", UUID.fromString(warehouseId));
+                    NbtUuid.put(tag, "WarehouseId", UUID.fromString(warehouseId));
                     tag.putLong("BoxPos", resultSet.getLong("box_pos_long"));
                     SqliteNbtHelper.putNullableUuid(tag, "CityId", resultSet.getString("city_id"));
                     tag.putString("DimensionId", resultSet.getString("dimension_id"));
@@ -368,7 +370,7 @@ public final class LogisticsSqliteRepository {
                 while (resultSet.next()) {
                     CompoundTag tag = new CompoundTag();
                     String clientId = resultSet.getString("client_id");
-                    tag.putUUID("ClientId", UUID.fromString(clientId));
+                    NbtUuid.put(tag, "ClientId", UUID.fromString(clientId));
                     tag.putLong("BoxPos", resultSet.getLong("box_pos_long"));
                     SqliteNbtHelper.putNullableUuid(tag, "CityId", resultSet.getString("city_id"));
                     tag.putString("DimensionId", resultSet.getString("dimension_id"));
@@ -430,7 +432,7 @@ public final class LogisticsSqliteRepository {
                 while (resultSet.next()) {
                     CompoundTag tag = new CompoundTag();
                     String channelId = resultSet.getString("channel_id");
-                    tag.putUUID("ChannelId", UUID.fromString(channelId));
+                    NbtUuid.put(tag, "ChannelId", UUID.fromString(channelId));
                     SqliteNbtHelper.putNullableUuid(tag, "WarehouseId", resultSet.getString("warehouse_id"));
                     SqliteNbtHelper.putNullableUuid(tag, "ClientId", resultSet.getString("client_id"));
                     tag.putString("Direction", resultSet.getString("direction"));
@@ -440,7 +442,7 @@ public final class LogisticsSqliteRepository {
                     tag.putInt("KeepQuantity", resultSet.getInt("keep_quantity"));
                     tag.putInt("KeepSourceQuantity", resultSet.getInt("keep_source"));
                     try {
-                        tag.put("Filters", net.minecraft.nbt.TagParser.parseCompoundFully("{Filters:" + resultSet.getString("filters") + "}").getList("Filters", CompoundTag.TAG_COMPOUND));
+                        tag.put("Filters", net.minecraft.nbt.TagParser.parseCompoundFully("{Filters:" + resultSet.getString("filters") + "}").getListOrEmpty("Filters"));
                     } catch (Exception exception) {
                         // 过滤规则损坏时置空但必须留痕，否则通道行为变化无从排查。
                         SimuKraft.LOGGER.warn("Failed to parse filters of logistics channel {} from SQLite; falling back to empty filters", channelId, exception);

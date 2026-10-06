@@ -1,11 +1,10 @@
 package client.cn.kafei.simukraft.client.citizen;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import common.cn.kafei.simukraft.citizen.family.CitizenFamilyGraphSnapshot;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -21,7 +20,6 @@ import java.util.UUID;
 
 /** 五代关系图画布：复用城市地图的裁剪画布、拖拽平移和滚轮缩放。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class CitizenFamilyGraphCanvas extends UIElement {
     private static final double MIN_ZOOM = 0.6D;
     private static final double MAX_ZOOM = 2.4D;
@@ -54,7 +52,8 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
     }
 
     @Override
-    public void drawBackgroundAdditional(@Nonnull GUIContext guiContext) {
+    public void drawBackgroundAdditional(IGUIContext context) {
+        GUIContext guiContext = (GUIContext) context;
         int x = Math.round(getPositionX());
         int y = Math.round(getPositionY());
         int width = Math.round(getSizeWidth());
@@ -70,10 +69,10 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
         guiContext.graphics.fill(startX - 2, startY - 2, startX + mapWidth + 2, startY + mapHeight + 2, 0xFFFFFFFF);
         guiContext.graphics.fill(startX - 1, startY - 1, startX + mapWidth + 1, startY + mapHeight + 1, 0x80000000);
         guiContext.graphics.fill(startX, startY, startX + mapWidth, startY + mapHeight, 0xFF1F1F1F);
-        guiContext.graphics.flush();
+        guiContext.graphics.nextStratum();
         guiContext.enableScissor(startX, startY, mapWidth, mapHeight);
         renderGraph(guiContext, startX, startY, mapWidth, mapHeight);
-        guiContext.graphics.flush();
+        guiContext.graphics.nextStratum();
         guiContext.disableScissor();
     }
 
@@ -109,7 +108,7 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
             }
             CitizenAvatarFactory.blitHead(guiContext.graphics, node.skinPath(), drawX, drawY, size, node.dead());
         }
-        guiContext.graphics.flush();
+        guiContext.graphics.nextStratum();
         renderHoverTooltip(guiContext, startX, startY, width, height, centerX, centerY, size);
     }
 
@@ -147,7 +146,7 @@ public final class CitizenFamilyGraphCanvas extends UIElement {
         }
         tooltipX = Math.max(startX + 4, Math.min(tooltipX, startX + width - tooltipWidth - 8));
         tooltipY = Math.max(startY + 4, Math.min(tooltipY, startY + height - tooltipHeight - 8));
-        guiContext.graphics.renderComponentTooltip(minecraft.font, lines, tooltipX, tooltipY);
+        guiContext.graphics.setComponentTooltipForNextFrame(minecraft.font, lines, tooltipX, tooltipY);
     }
 
     private CitizenFamilyGraphSnapshot.Node hitNode(double mouseX, double mouseY, double centerX, double centerY, float size) {

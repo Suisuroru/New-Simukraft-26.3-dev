@@ -462,7 +462,7 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
             }
             return isTag()
                     ? stack.is(TagKey.create(Registries.ITEM, itemTag))
-                    : stack.is(BuiltInRegistries.ITEM.get(itemId));
+                    : BuiltInRegistries.ITEM.getOptional(itemId).map(stack::is).orElse(false);
         }
 
         /** serializedId: 返回 UI 使用的物品或标签标识。 */

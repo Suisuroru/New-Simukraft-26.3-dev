@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireFirePacket;
@@ -20,8 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-
-@OnlyIn(Dist.CLIENT)
 public class BuildBoxScreenOpener {
     private static final int BUTTON_WIDTH = 120;
     private static final int BUTTON_HEIGHT = 24;
@@ -42,7 +40,7 @@ public class BuildBoxScreenOpener {
     private static volatile int currentCityLevel;
 
     public static void open(BlockPos buildBoxPos) {
-        PacketDistributor.sendToServer(new EmploymentStateRequestPacket(buildBoxPos, "build_box"));
+        ClientPacketDistributor.sendToServer(new EmploymentStateRequestPacket(buildBoxPos, "build_box"));
     }
 
     public static void applyEmploymentState(EmploymentStateResponsePacket packet) {
@@ -52,7 +50,7 @@ public class BuildBoxScreenOpener {
         }
         minecraft.execute(() -> {
             currentCityLevel = Math.max(0, packet.cityLevel());
-            minecraft.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet.sourcePos(), packet), Component.empty()));
+            minecraft.gui.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet.sourcePos(), packet), Component.empty()));
         });
     }
 
@@ -141,7 +139,7 @@ public class BuildBoxScreenOpener {
     }
 
     private static void close() {
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static void handleHireBuilder(BlockPos pos) {
@@ -157,7 +155,7 @@ public class BuildBoxScreenOpener {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createSelectBuildingUi(pos), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createSelectBuildingUi(pos), Component.empty())));
     }
 
     private static ModularUI createSelectBuildingUi(BlockPos buildBoxPos) {
@@ -232,12 +230,12 @@ public class BuildBoxScreenOpener {
 
     private static void handleFireEmployee(BlockPos pos, EmploymentStateResponsePacket state) {
         if (state.builderCitizenId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(pos, "build_box", "builder", state.builderCitizenId()));
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(pos, "build_box", "builder", state.builderCitizenId()));
             close();
             return;
         }
         if (state.plannerCitizenId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(pos, "build_box", "planner", state.plannerCitizenId()));
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(pos, "build_box", "planner", state.plannerCitizenId()));
             close();
         }
     }
@@ -269,5 +267,4 @@ public class BuildBoxScreenOpener {
                                    int gridHeight) {
     }
 }
-
 

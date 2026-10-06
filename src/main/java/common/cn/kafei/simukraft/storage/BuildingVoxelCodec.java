@@ -134,18 +134,18 @@ public final class BuildingVoxelCodec {
             if (tag == null) {
                 return fallbackState(blockId);
             }
-            String name = tag.getString("Name");
+            String name = tag.getStringOr("Name", "");
             Block block = BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.Identifier.parse(name)).orElse(null);
             if (block == null) {
                 return fallbackState(blockId);
             }
             BlockState state = block.defaultBlockState();
-            if (tag.contains("Properties", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
-                CompoundTag properties = tag.getCompound("Properties");
-                for (String key : properties.getAllKeys()) {
+            if (tag.contains("Properties")) {
+                CompoundTag properties = tag.getCompoundOrEmpty("Properties");
+                for (String key : properties.keySet()) {
                     Property<?> property = state.getBlock().getStateDefinition().getProperty(key);
                     if (property != null) {
-                        state = applyProperty(state, property, properties.getString(key));
+                        state = applyProperty(state, property, properties.getStringOr(key, ""));
                     }
                 }
             }

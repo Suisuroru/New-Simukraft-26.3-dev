@@ -1,13 +1,10 @@
 package client.cn.kafei.simukraft.client.rts;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /** RTS 手部渲染控制：隐藏第一人称手臂和手持物，保持俯视画面干净。 */
-@OnlyIn(Dist.CLIENT)
 public final class RtsHandRenderer {
     private RtsHandRenderer() {
     }

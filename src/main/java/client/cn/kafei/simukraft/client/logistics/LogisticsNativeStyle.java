@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.logistics;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -26,12 +26,12 @@ final class LogisticsNativeStyle {
     }
 
     /** drawBackdrop: 绘制旧版物流界面的半透明深色背景。 */
-    static void drawBackdrop(GuiGraphics graphics, int width, int height) {
+    static void drawBackdrop(GuiGraphicsExtractor graphics, int width, int height) {
         graphics.fill(0, 0, width, height, 0x660D0D1A);
     }
 
     /** drawPanel: 绘制旧版直角信息面板。 */
-    static void drawPanel(GuiGraphics graphics, int x, int y, int width, int height) {
+    static void drawPanel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         graphics.fill(x, y, x + width, y + height, PANEL);
         graphics.fill(x, y, x + width, y + 1, PANEL_LINE);
         graphics.fill(x, y + height - 1, x + width, y + height, PANEL_LINE);
@@ -45,17 +45,17 @@ final class LogisticsNativeStyle {
     }
 
     /** drawFitString: 在给定宽度内绘制单行文本，过长时截断。 */
-    static void drawFitString(GuiGraphics graphics, Font font, String text, int x, int y, int maxWidth, int color) {
-        graphics.drawString(font, fit(font, text, maxWidth), x, y, color, false);
+    static void drawFitString(GuiGraphicsExtractor graphics, Font font, String text, int x, int y, int maxWidth, int color) {
+        graphics.text(font, fit(font, text, maxWidth), x, y, color, false);
     }
 
     /** drawFitString: 在给定宽度内绘制组件文本，过长时截断。 */
-    static void drawFitString(GuiGraphics graphics, Font font, Component text, int x, int y, int maxWidth, int color) {
+    static void drawFitString(GuiGraphicsExtractor graphics, Font font, Component text, int x, int y, int maxWidth, int color) {
         drawFitString(graphics, font, text.getString(), x, y, maxWidth, color);
     }
 
     /** drawStatusBadge: 绘制路线启停状态的红绿文字色块。 */
-    static void drawStatusBadge(GuiGraphics graphics, Font font, boolean enabled, int x, int y) {
+    static void drawStatusBadge(GuiGraphicsExtractor graphics, Font font, boolean enabled, int x, int y) {
         String text = enabled ? "ON" : "OFF";
         int width = 25;
         int height = 11;
@@ -66,7 +66,7 @@ final class LogisticsNativeStyle {
         graphics.fill(x, y + height - 1, x + width, y + height, line);
         graphics.fill(x, y, x + 1, y + height, line);
         graphics.fill(x + width - 1, y, x + width, y + height, line);
-        graphics.drawCenteredString(font, text, x + width / 2, y + 1, TEXT);
+        graphics.centeredText(font, text, x + width / 2, y + 1, TEXT);
     }
 
     /** fit: 将长文本压缩成带省略号的单行内容。 */

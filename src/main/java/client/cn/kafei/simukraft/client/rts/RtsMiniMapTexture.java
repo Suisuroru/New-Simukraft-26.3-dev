@@ -6,21 +6,19 @@ import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegion;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegionData;
 import com.mojang.blaze3d.platform.NativeImage;
+import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Map;
 import java.util.UUID;
 
 /** RTS 小地图纹理：从已有地图缓存采样并管理动态纹理生命周期。 */
 
-@OnlyIn(Dist.CLIENT)
 final class RtsMiniMapTexture {
     private static final int SIZE = 192;
     private static final int COLOR_UNKNOWN = 0xFF202725;
@@ -74,7 +72,7 @@ final class RtsMiniMapTexture {
                 int terrainColor = sampleColor(worldX, worldZ);
                 int displayColor = applyTerritoryOverlay(
                         terrainColor, worldX, worldZ, pixelWorldSpan, currentCityId, chunkOwners);
-                image.setPixelRGBA(pixelX, pixelZ, SimuBlockColors.toNativeColor(displayColor));
+                image.setPixel(pixelX, pixelZ, displayColor);
             }
         }
         texture.upload();
@@ -105,8 +103,9 @@ final class RtsMiniMapTexture {
         if (texture != null) {
             return;
         }
-        texture = new DynamicTexture(SIZE, SIZE, true);
-        textureLocation = Minecraft.getInstance().getTextureManager().register("simukraft_rts_minimap", texture);
+        textureLocation = Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "rts_minimap");
+        texture = new DynamicTexture("simukraft-rts-minimap", SIZE, SIZE, true);
+        Minecraft.getInstance().getTextureManager().register(textureLocation, texture);
     }
 
     private static int sampleColor(int worldX, int worldZ) {
@@ -127,7 +126,7 @@ final class RtsMiniMapTexture {
                                               UUID currentCityId, Map<Long, UUID> chunkOwners) {
         int chunkX = worldX >> 4;
         int chunkZ = worldZ >> 4;
-        UUID owner = chunkOwners.get(ChunkPos.asLong(chunkX, chunkZ));
+        UUID owner = chunkOwners.get(ChunkPos.pack(chunkX, chunkZ));
         if (owner == null) {
             return terrainColor;
         }
@@ -151,6 +150,6 @@ final class RtsMiniMapTexture {
 
     /** hasDifferentOwner: 判断相邻区块是否未认领或归属另一座城市。 */
     private static boolean hasDifferentOwner(UUID owner, Map<Long, UUID> chunkOwners, int chunkX, int chunkZ) {
-        return !owner.equals(chunkOwners.get(ChunkPos.asLong(chunkX, chunkZ)));
+        return !owner.equals(chunkOwners.get(ChunkPos.pack(chunkX, chunkZ)));
     }
 }

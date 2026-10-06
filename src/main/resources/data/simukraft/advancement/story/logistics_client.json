@@ -19,7 +19,7 @@
     "craft_logistics_client": {
       "trigger": "minecraft:recipe_crafted",
       "conditions": {
-        "recipe_id": "simukraft:logistics_client_box"
+        "recipes": "simukraft:logistics_client_box"
       }
     }
   },

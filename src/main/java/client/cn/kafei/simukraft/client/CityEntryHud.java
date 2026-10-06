@@ -3,17 +3,13 @@ package client.cn.kafei.simukraft.client;
 import client.cn.kafei.simukraft.client.city.ClientCityChunkCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.List;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CityEntryHud {
     private static final long DURATION_MS = 3000L;
     private static final int FADE_IN_TICKS = 12;
@@ -42,7 +38,7 @@ public final class CityEntryHud {
             lastChunkLong = Long.MIN_VALUE;
             return;
         }
-        long chunkLong = mc.player.chunkPosition().toLong();
+        long chunkLong = mc.player.chunkPosition().pack();
         if (chunkLong == lastChunkLong) return;
         lastChunkLong = chunkLong;
 
@@ -72,7 +68,7 @@ public final class CityEntryHud {
         lastChunkLong = Long.MIN_VALUE;
     }
 
-    public static void render(GuiGraphics guiGraphics, float partialTick) {
+    public static void render(GuiGraphicsExtractor guiGraphics, float partialTick) {
         if (cityName == null) return;
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed > DURATION_MS) { cityName = null; return; }
@@ -137,16 +133,16 @@ public final class CityEntryHud {
         return w;
     }
 
-    private static void drawCenteredScaledLines(GuiGraphics g, Font font, List<FormattedCharSequence> lines,
+    private static void drawCenteredScaledLines(GuiGraphicsExtractor g, Font font, List<FormattedCharSequence> lines,
                                                 int centerX, int startY, float scale, int color, boolean shadow) {
         int lineHeight = Math.max(1, Math.round(font.lineHeight * scale));
         int y = startY;
         for (FormattedCharSequence line : lines) {
-            g.pose().pushPose();
-            g.pose().translate(centerX, y, 0);
-            g.pose().scale(scale, scale, 1.0F);
-            g.drawString(font, line, -font.width(line) / 2, 0, color, shadow);
-            g.pose().popPose();
+            g.pose().pushMatrix();
+            g.pose().translate(centerX, y);
+            g.pose().scale(scale, scale);
+            g.text(font, line, -font.width(line) / 2, 0, color, shadow);
+            g.pose().popMatrix();
             y += lineHeight;
         }
     }

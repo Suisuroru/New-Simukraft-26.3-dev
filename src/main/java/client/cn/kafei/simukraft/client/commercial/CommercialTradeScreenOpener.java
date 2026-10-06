@@ -1,10 +1,7 @@
 package client.cn.kafei.simukraft.client.commercial;
 
 import common.cn.kafei.simukraft.network.commercial.CommercialTradeOpenResponsePacket;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
-@OnlyIn(Dist.CLIENT)
 public final class CommercialTradeScreenOpener {
     private CommercialTradeScreenOpener() {
     }

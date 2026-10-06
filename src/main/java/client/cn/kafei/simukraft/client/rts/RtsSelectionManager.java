@@ -1,11 +1,14 @@
 package client.cn.kafei.simukraft.client.rts;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.renderer.RenderPipelines;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraScreen;
 import client.cn.kafei.simukraft.client.input.SimuKraftKeyMappings;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
-import client.cn.kafei.simukraft.mixin.MixinGameRenderer;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
@@ -18,7 +21,7 @@ import common.cn.kafei.simukraft.network.rts.RtsPlaceBlockPacket;
 import common.cn.kafei.simukraft.config.ClientConfig;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,11 +36,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -45,7 +46,6 @@ import java.util.UUID;
 
 /** RTS 鼠标目标状态：只负责光标射线、选择状态和鼠标捕获状态。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class RtsSelectionManager {
     private static final double MAX_RAY_DISTANCE = 128.0D;
     private static final long HOLD_PROGRESS_DISPLAY_DELAY_NANOS = 200_000_000L;
@@ -112,7 +112,7 @@ public final class RtsSelectionManager {
         if (!active || minecraft.player == null || minecraft.level == null) {
             return;
         }
-        PacketDistributor.sendToServer(new RtsBuildingBoundsRequestPacket());
+        ClientPacketDistributor.sendToServer(new RtsBuildingBoundsRequestPacket());
         if (minecraft.mouseHandler.isMouseGrabbed()) {
             minecraft.mouseHandler.releaseMouse();
         }
@@ -180,7 +180,7 @@ public final class RtsSelectionManager {
         BuildingBoundsRenderer.setRtsSelection(null);
         BuildingBoundsRenderer.setRtsBuildingBounds(null);
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.screen == null && minecraft.player != null) {
+        if (minecraft.gui.screen() == null && minecraft.player != null) {
             minecraft.mouseHandler.grabMouse();
         }
     }
@@ -205,7 +205,7 @@ public final class RtsSelectionManager {
     /** onClientTick: 处理可修改按键并按帧更新鼠标光标目标。 */
     public static void onClientTick() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (SimuKraftKeyMappings.RTS_TOGGLE.consumeClick() && minecraft.screen == null) {
+        if (SimuKraftKeyMappings.RTS_TOGGLE.consumeClick() && minecraft.gui.screen() == null) {
             toggle();
         }
         if (!active) {
@@ -215,13 +215,13 @@ public final class RtsSelectionManager {
             deactivate();
             return;
         }
-        if (minecraft.screen == null && SimuKraftKeyMappings.RTS_DELETE.consumeClick() && selectedPos != null) {
+        if (minecraft.gui.screen() == null && SimuKraftKeyMappings.RTS_DELETE.consumeClick() && selectedPos != null) {
             clearMoveState();
-            PacketDistributor.sendToServer(new RtsDemolishPacket(selectedPos));
+            ClientPacketDistributor.sendToServer(new RtsDemolishPacket(selectedPos));
             selectedPos = null;
             BuildingBoundsRenderer.setRtsSelection(null);
         }
-        if (minecraft.screen != null) {
+        if (minecraft.gui.screen() != null) {
             setTarget(null);
             clearPlacementTarget();
             setTargetCitizen(null);
@@ -245,22 +245,22 @@ public final class RtsSelectionManager {
             event.setCanceled(true);
             return;
         }
-        if (Minecraft.getInstance().screen != null) {
+        if (Minecraft.getInstance().gui.screen() != null) {
             return;
         }
         int button = event.getButton();
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT && button != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT && button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return;
         }
         event.setCanceled(true);
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            if (event.getAction() == GLFW.GLFW_PRESS) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+            if (event.getAction() == InputConstants.PRESS) {
                 handleLeftPress();
-            } else if (event.getAction() == GLFW.GLFW_RELEASE) {
+            } else if (event.getAction() == InputConstants.RELEASE) {
                 finishLeftPress();
             }
-        } else if (event.getAction() == GLFW.GLFW_PRESS) {
-            if ((event.getModifiers() & GLFW.GLFW_MOD_ALT) != 0 || isCameraRotationActive()) {
+        } else if (event.getAction() == InputConstants.PRESS) {
+            if ((event.getModifiers() & InputConstants.MOD_ALT) != 0 || isCameraRotationActive()) {
                 return;
             }
             boolean cancelledMovePreview = RtsMovePreviewManager.isActive();
@@ -302,7 +302,7 @@ public final class RtsSelectionManager {
     public static boolean canUseRtsCameraControls() {
         Minecraft minecraft = Minecraft.getInstance();
         return active && FreeCameraManager.isRtsActive()
-                && (minecraft.screen == null || minecraft.screen instanceof FreeCameraScreen);
+                && (minecraft.gui.screen() == null || minecraft.gui.screen() instanceof FreeCameraScreen);
     }
 
     /** isCameraRotationActive: 返回 Alt 与右键是否共同处于按下状态。 */
@@ -311,14 +311,13 @@ public final class RtsSelectionManager {
             return false;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        long window = minecraft.getWindow().getWindow();
-        return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS && isAltDown();
+        return minecraft.mouseHandler.isRightPressed() && isAltDown();
     }
 
     /** handleEscapeKey: 无界面时按 ESC 退出 RTS 并恢复原版鼠标捕获。 */
     public static boolean handleEscapeKey(int keyCode, int action) {
-        if (!active || keyCode != GLFW.GLFW_KEY_ESCAPE || action != GLFW.GLFW_PRESS
-                || Minecraft.getInstance().screen != null) {
+        if (!active || keyCode != InputConstants.KEY_ESCAPE || action != InputConstants.PRESS
+                || Minecraft.getInstance().gui.screen() != null) {
             return false;
         }
         deactivate();
@@ -327,7 +326,7 @@ public final class RtsSelectionManager {
 
     /** handlePreviewMovementKey: 处理抓取预览复用的方向键与高度键。 */
     public static boolean handlePreviewMovementKey(int keyCode, int scanCode, int action) {
-        if (!active || !RtsMovePreviewManager.isActive() || action != GLFW.GLFW_PRESS) {
+        if (!active || !RtsMovePreviewManager.isActive() || action != InputConstants.PRESS) {
             return false;
         }
         if (SimuKraftKeyMappings.matches(SimuKraftKeyMappings.PREVIEW_MOVE_FORWARD, keyCode, scanCode)) {
@@ -376,8 +375,8 @@ public final class RtsSelectionManager {
     }
 
     /** renderHoldProgress: 在系统光标旁绘制长按移动的圆形进度。 */
-    public static void renderHoldProgress(GuiGraphics graphics) {
-        if (!active || !leftPressed || moveHoldCompleted || pressedPos == null || Minecraft.getInstance().screen != null) {
+    public static void renderHoldProgress(GuiGraphicsExtractor graphics) {
+        if (!active || !leftPressed || moveHoldCompleted || pressedPos == null || Minecraft.getInstance().gui.screen() != null) {
             return;
         }
         long holdNanos = moveHoldNanos();
@@ -400,7 +399,7 @@ public final class RtsSelectionManager {
                 0, HOLD_RING_FRAME_COUNT - 1);
         int sourceX = frame % HOLD_RING_FRAME_COLUMNS * HOLD_RING_FRAME_SIZE;
         int sourceY = frame / HOLD_RING_FRAME_COLUMNS * HOLD_RING_FRAME_SIZE;
-        graphics.blit(HOLD_RING_TEXTURE, cursorX - HOLD_RING_FRAME_SIZE / 2,
+        graphics.blit(RenderPipelines.GUI_TEXTURED, HOLD_RING_TEXTURE, cursorX - HOLD_RING_FRAME_SIZE / 2,
                 cursorY - HOLD_RING_FRAME_SIZE / 2, sourceX, sourceY,
                 HOLD_RING_FRAME_SIZE, HOLD_RING_FRAME_SIZE,
                 HOLD_RING_FRAME_SIZE * HOLD_RING_FRAME_COLUMNS,
@@ -494,7 +493,7 @@ public final class RtsSelectionManager {
 
     /** cursorRay: 将系统光标转换为与当前透视或正交投影一致的世界射线。 */
     private static CursorRay cursorRay(Minecraft minecraft) {
-        Camera camera = minecraft.gameRenderer.getMainCamera();
+        Camera camera = minecraft.gameRenderer.mainCamera();
         if (!camera.isInitialized() || !(minecraft.level instanceof ClientLevel)) {
             return null;
         }
@@ -505,7 +504,7 @@ public final class RtsSelectionManager {
         }
         double mouseX = minecraft.mouseHandler.xpos();
         double mouseY = minecraft.mouseHandler.ypos();
-        Camera.NearPlane nearPlane = camera.getNearPlane();
+        Camera.NearPlane nearPlane = camera.getNearPlane(camera.getFov());
         if (FreeCameraManager.isRtsActive()) {
             Vec3 center = nearPlane.getPointOnPlane(0.0F, 0.0F);
             Vec3 forward = center.normalize();
@@ -514,7 +513,7 @@ public final class RtsSelectionManager {
             double aspect = (double) screenWidth / screenHeight;
             double offsetX = (mouseX / screenWidth - 0.5D) * FreeCameraManager.rtsZoom() * aspect;
             double offsetY = (0.5D - mouseY / screenHeight) * FreeCameraManager.rtsZoom();
-            Vec3 from = camera.getPosition().add(right.scale(offsetX)).add(up.scale(offsetY));
+            Vec3 from = camera.position().add(right.scale(offsetX)).add(up.scale(offsetY));
             Vec3 to = from.add(forward.scale(MAX_RAY_DISTANCE));
             return new CursorRay(from, to);
         }
@@ -522,7 +521,7 @@ public final class RtsSelectionManager {
         float planeX = (float) (mouseX / screenWidth * 2.0D - 1.0D) * rayScale;
         float planeY = (float) (1.0D - mouseY / screenHeight * 2.0D) * rayScale;
         Vec3 direction = nearPlane.getPointOnPlane(planeX, planeY).normalize();
-        Vec3 from = camera.getPosition();
+        Vec3 from = camera.position();
         Vec3 to = from.add(direction.scale(MAX_RAY_DISTANCE));
         return new CursorRay(from, to);
     }
@@ -552,17 +551,16 @@ public final class RtsSelectionManager {
 
     /** cursorFovScale: 按实际渲染 FOV 校正 NearPlane 横纵偏移，避免边缘射线偏离光标。 */
     private static float cursorFovScale(Minecraft minecraft) {
-        MixinGameRenderer renderer = (MixinGameRenderer) minecraft.gameRenderer;
-        float modifier = renderer.simukraft$getFovModifier();
         double configuredFov = minecraft.options.fov().get();
-        if (configuredFov <= 0.0D || modifier <= 0.0F) {
+        double actualFov = minecraft.gameRenderer.mainCamera().getFov();
+        if (configuredFov <= 0.0D || actualFov <= 0.0D) {
             return 1.0F;
         }
         double configuredTangent = Math.tan(Math.toRadians(configuredFov * 0.5D));
         if (configuredTangent <= 0.0D) {
             return 1.0F;
         }
-        double actualTangent = Math.tan(Math.toRadians(configuredFov * modifier * 0.5D));
+        double actualTangent = Math.tan(Math.toRadians(actualFov * 0.5D));
         return (float) Mth.clamp(actualTangent / configuredTangent, 0.1D, 4.0D);
     }
 
@@ -586,7 +584,7 @@ public final class RtsSelectionManager {
 
     private static void handleLeftPress() {
         if (isShiftDown() && !RtsMovePreviewManager.isActive() && placementClickedPos != null && placementFace != null) {
-            PacketDistributor.sendToServer(new RtsPlaceBlockPacket(placementClickedPos, placementFace));
+            ClientPacketDistributor.sendToServer(new RtsPlaceBlockPacket(placementClickedPos, placementFace));
             lastLeftClickPos = null;
             lastLeftClickNanos = 0L;
             clearMoveState();
@@ -636,7 +634,7 @@ public final class RtsSelectionManager {
         if (!leftPressed) {
             return;
         }
-        if (GLFW.glfwGetMouseButton(minecraft.getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) != GLFW.GLFW_PRESS) {
+        if (!minecraft.mouseHandler.isLeftPressed()) {
             finishLeftPress();
             return;
         }
@@ -672,7 +670,7 @@ public final class RtsSelectionManager {
         BuildingBoundsRenderer.setRtsSelection(selectedPos);
         long now = System.nanoTime();
         if (clicked.equals(lastLeftClickPos) && now - lastLeftClickNanos <= 350_000_000L) {
-            PacketDistributor.sendToServer(new RtsOpenTargetPacket(clicked));
+            ClientPacketDistributor.sendToServer(new RtsOpenTargetPacket(clicked));
             lastLeftClickPos = null;
             lastLeftClickNanos = 0L;
             return;
@@ -684,7 +682,7 @@ public final class RtsSelectionManager {
     private static void sendMove(BlockPos source, BlockPos destination, int manualVerticalOffset, int rotationDegrees) {
         if (source != null && destination != null && (!source.equals(destination) || rotationDegrees != 0)) {
             BlockPos focus = BlockPos.containing(FreeCameraManager.rtsFocus());
-            PacketDistributor.sendToServer(new RtsMovePacket(source, destination, manualVerticalOffset, rotationDegrees,
+            ClientPacketDistributor.sendToServer(new RtsMovePacket(source, destination, manualVerticalOffset, rotationDegrees,
                     focus.getX() >> 4, focus.getZ() >> 4));
         }
     }
@@ -723,7 +721,7 @@ public final class RtsSelectionManager {
         }
         long now = System.nanoTime();
         if (citizenId.equals(lastCitizenClickId) && now - lastCitizenClickNanos <= 350_000_000L) {
-            PacketDistributor.sendToServer(new RtsCitizenActionPacket(
+            ClientPacketDistributor.sendToServer(new RtsCitizenActionPacket(
                     isShiftDown() ? RtsCitizenActionPacket.Action.OPEN_SHOP : RtsCitizenActionPacket.Action.OPEN_INFO,
                     java.util.List.of(citizenId), BlockPos.ZERO));
             clearCitizenDoubleClick();
@@ -776,29 +774,26 @@ public final class RtsSelectionManager {
         if (destination != null && !selectedCitizenIds.isEmpty()) {
             citizenMoveTarget = destination.immutable();
             clearCitizenDoubleClick();
-            PacketDistributor.sendToServer(new RtsCitizenActionPacket(RtsCitizenActionPacket.Action.MOVE,
+            ClientPacketDistributor.sendToServer(new RtsCitizenActionPacket(RtsCitizenActionPacket.Action.MOVE,
                     java.util.List.copyOf(selectedCitizenIds), destination));
         }
     }
 
     private static boolean isAltDown() {
-        long window = Minecraft.getInstance().getWindow().getWindow();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LALT)
+                || InputConstants.isKeyDown(InputConstants.KEY_RALT);
     }
 
     /** isControlDown: 判断 Ctrl 是否按下以启用 RTS 快速缩放。 */
     private static boolean isControlDown() {
-        long window = Minecraft.getInstance().getWindow().getWindow();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL)
+                || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
     }
 
     /** isShiftDown: 判断 Shift 是否按下以选择市民的商店打开动作。 */
     private static boolean isShiftDown() {
-        long window = Minecraft.getInstance().getWindow().getWindow();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT)
+                || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
     }
 
     /** CursorRay: 保存已按当前投影换算的光标世界射线端点。 */

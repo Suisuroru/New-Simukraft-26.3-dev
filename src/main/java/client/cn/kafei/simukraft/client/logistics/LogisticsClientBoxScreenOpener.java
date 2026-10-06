@@ -1,35 +1,33 @@
 package client.cn.kafei.simukraft.client.logistics;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.selection.TwoPointSelectionScreen;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsClientBoxOpenRequestPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsClientBoxOpenResponsePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class LogisticsClientBoxScreenOpener {
     private LogisticsClientBoxScreenOpener() {
     }
 
     /** request: 请求打开旧版物流客户端盒主界面。 */
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new LogisticsClientBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new LogisticsClientBoxOpenRequestPacket(pos));
     }
 
     /** open: 接收服务端快照并打开旧版四入口主界面。 */
     public static void open(LogisticsClientBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new LogisticsClientBoxScreen(packet)));
+            minecraft.execute(() -> minecraft.gui.setScreen(new LogisticsClientBoxScreen(packet)));
         }
     }
 
@@ -64,16 +62,15 @@ public final class LogisticsClientBoxScreenOpener {
 
         /** renderBackground: 绘制旧版半透明深色背景。 */
         @Override
-        public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
         }
 
         /** render: 绘制旧版居中标题。 */
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            renderBackground(graphics, mouseX, mouseY, partialTick);
-            graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 44, LogisticsNativeStyle.TEXT);
-            super.render(graphics, mouseX, mouseY, partialTick);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+            graphics.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 44, LogisticsNativeStyle.TEXT);
+            super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -89,7 +86,7 @@ public final class LogisticsClientBoxScreenOpener {
         private void openScreen(Screen screen) {
             Minecraft minecraft = this.minecraft;
             if (minecraft != null) {
-                minecraft.setScreen(screen);
+                minecraft.gui.setScreen(screen);
             }
         }
     }

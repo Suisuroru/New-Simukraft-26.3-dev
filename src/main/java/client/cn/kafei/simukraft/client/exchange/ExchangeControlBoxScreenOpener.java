@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.exchange;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
@@ -29,12 +31,9 @@ import dev.vfyjxf.taffy.style.FlexWrap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** ExchangeControlBoxScreenOpener: Ore 主题股市界面，按 GUI 缩放收缩。 */
-@OnlyIn(Dist.CLIENT)
 public final class ExchangeControlBoxScreenOpener {
     private static final int UP = 0xFF55FF55;
     private static final int DOWN = 0xFFFF5555;
@@ -60,7 +59,7 @@ public final class ExchangeControlBoxScreenOpener {
 
     /** request: 向服务端请求股市快照。 */
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new ExchangeControlBoxOpenRequestPacket(pos, selectedId == null ? "" : selectedId));
+        ClientPacketDistributor.sendToServer(new ExchangeControlBoxOpenRequestPacket(pos, selectedId == null ? "" : selectedId));
     }
 
     /** open: 打开或原地刷新股市界面，不拆掉全屏 K 线。 */
@@ -78,7 +77,7 @@ public final class ExchangeControlBoxScreenOpener {
                 applySnapshot(ui, packet);
                 return;
             }
-            minecraft.setScreen(new ModularUIScreen(createUi(packet, selectedQuote(packet, selectedId)), Component.empty()));
+            minecraft.gui.setScreen(new ModularUIScreen(createUi(packet, selectedQuote(packet, selectedId)), Component.empty()));
         });
     }
 
@@ -151,15 +150,15 @@ public final class ExchangeControlBoxScreenOpener {
             layout.flexShrink(0);
         });
         bar.addChild(chromeButton(Component.translatable("gui.button.done"),
-                () -> Minecraft.getInstance().setScreen(null), true, metrics.chromeWidth(), metrics.chromeHeight()));
+                () -> Minecraft.getInstance().gui.setScreen(null), true, metrics.chromeWidth(), metrics.chromeHeight()));
         bar.addChild(label(Component.translatable("gui.simukraft.exchange.title"), Horizontal.CENTER,
                 0xFFFFFFFF, metrics.titleBarHeight()).layout(layout -> {
             layout.flex(1);
             layout.height(metrics.titleBarHeight());
         }));
         bar.addChild(chromeButton(Component.translatable("gui.button.demolish"), () -> {
-            PacketDistributor.sendToServer(new ExchangeControlBoxDemolishPacket(packet.boxPos()));
-            Minecraft.getInstance().setScreen(null);
+            ClientPacketDistributor.sendToServer(new ExchangeControlBoxDemolishPacket(packet.boxPos()));
+            Minecraft.getInstance().gui.setScreen(null);
         }, packet.hasBuilding(), metrics.chromeWidth(), metrics.chromeHeight()));
         return bar;
     }
@@ -442,15 +441,15 @@ public final class ExchangeControlBoxScreenOpener {
         if (selected == null) {
             return;
         }
-        PacketDistributor.sendToServer(new ExchangeControlBoxActionPacket(currentPacket.boxPos(), buy, selected.id(), 1));
+        ClientPacketDistributor.sendToServer(new ExchangeControlBoxActionPacket(currentPacket.boxPos(), buy, selected.id(), 1));
     }
 
     private static void fire(ExchangeControlBoxOpenResponsePacket packet) {
         if (packet.brokerId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), ExchangeControlBoxService.HIRE_SOURCE_TYPE,
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), ExchangeControlBoxService.HIRE_SOURCE_TYPE,
                     ExchangeControlBoxService.HIRE_ROLE, packet.brokerId()));
         }
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static String resolveSelected(ExchangeControlBoxOpenResponsePacket packet, String previous) {
@@ -491,7 +490,7 @@ public final class ExchangeControlBoxScreenOpener {
     }
 
     private static ModularUI currentUi() {
-        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen) {
+        if (Minecraft.getInstance().gui.screen() instanceof ModularUIScreen screen) {
             return screen.getModularUI();
         }
         return null;

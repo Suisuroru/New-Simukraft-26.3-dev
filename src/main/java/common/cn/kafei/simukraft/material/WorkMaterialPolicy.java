@@ -201,11 +201,11 @@ public final class WorkMaterialPolicy {
         if (id == null) {
             return java.util.Optional.empty();
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         if (item != Items.AIR) {
             return java.util.Optional.of(item);
         }
-        Block block = BuiltInRegistries.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.AIR);
         Item blockItem = block.asItem();
         if (blockItem != Items.AIR) {
             return java.util.Optional.of(blockItem);

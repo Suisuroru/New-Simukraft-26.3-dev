@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -24,9 +26,9 @@ public final class CitySqliteRepository {
      * 城市的真正删除只走 {@link #delete(Connection, java.util.UUID)}。
      */
     public void saveAll(Connection connection, CompoundTag tag, String dimensionId) throws SQLException {
-        ListTag cityTags = tag.getList("Cities", CompoundTag.TAG_COMPOUND);
+        ListTag cityTags = tag.getListOrEmpty("Cities");
         for (int i = 0; i < cityTags.size(); i++) {
-            saveCity(connection, cityTags.getCompound(i));
+            saveCity(connection, cityTags.getCompoundOrEmpty(i));
         }
     }
 
@@ -60,7 +62,7 @@ public final class CitySqliteRepository {
                  ResultSet rs = s.executeQuery()) {
                 while (rs.next()) {
                     CompoundTag member = new CompoundTag();
-                    member.putUUID("PlayerId", java.util.UUID.fromString(rs.getString("player_id")));
+                    NbtUuid.put(member, "PlayerId", java.util.UUID.fromString(rs.getString("player_id")));
                     member.putString("PlayerName", rs.getString("player_name"));
                     member.putString("PermissionLevel", rs.getString("permission_level"));
                     membersByCity.computeIfAbsent(rs.getString("city_id"), k -> new ListTag()).add(member);
@@ -88,7 +90,7 @@ public final class CitySqliteRepository {
                 while (resultSet.next()) {
                     String cityId = resultSet.getString("city_id");
                     CompoundTag cityTag = new CompoundTag();
-                    cityTag.putUUID("CityId", java.util.UUID.fromString(cityId));
+                    NbtUuid.put(cityTag, "CityId", java.util.UUID.fromString(cityId));
                     cityTag.putString("CityName", resultSet.getString("city_name"));
                     cityTag.putString("DimensionId", normalizeDimensionId(resultSet.getString("dimension_id")));
                     cityTag.putInt("CoreX", resultSet.getInt("core_x"));
@@ -113,46 +115,46 @@ public final class CitySqliteRepository {
     }
 
     private void saveCity(Connection connection, CompoundTag cityTag) throws SQLException {
-        String cityId = cityTag.getUUID("CityId").toString();
+        String cityId = NbtUuid.read(cityTag, "CityId").toString();
         try (PreparedStatement cityStatement = connection.prepareStatement("INSERT INTO cities(city_id, city_name, dimension_id, core_x, core_y, core_z, funds, city_level) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(city_id) DO UPDATE SET city_name = excluded.city_name, dimension_id = excluded.dimension_id, core_x = excluded.core_x, core_y = excluded.core_y, core_z = excluded.core_z, funds = excluded.funds, city_level = excluded.city_level");
              PreparedStatement deleteMembers = connection.prepareStatement("DELETE FROM city_members WHERE city_id = ?");
              PreparedStatement deleteFinances = connection.prepareStatement("DELETE FROM finance_transactions WHERE city_id = ?");
              PreparedStatement memberStatement = connection.prepareStatement("INSERT INTO city_members(city_id, player_id, player_name, permission_level) VALUES(?, ?, ?, ?)");
              PreparedStatement financeStatement = connection.prepareStatement("INSERT INTO finance_transactions(city_id, sort_index, time, actor_id, actor_name, amount, balance_after, type, reason) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             cityStatement.setString(1, cityId);
-            cityStatement.setString(2, cityTag.getString("CityName"));
-            cityStatement.setString(3, normalizeDimensionId(cityTag.getString("DimensionId")));
-            cityStatement.setInt(4, cityTag.getInt("CoreX"));
-            cityStatement.setInt(5, cityTag.getInt("CoreY"));
-            cityStatement.setInt(6, cityTag.getInt("CoreZ"));
-            cityStatement.setDouble(7, cityTag.getDouble("Funds"));
-            cityStatement.setInt(8, cityTag.getInt("CityLevel"));
+            cityStatement.setString(2, cityTag.getStringOr("CityName", ""));
+            cityStatement.setString(3, normalizeDimensionId(cityTag.getStringOr("DimensionId", "")));
+            cityStatement.setInt(4, cityTag.getIntOr("CoreX", 0));
+            cityStatement.setInt(5, cityTag.getIntOr("CoreY", 0));
+            cityStatement.setInt(6, cityTag.getIntOr("CoreZ", 0));
+            cityStatement.setDouble(7, cityTag.getDoubleOr("Funds", 0.0D));
+            cityStatement.setInt(8, cityTag.getIntOr("CityLevel", 0));
             cityStatement.executeUpdate();
             deleteMembers.setString(1, cityId);
             deleteMembers.executeUpdate();
             deleteFinances.setString(1, cityId);
             deleteFinances.executeUpdate();
-            ListTag members = cityTag.getList("Members", CompoundTag.TAG_COMPOUND);
+            ListTag members = cityTag.getListOrEmpty("Members");
             for (int i = 0; i < members.size(); i++) {
-                CompoundTag member = members.getCompound(i);
+                CompoundTag member = members.getCompoundOrEmpty(i);
                 memberStatement.setString(1, cityId);
-                memberStatement.setString(2, member.getUUID("PlayerId").toString());
-                memberStatement.setString(3, member.getString("PlayerName"));
-                memberStatement.setString(4, member.getString("PermissionLevel"));
+                memberStatement.setString(2, NbtUuid.read(member, "PlayerId").toString());
+                memberStatement.setString(3, member.getStringOr("PlayerName", ""));
+                memberStatement.setString(4, member.getStringOr("PermissionLevel", ""));
                 memberStatement.addBatch();
             }
-            ListTag finances = cityTag.getList("FinanceTransactions", CompoundTag.TAG_COMPOUND);
+            ListTag finances = cityTag.getListOrEmpty("FinanceTransactions");
             for (int i = 0; i < finances.size(); i++) {
-                CompoundTag finance = finances.getCompound(i);
+                CompoundTag finance = finances.getCompoundOrEmpty(i);
                 financeStatement.setString(1, cityId);
                 financeStatement.setInt(2, i);
-                financeStatement.setLong(3, finance.getLong("Time"));
-                SqliteNbtHelper.setNullableString(financeStatement, 4, finance.hasUUID("ActorId") ? finance.getUUID("ActorId").toString() : null);
-                financeStatement.setString(5, finance.getString("ActorName"));
-                financeStatement.setDouble(6, finance.getDouble("Amount"));
-                financeStatement.setDouble(7, finance.getDouble("BalanceAfter"));
-                financeStatement.setString(8, finance.getString("Type"));
-                financeStatement.setString(9, finance.getString("Reason"));
+                financeStatement.setLong(3, finance.getLongOr("Time", 0L));
+                SqliteNbtHelper.setNullableString(financeStatement, 4, NbtUuid.toStringOrNull(finance, "ActorId"));
+                financeStatement.setString(5, finance.getStringOr("ActorName", ""));
+                financeStatement.setDouble(6, finance.getDoubleOr("Amount", 0.0D));
+                financeStatement.setDouble(7, finance.getDoubleOr("BalanceAfter", 0.0D));
+                financeStatement.setString(8, finance.getStringOr("Type", ""));
+                financeStatement.setString(9, finance.getStringOr("Reason", ""));
                 financeStatement.addBatch();
             }
             memberStatement.executeBatch();

@@ -1,16 +1,14 @@
 package client.cn.kafei.simukraft.client.city;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.city.map.SimuChunkScanner;
 import client.cn.kafei.simukraft.client.city.map.SimuMapStorage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -28,8 +26,6 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class ClientCityMapTerrainCache {
     private static final ClientCityMapTerrainCache INSTANCE = new ClientCityMapTerrainCache();
     private static final int MAX_CACHED_COLUMNS = 262144;
@@ -94,7 +90,7 @@ public final class ClientCityMapTerrainCache {
     }
 
     private void queueChunk(int chunkX, int chunkZ, int priority) {
-        long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+        long chunkLong = ChunkPos.pack(chunkX, chunkZ);
         if (scannedChunks.contains(chunkLong) || !queuedChunks.add(chunkLong)) {
             return;
         }
@@ -174,7 +170,7 @@ public final class ClientCityMapTerrainCache {
         int localX = worldX & 15;
         int localZ = worldZ & 15;
         int topY = chunk.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, localX, localZ);
-        int minY = level.getMinBuildHeight();
+        int minY = level.getMinY();
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(worldX, topY, worldZ);
         BlockState state = level.getBlockState(pos);
         int y = topY;
@@ -231,10 +227,12 @@ public final class ClientCityMapTerrainCache {
             return 0xFF3F8F3A;
         }
         try {
-            BlockColors blockColors = Minecraft.getInstance().getBlockColors();
-            int tintColor = blockColors.getColor(state, (BlockAndTintGetter) level, pos, 0);
-            if (tintColor != -1 && tintColor != 0) {
-                return 0xFF000000 | tintColor;
+            BlockTintSource tintSource = Minecraft.getInstance().getBlockColors().getTintSource(state, 0);
+            if (tintSource != null && level instanceof BlockAndTintGetter tintGetter) {
+                int tintColor = tintSource.colorInWorld(state, tintGetter, pos);
+                if (tintColor != -1 && tintColor != 0) {
+                    return 0xFF000000 | tintColor;
+                }
             }
         } catch (RuntimeException ignored) {
         }
@@ -367,7 +365,7 @@ public final class ClientCityMapTerrainCache {
 
     // 将维度键转换为稳定字符串，参与客户端缓存隔离。
     private static String dimensionToId(ResourceKey<Level> dimension) {
-        return dimension.location().getNamespace() + ":" + dimension.location().getPath();
+        return dimension.identifier().getNamespace() + ":" + dimension.identifier().getPath();
     }
 
     private static int adjustBrightness(int argb, int delta) {

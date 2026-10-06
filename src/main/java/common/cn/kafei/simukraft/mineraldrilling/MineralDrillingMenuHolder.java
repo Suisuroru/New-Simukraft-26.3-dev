@@ -5,6 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -70,7 +71,7 @@ public final class MineralDrillingMenuHolder implements IContainerUIHolder {
         return serverLevel != null
                 && player.level() == serverLevel
                 && MineralDrillingControlBoxService.isControlBox(serverLevel, boxPos())
-                && (player.distanceToSqr(boxPos().getCenter()) <= 64.0D
+                && (player.distanceToSqr(Vec3.atCenterOf(boxPos())) <= 64.0D
                 || player instanceof ServerPlayer serverPlayer && RtsRemoteMenuAccess.hasAccess(serverPlayer, boxPos()));
     }
 

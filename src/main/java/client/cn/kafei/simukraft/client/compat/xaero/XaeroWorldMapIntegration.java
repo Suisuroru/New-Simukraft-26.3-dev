@@ -2,8 +2,6 @@ package client.cn.kafei.simukraft.client.compat.xaero;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import xaero.map.MapProcessor;
 import xaero.map.WorldMapSession;
 import xaero.map.highlight.AbstractHighlighter;
@@ -15,7 +13,6 @@ import xaero.map.world.MapWorld;
 import java.util.ArrayList;
 import java.util.List;
 
-@OnlyIn(Dist.CLIENT)
 public final class XaeroWorldMapIntegration {
     private static volatile boolean registeredOnce;
 

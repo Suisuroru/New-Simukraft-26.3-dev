@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.medical;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.UUID;
@@ -17,14 +19,14 @@ public final class MedicalPatientData {
 
     /** fromTag：从居民标签读取医疗状态。 */
     public void fromTag(CompoundTag tag) {
-        disease = DiseaseType.fromName(tag.getString("DiseaseId"));
-        diseaseSinceDay = Math.max(0L, tag.getLong("DiseaseSinceDay"));
-        diseaseTreatmentTicks = Math.max(0L, tag.getLong("DiseaseTreatmentTicks"));
-        medicalBedPoiId = tag.hasUUID("MedicalBedPoiId") ? tag.getUUID("MedicalBedPoiId") : null;
-        postpartumUntilDay = Math.max(0L, tag.getLong("PostpartumUntilDay"));
-        lastHospitalMealDay = tag.contains("LastHospitalMealDay") ? Math.max(-1L, tag.getLong("LastHospitalMealDay")) : -1L;
+        disease = DiseaseType.fromName(tag.getStringOr("DiseaseId", ""));
+        diseaseSinceDay = Math.max(0L, tag.getLongOr("DiseaseSinceDay", 0L));
+        diseaseTreatmentTicks = Math.max(0L, tag.getLongOr("DiseaseTreatmentTicks", 0L));
+        medicalBedPoiId = NbtUuid.readOrNull(tag, "MedicalBedPoiId");
+        postpartumUntilDay = Math.max(0L, tag.getLongOr("PostpartumUntilDay", 0L));
+        lastHospitalMealDay = tag.contains("LastHospitalMealDay") ? Math.max(-1L, tag.getLongOr("LastHospitalMealDay", 0L)) : -1L;
         lastHospitalProgressDayTime = tag.contains("LastHospitalProgressDayTime")
-                ? Math.max(0L, tag.getLong("LastHospitalProgressDayTime")) : 0L;
+                ? Math.max(0L, tag.getLongOr("LastHospitalProgressDayTime", 0L)) : 0L;
     }
 
     /** toTag：将医疗状态写入居民标签。 */
@@ -33,7 +35,7 @@ public final class MedicalPatientData {
         tag.putLong("DiseaseSinceDay", diseaseSinceDay);
         tag.putLong("DiseaseTreatmentTicks", diseaseTreatmentTicks);
         if (medicalBedPoiId != null) {
-            tag.putUUID("MedicalBedPoiId", medicalBedPoiId);
+            NbtUuid.put(tag, "MedicalBedPoiId", medicalBedPoiId);
         }
         tag.putLong("PostpartumUntilDay", postpartumUntilDay);
         tag.putLong("LastHospitalMealDay", lastHospitalMealDay);

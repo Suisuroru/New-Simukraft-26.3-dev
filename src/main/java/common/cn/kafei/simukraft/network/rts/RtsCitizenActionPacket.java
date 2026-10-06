@@ -20,6 +20,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -175,7 +176,7 @@ public record RtsCitizenActionPacket(Action action, List<UUID> citizenIds, Block
 
     /** canOperate: 仅允许管理员操作本城市民，管理员可用于无归属市民。 */
     private static boolean canOperate(ServerLevel level, ServerPlayer player, CitizenData citizen) {
-        return player.hasPermissions(2) || citizen.cityId() != null
+        return player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || citizen.cityId() != null
                 && CityService.canManageCity(level, citizen.cityId(), player.getUUID());
     }
 

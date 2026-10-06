@@ -71,7 +71,7 @@ public final class SimuKraftClientConfigScreen {
         });
         footer.addChild(footerButton("gui.simukraft.config.save", SimuKraftClientConfigScreen::save));
         footer.addChild(footerButton("gui.simukraft.config.reset", () -> reset(parent)));
-        footer.addChild(footerButton("gui.button.back", () -> Minecraft.getInstance().setScreen(SimuKraftConfigSelectionScreen.create(parent))));
+        footer.addChild(footerButton("gui.button.back", () -> Minecraft.getInstance().gui.setScreen(SimuKraftConfigSelectionScreen.create(parent))));
         return footer;
     }
 
@@ -87,7 +87,7 @@ public final class SimuKraftClientConfigScreen {
         return SimuKraftConfigWidgets.row(
                 Component.translatable("gui.simukraft.config.client.hud_position"),
                 SimuKraftConfigWidgets.button(Component.translatable("gui.simukraft.config.open"),
-                        () -> Minecraft.getInstance().setScreen(new HUDPositionEditorScreen(Minecraft.getInstance().screen)), true)
+                        () -> Minecraft.getInstance().gui.setScreen(new HUDPositionEditorScreen(Minecraft.getInstance().gui.screen())), true)
                         .layout(layout -> {
                             layout.width(96);
                             layout.height(24);
@@ -100,8 +100,8 @@ public final class SimuKraftClientConfigScreen {
         return SimuKraftConfigWidgets.row(
                 Component.translatable("gui.simukraft.config.client.toast_position"),
                 SimuKraftConfigWidgets.button(Component.translatable("gui.simukraft.config.open"),
-                        () -> Minecraft.getInstance().setScreen(
-                                new ToastPositionEditorScreen(Minecraft.getInstance().screen)),
+                        () -> Minecraft.getInstance().gui.setScreen(
+                                new ToastPositionEditorScreen(Minecraft.getInstance().gui.screen())),
                         true)
                         .layout(layout -> {
                             layout.width(96);
@@ -134,6 +134,6 @@ public final class SimuKraftClientConfigScreen {
         ClientConfig.RTS_TARGET_OTHER_MOD_BLOCKS.set(true);
         ClientConfig.RTS_MOVE_HOLD_SECONDS.set(ClientConfig.DEFAULT_RTS_MOVE_HOLD_SECONDS);
         save();
-        Minecraft.getInstance().setScreen(create(parent));
+        Minecraft.getInstance().gui.setScreen(create(parent));
     }
 }

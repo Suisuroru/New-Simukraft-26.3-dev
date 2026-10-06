@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRendererProjection {
     /** simukraft$applyRtsProjection: 使用 RTS 缩放范围生成正交投影。 */
-    @Inject(method = "getProjectionMatrix", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getProjectionMatrix", at = @At("HEAD"), cancellable = true, require = 0)
     private void simukraft$applyRtsProjection(double fov, CallbackInfoReturnable<Matrix4f> callbackInfo) {
         if (FreeCameraManager.isRtsActive()) {
             callbackInfo.setReturnValue(FreeCameraManager.rtsProjectionMatrix());

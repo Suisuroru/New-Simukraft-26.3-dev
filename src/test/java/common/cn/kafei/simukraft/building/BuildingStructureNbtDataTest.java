@@ -23,16 +23,16 @@ class BuildingStructureNbtDataTest {
         List<BuildingEntityData> entities = BuildingStructureService.parseEntities(root);
 
         assertEquals(2, blocks.size());
-        assertEquals("minecraft:banner", blocks.getFirst().blockEntityData().getString("id"));
-        assertEquals("minecraft:flower", blocks.getFirst().blockEntityData().getList("patterns", CompoundTag.TAG_COMPOUND).getCompound(0).getString("pattern"));
-        assertEquals("minecraft:skull", blocks.get(1).blockEntityData().getString("id"));
-        assertEquals("Simukraft", blocks.get(1).blockEntityData().getCompound("profile").getString("name"));
+        assertEquals("minecraft:banner", blocks.getFirst().blockEntityData().getStringOr("id", ""));
+        assertEquals("minecraft:flower", blocks.getFirst().blockEntityData().getListOrEmpty("patterns").getCompoundOrEmpty(0).getStringOr("pattern", ""));
+        assertEquals("minecraft:skull", blocks.get(1).blockEntityData().getStringOr("id", ""));
+        assertEquals("Simukraft", blocks.get(1).blockEntityData().getCompoundOrEmpty("profile").getStringOr("name", ""));
 
         assertEquals(2, entities.size());
-        assertEquals("minecraft:item_frame", entities.getFirst().entityData().getString("id"));
-        assertEquals("minecraft:diamond", entities.getFirst().entityData().getCompound("Item").getString("id"));
-        assertEquals("minecraft:painting", entities.get(1).entityData().getString("id"));
-        assertEquals("minecraft:aztec", entities.get(1).entityData().getString("variant"));
+        assertEquals("minecraft:item_frame", entities.getFirst().entityData().getStringOr("id", ""));
+        assertEquals("minecraft:diamond", entities.getFirst().entityData().getCompoundOrEmpty("Item").getStringOr("id", ""));
+        assertEquals("minecraft:painting", entities.get(1).entityData().getStringOr("id", ""));
+        assertEquals("minecraft:aztec", entities.get(1).entityData().getStringOr("variant", ""));
 
         BuildingStructure structure = new BuildingStructure(
                 "other", "NBT test", "nbt_test", "", "nbt_test.nbt", "test", "",
@@ -43,17 +43,17 @@ class BuildingStructureNbtDataTest {
 
         assertEquals(new BlockPos(7, 65, 22), placedBlocks.getFirst().relativePos());
         assertNotNull(placedBlocks.getFirst().blockEntityData());
-        assertEquals("minecraft:banner", placedBlocks.getFirst().blockEntityData().getString("id"));
+        assertEquals("minecraft:banner", placedBlocks.getFirst().blockEntityData().getStringOr("id", ""));
 
         BuildingEntityData frame = placedEntities.getFirst();
         assertEquals(new Vec3(10.75D, 67.0D, 22.25D), frame.pos());
         assertEquals(new BlockPos(10, 67, 22), frame.blockPos());
-        assertEquals("minecraft:diamond", frame.entityData().getCompound("Item").getString("id"));
+        assertEquals("minecraft:diamond", frame.entityData().getCompoundOrEmpty("Item").getStringOr("id", ""));
 
         BuildingEntityData painting = placedEntities.get(1);
         assertEquals(new Vec3(8.5D, 67.0D, 21.5D), painting.pos());
         assertEquals(new BlockPos(8, 67, 21), painting.blockPos());
-        assertEquals("minecraft:aztec", painting.entityData().getString("variant"));
+        assertEquals("minecraft:aztec", painting.entityData().getStringOr("variant", ""));
     }
 
     @Test
@@ -64,7 +64,7 @@ class BuildingStructureNbtDataTest {
         CompoundTag armorStandData = new CompoundTag();
         armorStandData.putString("id", "minecraft:armor_stand");
         armorStand.put("nbt", armorStandData);
-        root.getList("entities", CompoundTag.TAG_COMPOUND).add(armorStand);
+        root.getListOrEmpty("entities").add(armorStand);
 
         assertEquals(2, BuildingStructureService.parseEntities(root).size());
     }

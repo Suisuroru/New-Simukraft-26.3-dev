@@ -30,8 +30,8 @@ import java.util.List;
 
 
 public final class CityCoreBlock extends Block {
-    public CityCoreBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).explosionResistance(3600000.0F).sound(SoundType.METAL));
+    public CityCoreBlock(Properties properties) {
+        super(properties);
     }
 
     // getDrops: 已绑定城市核心会被保护恢复，不产生掉落以避免复制。

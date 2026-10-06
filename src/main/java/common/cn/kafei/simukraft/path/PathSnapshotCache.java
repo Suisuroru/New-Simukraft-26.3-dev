@@ -35,8 +35,8 @@ final class PathSnapshotCache {
         boolean complete = true;
         int minSectionX = Math.floorDiv(bounds.minX(), 16);
         int maxSectionX = Math.floorDiv(bounds.maxX(), 16);
-        int minSectionY = Math.floorDiv(Math.max(level.getMinBuildHeight(), bounds.minY() - 1), 16);
-        int maxSectionY = Math.floorDiv(Math.min(level.getMaxBuildHeight() - 1, bounds.maxY() + 1), 16);
+        int minSectionY = Math.floorDiv(Math.max(level.getMinY(), bounds.minY() - 1), 16);
+        int maxSectionY = Math.floorDiv(Math.min(level.getMaxY() + 1 - 1, bounds.maxY() + 1), 16);
         int minSectionZ = Math.floorDiv(bounds.minZ(), 16);
         int maxSectionZ = Math.floorDiv(bounds.maxZ(), 16);
         for (int sectionX = minSectionX; sectionX <= maxSectionX; sectionX++) {

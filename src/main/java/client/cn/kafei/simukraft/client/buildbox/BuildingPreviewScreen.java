@@ -1,7 +1,13 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.world.level.block.Blocks;
+
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.KeyEvent;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraScreen;
 import client.cn.kafei.simukraft.client.input.SimuKraftKeyMappings;
@@ -16,7 +22,7 @@ import common.cn.kafei.simukraft.config.ServerConfig;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import common.cn.kafei.simukraft.network.building.BuildBoxStartConstructionPacket;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -24,10 +30,8 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class BuildingPreviewScreen extends Screen implements FreeCameraScreen {
     private final Screen parent;
     private final BuildingCacheService.BuildingMeta building;
@@ -68,7 +72,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         BuildingPreviewManager.startPreview(structure, previewOrigin);
         if (!BuildingPreviewManager.isPreviewActive()) {
             if (this.minecraft != null) {
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
             }
             return;
         }
@@ -96,7 +100,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         if (rtsPreviewMode) {
             return;
         }
@@ -106,38 +110,38 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         // ── 顶部标题条 ──
         g.fill(0, 0, sw, 18, 0xAA000000);
         g.fill(0, 17, sw, 18, 0x55AAAACC);
-        g.pose().pushPose();
-        g.pose().translate(2.0F, 3.0F, 0.0F);
-        g.pose().scale(0.75F, 0.75F, 1.0F);
-        g.renderItem(new ItemStack(Items.BARRIER), 0, 0);
-        g.pose().popPose();
+        g.pose().pushMatrix();
+        g.pose().translate(2.0F, 3.0F);
+        g.pose().scale(0.75F, 0.75F);
+        g.item(new ItemStack(Items.BARRIER), 0, 0);
+        g.pose().popMatrix();
         Component modeText = Component.translatable(replaceWithAir
                 ? "gui.building_preview.mode.replace_air" : "gui.building_preview.mode.keep_obstacles");
         int modeColor = replaceWithAir ? SimuKraftUiTheme.TEXT_SUCCESS_COLOR : SimuKraftUiTheme.TEXT_MUTED_COLOR;
         Component eKey = Component.literal("E");
         int eCapW = Math.max(10, font.width(eKey) + 6);
         panel.drawKeyCapAt(g, eKey, 22, 4, eCapW, 10);
-        g.drawString(font, modeText, 22 + eCapW + 3, 4 + (10 - font.lineHeight) / 2, modeColor, false);
-        g.drawCenteredString(font,
+        g.text(font, modeText, 22 + eCapW + 3, 4 + (10 - font.lineHeight) / 2, modeColor, false);
+        g.centeredText(font,
                 Component.translatable("gui.building_preview.title_with_name", building.name()),
                 sw / 2, 5, SimuKraftUiTheme.TEXT_PRIMARY_COLOR);
         // ── 住宅信息（床位+户数，仅住宅建筑显示，标题栏模式文字右侧）──
         if (bedCount > 0) {
             String bedStr = String.valueOf(bedCount);
             int bedX = 22 + eCapW + 3 + font.width(modeText) + 6;
-            g.pose().pushPose();
-            g.pose().translate(bedX, 3.0F, 0.0F);
-            g.pose().scale(0.75F, 0.75F, 1.0F);
-            g.renderItem(new ItemStack(Items.RED_BED), 0, 0);
-            g.pose().popPose();
-            g.drawString(font, bedStr, bedX + 14, 1 + (16 - font.lineHeight) / 2, SimuKraftUiTheme.TEXT_PRIMARY_COLOR, false);
+            g.pose().pushMatrix();
+            g.pose().translate(bedX, 3.0F);
+            g.pose().scale(0.75F, 0.75F);
+            g.item(new ItemStack(Blocks.BED.red().asItem()), 0, 0);
+            g.pose().popMatrix();
+            g.text(font, bedStr, bedX + 14, 1 + (16 - font.lineHeight) / 2, SimuKraftUiTheme.TEXT_PRIMARY_COLOR, false);
             int doorX = bedX + 14 + font.width(bedStr) + 6;
-            g.pose().pushPose();
-            g.pose().translate(doorX, 3.0F, 0.0F);
-            g.pose().scale(0.75F, 0.75F, 1.0F);
-            g.renderItem(new ItemStack(Items.OAK_DOOR), 0, 0);
-            g.pose().popPose();
-            g.drawString(font, String.valueOf(doorCount), doorX + 14, 1 + (16 - font.lineHeight) / 2, SimuKraftUiTheme.TEXT_PRIMARY_COLOR, false);
+            g.pose().pushMatrix();
+            g.pose().translate(doorX, 3.0F);
+            g.pose().scale(0.75F, 0.75F);
+            g.item(new ItemStack(Items.OAK_DOOR), 0, 0);
+            g.pose().popMatrix();
+            g.text(font, String.valueOf(doorCount), doorX + 14, 1 + (16 - font.lineHeight) / 2, SimuKraftUiTheme.TEXT_PRIMARY_COLOR, false);
         }
         int kw = 10, kh = 10, step = 11;
         int pX = panel.getPanelX(), pW = panel.getPanelW(), iX = panel.getInnerX();
@@ -150,17 +154,17 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_LEFT),    arrowCX - step, curY + step, kw, kh);
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_BACKWARD),arrowCX,        curY + step, kw, kh);
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_RIGHT),   arrowCX + step, curY + step, kw, kh);
-        g.drawCenteredString(font, Component.translatable("gui.building_preview.label.move"),
+        g.centeredText(font, Component.translatable("gui.building_preview.label.move"),
                 arrowCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
         int heightCX = pX + 62;
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_UP),   heightCX, curY,        kw, kh);
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_MOVE_DOWN), heightCX, curY + step, kw, kh);
-        g.drawCenteredString(font, Component.translatable("gui.building_preview.label.height"),
+        g.centeredText(font, Component.translatable("gui.building_preview.label.height"),
                 heightCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
         int rotateCX = pX + 86;
         panel.drawKeyCap(g, SimuKraftKeyMappings.display(SimuKraftKeyMappings.PREVIEW_ROTATE),
                 rotateCX, curY + step / 2, kw, kh);
-        g.drawCenteredString(font, Component.translatable("gui.building_preview.label.rotate"),
+        g.centeredText(font, Component.translatable("gui.building_preview.label.rotate"),
                 rotateCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
         curY += step * 2 + font.lineHeight + 5;
         panel.drawSeparator(g, curY); curY += 8;
@@ -174,7 +178,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
             panel.drawKeyCap(g, mc.options.keyLeft.getTranslatedKeyMessage(),  wasdCX - step, curY + step, kw, kh);
             panel.drawKeyCap(g, mc.options.keyDown.getTranslatedKeyMessage(),  wasdCX,        curY + step, kw, kh);
             panel.drawKeyCap(g, mc.options.keyRight.getTranslatedKeyMessage(), wasdCX + step, curY + step, kw, kh);
-            g.drawCenteredString(font, Component.translatable("gui.building_preview.label.move"),
+            g.centeredText(font, Component.translatable("gui.building_preview.label.move"),
                     wasdCX, curY + step * 2 + 2, SimuKraftUiTheme.TEXT_MUTED_COLOR);
             int modX = pX + 58;
             int shiftCapW = Math.max(14, font.width(mc.options.keyShift.getTranslatedKeyMessage()) + 6);
@@ -183,7 +187,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
             panel.drawKeyCapAt(g, mc.options.keyJump.getTranslatedKeyMessage(),  modX, curY + step, spaceCapW, kh);
             int ctrlCapW = Math.max(kw, font.width(Component.literal("Ctrl")) + 6);
             panel.drawKeyCapAt(g, Component.literal("Ctrl"), modX, curY + step * 2 + 2, ctrlCapW, kh);
-            g.drawString(font, Component.translatable("gui.building_preview.label.boost"),
+            g.text(font, Component.translatable("gui.building_preview.label.boost"),
                     modX + ctrlCapW + 3, curY + step * 2 + 2 + (kh - font.lineHeight) / 2,
                     SimuKraftUiTheme.TEXT_MUTED_COLOR, false);
         }
@@ -197,11 +201,11 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
                 origin.getX(), origin.getY(), origin.getZ(), BuildingPreviewManager.getRotationDegrees());
         Component blockText = Component.translatable("gui.building_preview.block_count", structure.blockCount());
         for (FormattedCharSequence line : font.split(originText, pW - 16)) {
-            g.drawString(font, line, iX, curY, SimuKraftUiTheme.TEXT_SUCCESS_COLOR, false);
+            g.text(font, line, iX, curY, SimuKraftUiTheme.TEXT_SUCCESS_COLOR, false);
             curY += font.lineHeight + 2;
         }
         for (FormattedCharSequence line : font.split(blockText, pW - 16)) {
-            g.drawString(font, line, iX, curY, SimuKraftUiTheme.TEXT_INFO_COLOR, false);
+            g.text(font, line, iX, curY, SimuKraftUiTheme.TEXT_INFO_COLOR, false);
             curY += font.lineHeight + 2;
         }
         panel.drawSeparator(g, curY); curY += 8;
@@ -218,8 +222,11 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_E) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.keycode();
+        int modifiers = event.modifiers();
+        if (keyCode == InputConstants.KEY_E) {
             replaceWithAir = !replaceWithAir;
             return true;
         }
@@ -266,7 +273,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
             confirmPreview();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     /** tick: RTS 预览中按每帧光标落点更新已抓取建筑的位置。 */
@@ -280,15 +287,18 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
 
     /** mouseClicked: RTS 预览中左键确认建造，右键取消当前抓取预览。 */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (!rtsPreviewMode) {
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, doubleClick);
         }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             confirmPreview();
             return true;
         }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
             if (RtsSelectionManager.isCameraRotationActive()) {
                 return true;
             }
@@ -352,7 +362,7 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         var minecraft = this.minecraft;
         clearPreviewState();
         if (minecraft != null) {
-            minecraft.setScreen(parent);
+            minecraft.gui.setScreen(parent);
         }
     }
 
@@ -361,9 +371,9 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
         if (minecraft == null) {
             return;
         }
-        PacketDistributor.sendToServer(new BuildBoxStartConstructionPacket(buildBoxPos, building.category(), stripExtension(building.metaFileName()), BuildingPreviewManager.getPreviewOrigin(), BuildingPreviewManager.getRotationDegrees(), replaceWithAir));
+        ClientPacketDistributor.sendToServer(new BuildBoxStartConstructionPacket(buildBoxPos, building.category(), stripExtension(building.metaFileName()), BuildingPreviewManager.getPreviewOrigin(), BuildingPreviewManager.getRotationDegrees(), replaceWithAir));
         clearPreviewState();
-        minecraft.setScreen(null);
+        minecraft.gui.setScreen(null);
     }
 
     /** clearPreviewState: 清理建筑预览，RTS 中保留已启用的俯视相机。 */

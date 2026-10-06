@@ -80,7 +80,7 @@ public final class BuildingBlockPlacementService {
                     level.addFreshEntity(entity);
                 });
             } catch (RuntimeException exception) {
-                SimuKraft.LOGGER.warn("Simukraft: Failed to place structure entity {}", data.getString("id"), exception);
+                SimuKraft.LOGGER.warn("Simukraft: Failed to place structure entity {}", data.getStringOr("id", ""), exception);
             }
         }
     }

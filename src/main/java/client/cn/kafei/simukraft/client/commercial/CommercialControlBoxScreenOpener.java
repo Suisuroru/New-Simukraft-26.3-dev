@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.commercial;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.building.BuildingIntegrityUi;
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
@@ -26,12 +28,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CommercialControlBoxScreenOpener {
     private static final int PANEL_WIDTH = 320;
     private static final int PANEL_HEIGHT = 208;
@@ -44,7 +42,7 @@ public final class CommercialControlBoxScreenOpener {
 
     /** request: 请求服务端打开商业控制箱管理界面。 */
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new CommercialControlBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new CommercialControlBoxOpenRequestPacket(pos));
     }
 
     /** open: 打开或刷新商业控制箱管理界面。 */
@@ -55,7 +53,7 @@ public final class CommercialControlBoxScreenOpener {
         }
         packet.boxPos().immutable();
         syncDisplayedBounds(packet);
-        minecraft.execute(() -> minecraft.setScreen(new CommercialControlBoxScreen(createUi(packet), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new CommercialControlBoxScreen(createUi(packet), Component.empty())));
     }
 
     private static ModularUI createUi(CommercialControlBoxOpenResponsePacket packet) {
@@ -214,7 +212,7 @@ public final class CommercialControlBoxScreenOpener {
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.setScreen(new CommercialControlBoxScreen(createUi(packet), Component.empty()));
+            minecraft.gui.setScreen(new CommercialControlBoxScreen(createUi(packet), Component.empty()));
         }
     }
 
@@ -244,7 +242,7 @@ public final class CommercialControlBoxScreenOpener {
     }
 
     private static void repair(CommercialControlBoxOpenResponsePacket packet) {
-        PacketDistributor.sendToServer(new CommercialControlBoxActionPacket(packet.boxPos(), CommercialControlBoxActionPacket.Action.REPAIR_BUILDING));
+        ClientPacketDistributor.sendToServer(new CommercialControlBoxActionPacket(packet.boxPos(), CommercialControlBoxActionPacket.Action.REPAIR_BUILDING));
     }
 
     private static void hire(CommercialControlBoxOpenResponsePacket packet) {
@@ -253,18 +251,18 @@ public final class CommercialControlBoxScreenOpener {
 
     private static void fire(CommercialControlBoxOpenResponsePacket packet) {
         if (packet.hasWorker() && packet.workerId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), CommercialConstants.HIRE_SOURCE_TYPE, CommercialConstants.HIRE_ROLE, packet.workerId()));
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), CommercialConstants.HIRE_SOURCE_TYPE, CommercialConstants.HIRE_ROLE, packet.workerId()));
         }
     }
 
     private static void demolish(CommercialControlBoxOpenResponsePacket packet) {
         BuildingBoundsRenderer.setBuildingBoundsVisible(packet.boxPos(), null, false);
-        Minecraft.getInstance().setScreen(null);
-        PacketDistributor.sendToServer(new CommercialControlBoxDemolishPacket(packet.boxPos()));
+        Minecraft.getInstance().gui.setScreen(null);
+        ClientPacketDistributor.sendToServer(new CommercialControlBoxDemolishPacket(packet.boxPos()));
     }
 
     private static void close() {
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static final class CommercialControlBoxScreen extends ModularUIScreen {
@@ -276,7 +274,7 @@ public final class CommercialControlBoxScreenOpener {
         public void removed() {
             super.removed();
             Minecraft minecraft = Minecraft.getInstance();
-            if (!(minecraft.screen instanceof CommercialControlBoxScreen)) {
+            if (!(minecraft.gui.screen() instanceof CommercialControlBoxScreen)) {
             }
         }
     }

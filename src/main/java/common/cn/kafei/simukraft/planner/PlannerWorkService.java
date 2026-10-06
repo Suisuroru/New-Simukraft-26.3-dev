@@ -27,7 +27,6 @@ import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;
 import common.cn.kafei.simukraft.registry.ModSoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -387,7 +386,7 @@ public final class PlannerWorkService {
         CityGroupMessageService.successToCity(level, taskRuntime.task.cityId(),
                 Component.translatable("message.simukraft.planner.task_completed", citizen.name(), Component.translatable(taskRuntime.task.operation().translationKey())));
         CityUserGroupService.forEach(level, CityUserGroup.mayors(taskRuntime.task.cityId()),
-                p -> p.playNotifySound(ModSoundEvents.CONSTRUCTION_COMPLETE.get(), SoundSource.PLAYERS, 1.0F, 1.0F));
+                p -> p.playSound(ModSoundEvents.CONSTRUCTION_COMPLETE.get(), 1.0F, 1.0F));
         CitizenEmploymentService.clearAfterJobFinished(level, citizen.uuid());
         SimuKraft.LOGGER.info("Simukraft: Planning task completed by {}", citizen.name());
     }
@@ -532,7 +531,7 @@ public final class PlannerWorkService {
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return null;
         }
-        return BuiltInRegistries.BLOCK.get(id);
+        return BuiltInRegistries.BLOCK.getOptional(id).orElse(null);
     }
 
     // 保护：不拆基岩、建筑盒、绑定的箱子，避免规划师自毁工作区或吃掉材料箱。

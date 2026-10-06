@@ -1,19 +1,13 @@
 package client.cn.kafei.simukraft.client.logistics;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import org.joml.Matrix4f;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
  * 物流地图端点图标与路径绘制。
  * 路径为直线，终点有实心箭头；启用时沿线有流向动效，双向为双箭头。
  */
-@OnlyIn(Dist.CLIENT)
 final class LogisticsMapOverlay {
     static final int HIT_RADIUS = 10;
     static final float ROUTE_HOVER_DISTANCE = 8.0F;
@@ -124,7 +118,7 @@ final class LogisticsMapOverlay {
     }
 
     /** drawRoute: 画直线路径；终点实心箭头，启用时沿线流动，双向则两端各一枚箭头。 */
-    static void drawRoute(GuiGraphics graphics, float x1, float y1, float x2, float y2,
+    static void drawRoute(GuiGraphicsExtractor graphics, float x1, float y1, float x2, float y2,
                           boolean enabled, float lane, boolean highlighted, boolean bidirectional) {
         float[] offset = offsetAlongNormal(x1, y1, x2, y2, lane);
         float ax = offset[0];
@@ -142,8 +136,6 @@ final class LogisticsMapOverlay {
         float uy = dy * inv;
         int core = enabled ? ROUTE_CORE : ROUTE_DISABLED_CORE;
         int outline = enabled ? ROUTE_OUTLINE : ROUTE_DISABLED_OUTLINE;
-        VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
-        Matrix4f matrix = graphics.pose().last().pose();
         float tipInset = arrowTipInset(length);
         float headLen = Math.min(HEAD_LENGTH, length * 0.22F);
         float headWidth = Math.min(HEAD_WIDTH, 8.0F + length * 0.04F);
@@ -160,48 +152,48 @@ final class LogisticsMapOverlay {
         float lineX2 = destBaseX;
         float lineY2 = destBaseY;
         if (highlighted) {
-            appendLineQuad(consumer, matrix, lineX1, lineY1, lineX2, lineY2, 7.0F, 0xE6FFE28A);
+            appendLineQuad(graphics, lineX1, lineY1, lineX2, lineY2, 7.0F, 0xE6FFE28A);
         }
         if (enabled) {
-            appendLineQuad(consumer, matrix, lineX1, lineY1, lineX2, lineY2, 5.0F, outline);
-            appendLineQuad(consumer, matrix, lineX1, lineY1, lineX2, lineY2, 3.0F, core);
-            appendFlowMarks(consumer, matrix, lineX1, lineY1, lineX2, lineY2, ux, uy, bidirectional);
+            appendLineQuad(graphics, lineX1, lineY1, lineX2, lineY2, 5.0F, outline);
+            appendLineQuad(graphics, lineX1, lineY1, lineX2, lineY2, 3.0F, core);
+            appendFlowMarks(graphics, lineX1, lineY1, lineX2, lineY2, ux, uy, bidirectional);
         } else {
-            appendDashedQuad(consumer, matrix, lineX1, lineY1, lineX2, lineY2, 5.0F, outline, 10.0F, 7.0F);
-            appendDashedQuad(consumer, matrix, lineX1, lineY1, lineX2, lineY2, 3.0F, core, 10.0F, 7.0F);
+            appendDashedQuad(graphics, lineX1, lineY1, lineX2, lineY2, 5.0F, outline, 10.0F, 7.0F);
+            appendDashedQuad(graphics, lineX1, lineY1, lineX2, lineY2, 3.0F, core, 10.0F, 7.0F);
         }
         if (length >= 22.0F) {
-            appendFilledHead(consumer, matrix, destBaseX, destBaseY, destTipX, destTipY, ux, uy, headWidth, core, outline);
+            appendFilledHead(graphics, destBaseX, destBaseY, destTipX, destTipY, ux, uy, headWidth, core, outline);
             if (bidirectional) {
-                appendFilledHead(consumer, matrix, srcBaseX, srcBaseY, srcTipX, srcTipY, -ux, -uy, headWidth, core, outline);
+                appendFilledHead(graphics, srcBaseX, srcBaseY, srcTipX, srcTipY, -ux, -uy, headWidth, core, outline);
             }
         }
     }
 
     /** drawWarehouseMarker: 仓库端点画成带屋顶的仓房图标。 */
-    static void drawWarehouseMarker(GuiGraphics graphics, Font font, int x, int y, String label,
+    static void drawWarehouseMarker(GuiGraphicsExtractor graphics, Font font, int x, int y, String label,
                                     boolean selected, boolean receiver, boolean sender) {
         drawRoleRings(graphics, x, y, 11, selected, receiver, sender);
         graphics.fill(x - 6, y + 1, x + 9, y + 11, ICON_SHADOW);
         drawHouse(graphics, x, y, ICON_OUTLINE, ICON_OUTLINE, ICON_OUTLINE, 1);
         drawHouse(graphics, x, y, WAREHOUSE_BODY, WAREHOUSE_ROOF, WAREHOUSE_DOOR, 0);
-        graphics.drawCenteredString(font, "W", x, y - 2, LogisticsNativeStyle.TEXT);
+        graphics.centeredText(font, "W", x, y - 2, LogisticsNativeStyle.TEXT);
         drawLabel(graphics, font, label, x, y + 12);
     }
 
     /** drawClientMarker: 客户端端点画成菱形节点。 */
-    static void drawClientMarker(GuiGraphics graphics, Font font, int x, int y, String label,
+    static void drawClientMarker(GuiGraphicsExtractor graphics, Font font, int x, int y, String label,
                                  boolean selected, boolean receiver, boolean sender) {
         drawRoleRings(graphics, x, y, 10, selected, receiver, sender);
         fillDiamond(graphics, x + 1, y + 2, 8, ICON_SHADOW);
         fillDiamond(graphics, x, y, 8, ICON_OUTLINE);
         fillDiamond(graphics, x, y, 6, CLIENT_BODY);
         fillDiamond(graphics, x, y - 1, 3, CLIENT_INNER);
-        graphics.drawCenteredString(font, "C", x, y - 4, LogisticsNativeStyle.TEXT);
+        graphics.centeredText(font, "C", x, y - 4, LogisticsNativeStyle.TEXT);
         drawLabel(graphics, font, label, x, y + 11);
     }
 
-    private static void drawRoleRings(GuiGraphics graphics, int x, int y, int radius,
+    private static void drawRoleRings(GuiGraphicsExtractor graphics, int x, int y, int radius,
                                       boolean selected, boolean receiver, boolean sender) {
         if (sender) {
             fillDiamond(graphics, x, y, radius + 4, RING_SENDER);
@@ -214,7 +206,7 @@ final class LogisticsMapOverlay {
         }
     }
 
-    private static void drawHouse(GuiGraphics graphics, int x, int y, int body, int roof, int door, int grow) {
+    private static void drawHouse(GuiGraphicsExtractor graphics, int x, int y, int body, int roof, int door, int grow) {
         int top = y - 8 - grow;
         for (int row = 0; row <= 7 + grow; row++) {
             graphics.fill(x - row, top + row, x + row + 1, top + row + 1, roof);
@@ -224,20 +216,20 @@ final class LogisticsMapOverlay {
         graphics.fill(x - 5, y - 1, x + 6, y, 0x66FFFFFF);
     }
 
-    private static void fillDiamond(GuiGraphics graphics, int cx, int cy, int radius, int color) {
+    private static void fillDiamond(GuiGraphicsExtractor graphics, int cx, int cy, int radius, int color) {
         for (int dy = -radius; dy <= radius; dy++) {
             int width = radius - Math.abs(dy);
             graphics.fill(cx - width, cy + dy, cx + width + 1, cy + dy + 1, color);
         }
     }
 
-    private static void drawLabel(GuiGraphics graphics, Font font, String label, int x, int y) {
+    private static void drawLabel(GuiGraphicsExtractor graphics, Font font, String label, int x, int y) {
         if (label == null || label.isBlank()) {
             return;
         }
         String text = LogisticsNativeStyle.fit(font, label, 72);
-        graphics.drawCenteredString(font, text, x + 1, y + 1, LABEL_SHADOW);
-        graphics.drawCenteredString(font, text, x, y, LogisticsNativeStyle.TEXT);
+        graphics.centeredText(font, text, x + 1, y + 1, LABEL_SHADOW);
+        graphics.centeredText(font, text, x, y, LogisticsNativeStyle.TEXT);
     }
 
     /** lineSteps: 按像素长度取样，供测试核对。 */
@@ -245,8 +237,8 @@ final class LogisticsMapOverlay {
         return Math.max(1, Math.round((float) Math.hypot(x2 - x1, y2 - y1)));
     }
 
-    /** appendLineQuad: 沿线做法线偏移四边形，正反两面都写，避免界面背面剔除。 */
-    static void appendLineQuad(VertexConsumer consumer, Matrix4f matrix,
+    /** appendLineQuad: 沿线旋转后填充细矩形。 */
+    static void appendLineQuad(GuiGraphicsExtractor graphics,
                                float x1, float y1, float x2, float y2, float width, int argb) {
         float dx = x2 - x1;
         float dy = y2 - y1;
@@ -254,13 +246,16 @@ final class LogisticsMapOverlay {
         if (length < 0.001F) {
             return;
         }
-        float hx = -dy / length * width * 0.5F;
-        float hy = dx / length * width * 0.5F;
-        putQuadBoth(consumer, matrix,
-                x1 - hx, y1 - hy, x2 - hx, y2 - hy, x2 + hx, y2 + hy, x1 + hx, y1 + hy, argb);
+        int half = Math.max(1, Math.round(width * 0.5F));
+        int len = Math.max(1, Math.round(length));
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x1, y1);
+        graphics.pose().rotate((float) Math.atan2(dy, dx));
+        graphics.fill(0, -half, len, half, argb);
+        graphics.pose().popMatrix();
     }
 
-    private static void appendDashedQuad(VertexConsumer consumer, Matrix4f matrix,
+    private static void appendDashedQuad(GuiGraphicsExtractor graphics,
                                          float x1, float y1, float x2, float y2, float width, int argb,
                                          float dash, float gap) {
         float dx = x2 - x1;
@@ -277,7 +272,7 @@ final class LogisticsMapOverlay {
             float span = on ? dash : gap;
             float next = Math.min(length, cursor + span);
             if (on && next - cursor >= 1.0F) {
-                appendLineQuad(consumer, matrix, x1 + ux * cursor, y1 + uy * cursor,
+                appendLineQuad(graphics, x1 + ux * cursor, y1 + uy * cursor,
                         x1 + ux * next, y1 + uy * next, width, argb);
             }
             on = !on;
@@ -286,25 +281,16 @@ final class LogisticsMapOverlay {
     }
 
     /** appendFilledHead: 画上窄下宽的实心三角箭头，尖端指向 (ux, uy)。 */
-    private static void appendFilledHead(VertexConsumer consumer, Matrix4f matrix,
+    private static void appendFilledHead(GuiGraphicsExtractor graphics,
                                          float baseX, float baseY, float tipX, float tipY,
                                          float ux, float uy, float headWidth, int core, int outline) {
-        float px = -uy;
-        float py = ux;
-        float half = headWidth * 0.5F;
-        float leftX = baseX + px * half;
-        float leftY = baseY + py * half;
-        float rightX = baseX - px * half;
-        float rightY = baseY - py * half;
-        float o = 1.5F;
-        putQuadBoth(consumer, matrix,
-                leftX + px * o, leftY + py * o, tipX + ux * o, tipY + uy * o,
-                rightX - px * o, rightY - py * o, baseX - ux * o, baseY - uy * o, outline);
-        putQuadBoth(consumer, matrix, leftX, leftY, tipX, tipY, rightX, rightY, baseX, baseY, core);
+        float length = (float) Math.hypot(tipX - baseX, tipY - baseY);
+        fillTriangle(graphics, baseX, baseY, length + 1.5F, (float) Math.atan2(uy, ux), headWidth * 0.5F + 1.5F, outline);
+        fillTriangle(graphics, baseX, baseY, length, (float) Math.atan2(uy, ux), headWidth * 0.5F, core);
     }
 
     /** appendFlowMarks: 沿线绘制朝终点移动的小箭头；双向时对向各一列。 */
-    private static void appendFlowMarks(VertexConsumer consumer, Matrix4f matrix,
+    private static void appendFlowMarks(GuiGraphicsExtractor graphics,
                                         float x1, float y1, float x2, float y2,
                                         float ux, float uy, boolean bidirectional) {
         float length = (float) Math.hypot(x2 - x1, y2 - y1);
@@ -313,50 +299,40 @@ final class LogisticsMapOverlay {
         }
         float phase = animationPhase(Util.getMillis(), FLOW_PERIOD_MS);
         float shift = flowShift(phase, FLOW_SPACING);
-        appendFlowColumn(consumer, matrix, x1, y1, length, ux, uy, shift);
+        appendFlowColumn(graphics, x1, y1, length, ux, uy, shift);
         if (bidirectional) {
-            appendFlowColumn(consumer, matrix, x2, y2, length, -ux, -uy, shift);
+            appendFlowColumn(graphics, x2, y2, length, -ux, -uy, shift);
         }
     }
 
-    private static void appendFlowColumn(VertexConsumer consumer, Matrix4f matrix,
+    private static void appendFlowColumn(GuiGraphicsExtractor graphics,
                                          float x1, float y1, float length,
                                          float ux, float uy, float shift) {
         for (float distance = shift; distance <= length - 6.0F; distance += FLOW_SPACING) {
             if (distance < 6.0F) {
                 continue;
             }
-            appendMiniChevron(consumer, matrix, x1 + ux * distance, y1 + uy * distance, ux, uy);
+            appendMiniChevron(graphics, x1 + ux * distance, y1 + uy * distance, ux, uy);
         }
     }
 
     /** appendMiniChevron: 流动用的小三角，尖端沿前进方向。 */
-    private static void appendMiniChevron(VertexConsumer consumer, Matrix4f matrix,
+    private static void appendMiniChevron(GuiGraphicsExtractor graphics,
                                           float x, float y, float ux, float uy) {
-        float px = -uy;
-        float py = ux;
-        float tipX = x + ux * 4.5F;
-        float tipY = y + uy * 4.5F;
-        float leftX = x - ux * 2.8F + px * 3.2F;
-        float leftY = y - uy * 2.8F + py * 3.2F;
-        float rightX = x - ux * 2.8F - px * 3.2F;
-        float rightY = y - uy * 2.8F - py * 3.2F;
-        putQuadBoth(consumer, matrix, leftX, leftY, tipX, tipY, rightX, rightY, x - ux * 1.2F, y - uy * 1.2F, FLOW_CORE);
+        fillTriangle(graphics, x - ux * 2.8F, y - uy * 2.8F, 7.3F, (float) Math.atan2(uy, ux), 3.2F, FLOW_CORE);
     }
 
-    private static void putQuadBoth(VertexConsumer consumer, Matrix4f matrix,
-                                    float x1, float y1, float x2, float y2,
-                                    float x3, float y3, float x4, float y4, int argb) {
-        putQuad(consumer, matrix, x1, y1, x2, y2, x3, y3, x4, y4, argb);
-        putQuad(consumer, matrix, x1, y1, x4, y4, x3, y3, x2, y2, argb);
-    }
-
-    private static void putQuad(VertexConsumer consumer, Matrix4f matrix,
-                                float x1, float y1, float x2, float y2,
-                                float x3, float y3, float x4, float y4, int argb) {
-        consumer.addVertex(matrix, x1, y1, 0).setColor(argb);
-        consumer.addVertex(matrix, x2, y2, 0).setColor(argb);
-        consumer.addVertex(matrix, x3, y3, 0).setColor(argb);
-        consumer.addVertex(matrix, x4, y4, 0).setColor(argb);
+    private static void fillTriangle(GuiGraphicsExtractor graphics, float baseX, float baseY,
+                                     float length, float angle, float halfWidth, int argb) {
+        int steps = Math.max(1, Math.round(length));
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(baseX, baseY);
+        graphics.pose().rotate(angle);
+        for (int i = 0; i <= steps; i++) {
+            float t = i / (float) steps;
+            int half = Math.max(1, Math.round(halfWidth * (1.0F - t)));
+            graphics.fill(i, -half, i + 1, half, argb);
+        }
+        graphics.pose().popMatrix();
     }
 }

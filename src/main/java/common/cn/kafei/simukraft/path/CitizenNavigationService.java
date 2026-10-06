@@ -118,7 +118,7 @@ public final class CitizenNavigationService {
             }
         }
 
-        PathRequest request = new PathRequest(citizenId, level.dimension().location(), citizen.blockPosition(), target, normalizedIntent, level.getGameTime());
+        PathRequest request = new PathRequest(citizenId, level.dimension().identifier(), citizen.blockPosition(), target, normalizedIntent, level.getGameTime());
         runtime.latestRequests.put(citizenId, request);
         if (runtime.queuedCitizenIds.add(citizenId)) {
             runtime.queue.offer(citizenId);
@@ -226,7 +226,7 @@ public final class CitizenNavigationService {
         if (player == null || target == null) {
             return false;
         }
-        CitizenEntity citizen = CitizenPathDebugService.findNearestLoadedCitizen(player.serverLevel(), player.position(), ServerConfig.pathLocalRadiusBlocks());
+        CitizenEntity citizen = CitizenPathDebugService.findNearestLoadedCitizen(player.level(), player.position(), ServerConfig.pathLocalRadiusBlocks());
         if (citizen == null) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.path_debug.no_citizen"));
             PacketDistributor.sendToPlayer(player, NpcPathDebugSyncPacket.clear());
@@ -239,7 +239,7 @@ public final class CitizenNavigationService {
         if (player == null || citizen == null || target == null || !(citizen.level() instanceof ServerLevel level)) {
             return false;
         }
-        if (level != player.serverLevel()) {
+        if (level != player.level()) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.path_debug.failed", "citizen_dimension_mismatch"));
             return false;
         }
@@ -254,7 +254,7 @@ public final class CitizenNavigationService {
             return false;
         }
 
-        PathRequest request = new PathRequest(citizen.getUUID(), level.dimension().location(), citizen.blockPosition(), target, MovementIntent.RUN, level.getGameTime());
+        PathRequest request = new PathRequest(citizen.getUUID(), level.dimension().identifier(), citizen.blockPosition(), target, MovementIntent.RUN, level.getGameTime());
         PathSnapshot snapshot = PathSnapshotBuilder.build(level, request.startPos(), request.targetBlockPos(), ServerConfig.pathLocalRadiusBlocks());
         InfoToastService.send(player, Component.translatable("message.simukraft.path_debug.started", citizen.getName().getString(), CitizenPathDebugService.formatTarget(target)));
         CompletableFuture<PathResult> future = CompletableFuture.supplyAsync(() -> HybridPathfinder.find(request, snapshot), executor());
@@ -273,7 +273,7 @@ public final class CitizenNavigationService {
         if (player == null) {
             return false;
         }
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         LevelRuntime runtime = runtime(level);
         runtime.cooldowns.entrySet().removeIf(entry -> entry.getValue() <= level.getGameTime());
         InfoToastService.send(player, Component.translatable(
@@ -509,7 +509,7 @@ public final class CitizenNavigationService {
                     continue;
                 }
                 runtime.cooldowns.put(entry.getKey(), level.getGameTime() + 20L);
-                PathRequest request = new PathRequest(entry.getKey(), level.dimension().location(), citizen.blockPosition(), active.target, active.intent, level.getGameTime());
+                PathRequest request = new PathRequest(entry.getKey(), level.dimension().identifier(), citizen.blockPosition(), active.target, active.intent, level.getGameTime());
                 runtime.latestRequests.put(entry.getKey(), request);
                 if (runtime.queuedCitizenIds.add(entry.getKey())) {
                     runtime.queue.offer(entry.getKey());
@@ -541,7 +541,7 @@ public final class CitizenNavigationService {
     }
 
     private static String runtimeKey(ServerLevel level) {
-        return SaveKey.serverKey(level.getServer()) + "|" + level.dimension().location();
+        return SaveKey.serverKey(level.getServer()) + "|" + level.dimension().identifier();
     }
 
     /**

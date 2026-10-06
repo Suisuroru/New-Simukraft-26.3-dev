@@ -3,6 +3,7 @@ package common.cn.kafei.simukraft.mixin;
 import common.cn.kafei.simukraft.building.BuildingStructurePort;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -32,10 +33,16 @@ public abstract class MixinStructureManager {
         replaceWithPlacedBuilding(callback, BuildingStructurePort.findAt(this.level, pos, predicate));
     }
 
-    @Inject(method = "getStructureWithPieceAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/levelgen/structure/Structure;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;",
+    @Inject(method = "getStructureWithPieceAt(IIILnet/minecraft/world/level/levelgen/structure/Structure;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;",
             at = @At("RETURN"), cancellable = true)
-    private void simukraft$placedBuildingByStructure(BlockPos pos, Structure structure, CallbackInfoReturnable<StructureStart> callback) {
-        replaceWithPlacedBuilding(callback, BuildingStructurePort.findAt(this.level, pos, structure));
+    private void simukraft$placedBuildingByStructure(int x, int y, int z, Structure structure, CallbackInfoReturnable<StructureStart> callback) {
+        replaceWithPlacedBuilding(callback, BuildingStructurePort.findAt(this.level, new BlockPos(x, y, z), structure));
+    }
+
+    @Inject(method = "getStructureWithPieceAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/HolderSet;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;",
+            at = @At("RETURN"), cancellable = true)
+    private void simukraft$placedBuildingByHolderSet(BlockPos pos, HolderSet<Structure> structures, CallbackInfoReturnable<StructureStart> callback) {
+        replaceWithPlacedBuilding(callback, BuildingStructurePort.findAt(this.level, pos, structures::contains));
     }
 
     @Inject(method = "getStructureAt", at = @At("RETURN"), cancellable = true)

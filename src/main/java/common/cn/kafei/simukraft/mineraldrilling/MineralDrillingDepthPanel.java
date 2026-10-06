@@ -14,7 +14,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Scroller;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import dev.vfyjxf.taffy.style.TaffyPosition;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
@@ -107,8 +106,8 @@ public final class MineralDrillingDepthPanel {
             smoothHandle.sendMessage(DEPTH_CHANGE_MESSAGE, request);
         });
         smoothHandle.onMessage(DEPTH_CHANGE_MESSAGE, request -> {
-            if (request.contains(DEPTH_VALUE_TAG, Tag.TAG_INT)) {
-                holder.setDrillDepth(player, request.getInt(DEPTH_VALUE_TAG));
+            if (request.contains(DEPTH_VALUE_TAG)) {
+                holder.setDrillDepth(player, request.getIntOr(DEPTH_VALUE_TAG, 0));
             }
         });
         panel.addChild(smoothHandle);

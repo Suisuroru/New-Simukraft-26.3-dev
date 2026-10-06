@@ -55,8 +55,6 @@ import common.cn.kafei.simukraft.network.path.NpcPathDebugSyncPacket;
 import common.cn.kafei.simukraft.network.planner.PlannerMaterialScanResponsePacket;
 import common.cn.kafei.simukraft.network.toast.InfoToastPacket;
 import common.cn.kafei.simukraft.network.rts.RtsBuildingBoundsSyncPacket;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Map;
 import java.util.UUID;
@@ -65,7 +63,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * ClientboundNetworkHandlerImpl: 客户端网络响应实现，二次封装具体 UI 与渲染缓存调用。
  */
-@OnlyIn(Dist.CLIENT)
 public final class ClientboundNetworkHandlerImpl implements ClientboundNetworkHandler {
     public static final ClientboundNetworkHandlerImpl INSTANCE = new ClientboundNetworkHandlerImpl();
 

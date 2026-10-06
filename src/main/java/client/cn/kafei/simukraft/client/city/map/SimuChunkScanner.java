@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -22,7 +20,6 @@ import org.slf4j.Logger;
 
 import java.util.Objects;
 
-@OnlyIn(Dist.CLIENT)
 public class SimuChunkScanner {
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -51,7 +48,7 @@ public class SimuChunkScanner {
         int baseZ = chunkZ * 16;
         int regOriginX = region.regionX * 512;
         int regOriginZ = region.regionZ * 512;
-        int minBuild = level.getMinBuildHeight();
+        int minBuild = level.getMinY();
 
         for (int localZ = 0; localZ < 16; localZ++) {
             for (int localX = 0; localX < 16; localX++) {
@@ -215,8 +212,8 @@ public class SimuChunkScanner {
         Level level = mc.level;
         if (player == null || level == null) return;
 
-        int playerChunkX = player.chunkPosition().x;
-        int playerChunkZ = player.chunkPosition().z;
+        int playerChunkX = player.chunkPosition().x();
+        int playerChunkZ = player.chunkPosition().z();
 
         for (int dz = -radius; dz <= radius; dz++) {
             for (int dx = -radius; dx <= radius; dx++) {

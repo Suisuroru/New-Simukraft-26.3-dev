@@ -15,20 +15,23 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SimuKraft.MOD_ID);
 
-    public static final DeferredHolder<Item, Item> MANIFEST = ITEMS.register("manifest", ManifestItem::new);
-    public static final DeferredHolder<Item, Item> PORTABLE_CITY_CORE = ITEMS.register("portable_city_core", PortableCityCoreItem::new);
-    public static final DeferredHolder<Item, Item> COPPER_COIN = ITEMS.register("copper_coin", () -> new Item(new Item.Properties())); // 铜币
-    public static final DeferredHolder<Item, Item> SILVER_COIN = ITEMS.register("silver_coin", () -> new Item(new Item.Properties())); // 银币
-    public static final DeferredHolder<Item, Item> GOLD_COIN = ITEMS.register("gold_coin", () -> new Item(new Item.Properties())); // 金币
-    public static final DeferredHolder<Item, Item> HAMBURGER = ITEMS.register("hamburger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.HAMBURGER.food(), ModFoods.HAMBURGER.consumable())));
-    public static final DeferredHolder<Item, Item> FRENCH_FRIES = ITEMS.register("french_fries", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.FRENCH_FRIES.food(), ModFoods.FRENCH_FRIES.consumable())));
-    public static final DeferredHolder<Item, Item> CHEESE_CHUNK = ITEMS.register("cheese_chunk", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_CHUNK.food(), ModFoods.CHEESE_CHUNK.consumable())));
-    public static final DeferredHolder<Item, Item> CHEESE_BURGER = ITEMS.register("cheese_burger", () -> new BuffFoodItem(new Item.Properties().food(ModFoods.CHEESE_BURGER.food(), ModFoods.CHEESE_BURGER.consumable())));
-    // 矿物钻井用具
-    public static final DeferredHolder<Item, Item> GEOLOGICAL_HAMMER = ITEMS.register("geological_hammer", GeologicalHammerItem::new);
-    public static final DeferredHolder<Item, Item> DRILL_ROD_SEGMENT = ITEMS.register("drill_rod_segment", () -> new Item(new Item.Properties()));
-    public static final DeferredHolder<Item, Item> SHALLOW_DRILL_BIT = ITEMS.register("shallow_drill_bit", () -> new Item(new Item.Properties().durability(500))); // 浅层钻头，开采 500 个产物后损坏
-    public static final DeferredHolder<Item, Item> DEEP_DRILL_BIT = ITEMS.register("deep_drill_bit", () -> new Item(new Item.Properties().durability(900))); // 深层钻头，开采 900 个产物后损坏
+    public static final DeferredHolder<Item, Item> MANIFEST = ITEMS.registerItem("manifest", ManifestItem::new);
+    public static final DeferredHolder<Item, Item> PORTABLE_CITY_CORE = ITEMS.registerItem("portable_city_core", PortableCityCoreItem::new);
+    public static final DeferredHolder<Item, Item> COPPER_COIN = ITEMS.registerSimpleItem("copper_coin");
+    public static final DeferredHolder<Item, Item> SILVER_COIN = ITEMS.registerSimpleItem("silver_coin");
+    public static final DeferredHolder<Item, Item> GOLD_COIN = ITEMS.registerSimpleItem("gold_coin");
+    public static final DeferredHolder<Item, Item> HAMBURGER = ITEMS.registerItem("hamburger", BuffFoodItem::new,
+            p -> p.food(ModFoods.HAMBURGER.food(), ModFoods.HAMBURGER.consumable()));
+    public static final DeferredHolder<Item, Item> FRENCH_FRIES = ITEMS.registerItem("french_fries", BuffFoodItem::new,
+            p -> p.food(ModFoods.FRENCH_FRIES.food(), ModFoods.FRENCH_FRIES.consumable()));
+    public static final DeferredHolder<Item, Item> CHEESE_CHUNK = ITEMS.registerItem("cheese_chunk", BuffFoodItem::new,
+            p -> p.food(ModFoods.CHEESE_CHUNK.food(), ModFoods.CHEESE_CHUNK.consumable()));
+    public static final DeferredHolder<Item, Item> CHEESE_BURGER = ITEMS.registerItem("cheese_burger", BuffFoodItem::new,
+            p -> p.food(ModFoods.CHEESE_BURGER.food(), ModFoods.CHEESE_BURGER.consumable()));
+    public static final DeferredHolder<Item, Item> GEOLOGICAL_HAMMER = ITEMS.registerItem("geological_hammer", GeologicalHammerItem::new);
+    public static final DeferredHolder<Item, Item> DRILL_ROD_SEGMENT = ITEMS.registerSimpleItem("drill_rod_segment");
+    public static final DeferredHolder<Item, Item> SHALLOW_DRILL_BIT = ITEMS.registerItem("shallow_drill_bit", Item::new, p -> p.durability(500));
+    public static final DeferredHolder<Item, Item> DEEP_DRILL_BIT = ITEMS.registerItem("deep_drill_bit", Item::new, p -> p.durability(900));
 
     private ModItems() {
     }

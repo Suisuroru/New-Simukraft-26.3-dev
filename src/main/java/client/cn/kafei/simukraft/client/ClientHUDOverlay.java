@@ -1,12 +1,10 @@
 package client.cn.kafei.simukraft.client;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import common.cn.kafei.simukraft.city.CityPermissionLevel;
 import common.cn.kafei.simukraft.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
@@ -15,8 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class ClientHUDOverlay {
     private static final int HUD_COLOR = 0xFFFFFF;
     private static final String SEPARATOR = " | ";
@@ -39,8 +35,8 @@ public final class ClientHUDOverlay {
 
     public static void render(RenderGuiEvent.Post event) {
         Minecraft mc = Objects.requireNonNull(Minecraft.getInstance());
-        if (!ClientConfig.hudEnabled() || mc.player == null || mc.screen != null
-                || mc.gui.getDebugOverlay().showDebugScreen()) {
+        if (!ClientConfig.hudEnabled() || mc.player == null || mc.gui.screen() != null
+                || mc.getDebugOverlay().showDebugScreen()) {
             return;
         }
         try {
@@ -56,7 +52,7 @@ public final class ClientHUDOverlay {
 
             int maxWidth = ClientConfig.hudMaxWidth();
             List<String> lines = wrapFieldsToLines(font, fields, maxWidth);
-            GuiGraphics g = event.getGuiGraphics();
+            GuiGraphicsExtractor g = event.getGuiGraphics();
             int widestLine = widestLineWidth(font, lines);
             int[] pos = ClientHUDConfig.calculatePosition(g.guiWidth(), g.guiHeight(), widestLine);
             ClientHUDConfig.Anchor anchor = ClientHUDConfig.getAnchor();
@@ -69,7 +65,7 @@ public final class ClientHUDOverlay {
                     case TOP_CENTER, BOTTOM_CENTER -> pos[0] + (widestLine - lw) / 2;
                     default -> pos[0];
                 };
-                g.drawString(font, line, x, pos[1] + i * lineStep, HUD_COLOR, true);
+                g.text(font, line, x, pos[1] + i * lineStep, HUD_COLOR, true);
             }
         } catch (RuntimeException ignored) {}
     }

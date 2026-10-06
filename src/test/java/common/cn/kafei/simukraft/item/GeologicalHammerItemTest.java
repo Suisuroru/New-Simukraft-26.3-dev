@@ -10,9 +10,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.Tool;
+import net.minecraft.world.item.component.TooltipDisplay;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,9 +44,14 @@ class GeologicalHammerItemTest {
     void addsMemorialDescriptionToTooltip() {
         ItemStack hammer = new ItemStack(ModItems.GEOLOGICAL_HAMMER.get());
         var tooltip = new ArrayList<net.minecraft.network.chat.Component>();
+        Consumer<net.minecraft.network.chat.Component> tooltipComponents = tooltip::add;
 
-        hammer.getItem().appendHoverText(hammer, net.minecraft.world.item.Item.TooltipContext.EMPTY,
-                tooltip, TooltipFlag.Default.NORMAL);
+        hammer.getItem().appendHoverText(
+                hammer,
+                net.minecraft.world.item.Item.TooltipContext.EMPTY,
+                TooltipDisplay.DEFAULT,
+                tooltipComponents,
+                TooltipFlag.Default.NORMAL);
 
         assertTrue(tooltip.stream().anyMatch(component ->
                 component.getContents() instanceof TranslatableContents contents

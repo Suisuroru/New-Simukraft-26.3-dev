@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -23,20 +25,20 @@ public final class CityPoiSqliteRepository {
      * 会把整个维度的 POI 清空。POI 的删除只走 {@link #delete} / {@link #deleteCity}。
      */
     public void saveAll(Connection connection, CompoundTag tag, String dimensionId) throws SQLException {
-        ListTag pois = tag.getList("Pois", CompoundTag.TAG_COMPOUND);
+        ListTag pois = tag.getListOrEmpty("Pois");
         if (!pois.isEmpty()) {
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO city_pois(poi_id, dimension_id, city_id, pos_long, type, capacity, active, unit_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(poi_id) DO UPDATE SET dimension_id = excluded.dimension_id, city_id = excluded.city_id, pos_long = excluded.pos_long, type = excluded.type, capacity = excluded.capacity, active = excluded.active, unit_id = excluded.unit_id")) {
                 for (int i = 0; i < pois.size(); i++) {
-                    CompoundTag poi = pois.getCompound(i);
-                    statement.setString(1, poi.getUUID("PoiId").toString());
+                    CompoundTag poi = pois.getCompoundOrEmpty(i);
+                    statement.setString(1, NbtUuid.read(poi, "PoiId").toString());
                     statement.setString(2, normalizeDimensionId(dimensionId));
-                    statement.setString(3, poi.getUUID("CityId").toString());
-                    statement.setLong(4, poi.getLong("Pos"));
-                    statement.setString(5, poi.getString("Type"));
-                    statement.setInt(6, poi.getInt("Capacity"));
-                    statement.setInt(7, poi.getBoolean("Active") ? 1 : 0);
-                    SqliteNbtHelper.setNullableString(statement, 8, poi.hasUUID("UnitId") ? poi.getUUID("UnitId").toString() : null);
+                    statement.setString(3, NbtUuid.read(poi, "CityId").toString());
+                    statement.setLong(4, poi.getLongOr("Pos", 0L));
+                    statement.setString(5, poi.getStringOr("Type", ""));
+                    statement.setInt(6, poi.getIntOr("Capacity", 0));
+                    statement.setInt(7, poi.getBooleanOr("Active", false) ? 1 : 0);
+                    SqliteNbtHelper.setNullableString(statement, 8, NbtUuid.toStringOrNull(poi, "UnitId"));
                     statement.addBatch();
                 }
                 statement.executeBatch();
@@ -82,8 +84,8 @@ public final class CityPoiSqliteRepository {
             try (ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 CompoundTag poi = new CompoundTag();
-                poi.putUUID("PoiId", java.util.UUID.fromString(resultSet.getString("poi_id")));
-                poi.putUUID("CityId", java.util.UUID.fromString(resultSet.getString("city_id")));
+                NbtUuid.put(poi, "PoiId", java.util.UUID.fromString(resultSet.getString("poi_id")));
+                NbtUuid.put(poi, "CityId", java.util.UUID.fromString(resultSet.getString("city_id")));
                 poi.putLong("Pos", resultSet.getLong("pos_long"));
                 poi.putString("Type", resultSet.getString("type"));
                 poi.putInt("Capacity", resultSet.getInt("capacity"));
@@ -103,14 +105,14 @@ public final class CityPoiSqliteRepository {
 
     private void savePoi(Connection connection, CompoundTag poi, String dimensionId) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO city_pois(poi_id, dimension_id, city_id, pos_long, type, capacity, active, unit_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(poi_id) DO UPDATE SET dimension_id = excluded.dimension_id, city_id = excluded.city_id, pos_long = excluded.pos_long, type = excluded.type, capacity = excluded.capacity, active = excluded.active, unit_id = excluded.unit_id")) {
-            statement.setString(1, poi.getUUID("PoiId").toString());
+            statement.setString(1, NbtUuid.read(poi, "PoiId").toString());
             statement.setString(2, dimensionId);
-            statement.setString(3, poi.getUUID("CityId").toString());
-            statement.setLong(4, poi.getLong("Pos"));
-            statement.setString(5, poi.getString("Type"));
-            statement.setInt(6, poi.getInt("Capacity"));
-            statement.setInt(7, poi.getBoolean("Active") ? 1 : 0);
-            SqliteNbtHelper.setNullableString(statement, 8, poi.hasUUID("UnitId") ? poi.getUUID("UnitId").toString() : null);
+            statement.setString(3, NbtUuid.read(poi, "CityId").toString());
+            statement.setLong(4, poi.getLongOr("Pos", 0L));
+            statement.setString(5, poi.getStringOr("Type", ""));
+            statement.setInt(6, poi.getIntOr("Capacity", 0));
+            statement.setInt(7, poi.getBooleanOr("Active", false) ? 1 : 0);
+            SqliteNbtHelper.setNullableString(statement, 8, NbtUuid.toStringOrNull(poi, "UnitId"));
             statement.executeUpdate();
         }
     }

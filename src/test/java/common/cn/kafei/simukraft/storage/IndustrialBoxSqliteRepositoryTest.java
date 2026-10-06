@@ -46,9 +46,9 @@ class IndustrialBoxSqliteRepositoryTest {
             CompoundTag loaded = repository.loadAll();
 
             assertNotNull(loaded);
-            CompoundTag loadedBox = loaded.getList("Boxes", CompoundTag.TAG_COMPOUND).getCompound(0);
-            assertEquals(workState, loadedBox.getString("WorkState"));
-            assertEquals("machine", loadedBox.getString("MachineState"));
+            CompoundTag loadedBox = loaded.getListOrEmpty("Boxes").getCompoundOrEmpty(0);
+            assertEquals(workState, loadedBox.getStringOr("WorkState", ""));
+            assertEquals("machine", loadedBox.getStringOr("MachineState", ""));
         }
     }
 

@@ -2,11 +2,8 @@ package client.cn.kafei.simukraft.client.toast;
 
 import common.cn.kafei.simukraft.config.ClientConfig;
 import java.util.Locale;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** ClientToastConfig: 解析通知布局的客户端配置。 */
-@OnlyIn(Dist.CLIENT)
 public final class ClientToastConfig {
     /** 通知布局使用的六个屏幕锚点。 */
     public enum Anchor {

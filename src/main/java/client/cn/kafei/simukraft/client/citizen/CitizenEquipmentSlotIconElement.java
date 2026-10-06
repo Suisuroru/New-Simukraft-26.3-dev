@@ -2,16 +2,13 @@ package client.cn.kafei.simukraft.client.citizen;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
+import net.minecraft.client.renderer.RenderPipelines;
 import common.cn.kafei.simukraft.citizen.CitizenInventory;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** 在 LDLib 槽位上补绘原版玩家装备空槽图标。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class CitizenEquipmentSlotIconElement extends UIElement {
     private final CitizenInventory inventory;
     private final int inventorySlot;
@@ -41,18 +38,19 @@ public final class CitizenEquipmentSlotIconElement extends UIElement {
 
     /** drawBackgroundAdditional：仅在对应装备槽为空时绘制原版图集精灵。 */
     @Override
-    public void drawBackgroundAdditional(GUIContext context) {
+    public void drawBackgroundAdditional(IGUIContext raw) {
+        GUIContext context = (GUIContext) raw;
         if (inventory == null || !inventory.getItem(inventorySlot).isEmpty()) {
             return;
         }
         int x = Math.round(getPositionX());
         int y = Math.round(getPositionY());
         if (directTexture != null) {
-            context.graphics.blit(directTexture, x, y, 0, 0,
+            context.graphics.blit(RenderPipelines.GUI_TEXTURED, directTexture, x, y, 0, 0,
                     Math.round(getSizeWidth()), Math.round(getSizeHeight()), 16, 16);
             return;
         }
-        TextureAtlasSprite sprite = context.mc.getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(icon);
-        context.graphics.blit(x, y, 0, Math.round(getSizeWidth()), Math.round(getSizeHeight()), sprite);
+        context.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, icon, x, y,
+                Math.round(getSizeWidth()), Math.round(getSizeHeight()));
     }
 }

@@ -150,12 +150,15 @@ public final class PlayerWelcomeService {
 
     private static boolean hasPlayedFirstDream(ServerPlayer player) {
         return player.getPersistentData()
-                .getCompound(Player.PERSISTED_NBT_TAG).get()
-                .getBoolean(FIRST_DREAM_PLAYED_TAG).get();
+                .getCompound(Player.PERSISTED_NBT_TAG)
+                .flatMap(tag -> tag.getBoolean(FIRST_DREAM_PLAYED_TAG))
+                .orElse(false);
     }
 
     private static void markFirstDreamPlayed(ServerPlayer player) {
-        CompoundTag persistedData = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG).get();
+        CompoundTag persistedData = player.getPersistentData()
+                .getCompound(Player.PERSISTED_NBT_TAG)
+                .orElseGet(CompoundTag::new);
         persistedData.putBoolean(FIRST_DREAM_PLAYED_TAG, true);
         player.getPersistentData().put(Player.PERSISTED_NBT_TAG, persistedData);
     }

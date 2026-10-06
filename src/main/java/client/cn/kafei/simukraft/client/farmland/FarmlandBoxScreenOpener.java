@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.farmland;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.selection.TwoPointSelectionScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
@@ -26,8 +26,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class FarmlandBoxScreenOpener {
     private static final int PANEL_WIDTH = 340;
     private static final int PANEL_HEIGHT = 220;
@@ -37,7 +35,7 @@ public final class FarmlandBoxScreenOpener {
     }
 
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(pos));
     }
 
     public static void open(FarmlandBoxOpenResponsePacket packet) {
@@ -46,7 +44,7 @@ public final class FarmlandBoxScreenOpener {
             return;
         }
         packet.boxPos().immutable();
-        minecraft.execute(() -> minecraft.setScreen(new FarmlandBoxScreen(createUi(packet), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new FarmlandBoxScreen(createUi(packet), Component.empty())));
     }
 
     private static ModularUI createUi(FarmlandBoxOpenResponsePacket packet) {
@@ -216,7 +214,7 @@ public final class FarmlandBoxScreenOpener {
     }
 
     private static void action(FarmlandBoxOpenResponsePacket packet, FarmlandBoxActionPacket.Action action) {
-        PacketDistributor.sendToServer(new FarmlandBoxActionPacket(packet.boxPos(), action));
+        ClientPacketDistributor.sendToServer(new FarmlandBoxActionPacket(packet.boxPos(), action));
     }
 
     private static void hire(FarmlandBoxOpenResponsePacket packet) {
@@ -224,7 +222,7 @@ public final class FarmlandBoxScreenOpener {
     }
 
     private static void close() {
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static final class FarmlandBoxScreen extends ModularUIScreen {
@@ -236,7 +234,7 @@ public final class FarmlandBoxScreenOpener {
         public void removed() {
             super.removed();
             Minecraft minecraft = Minecraft.getInstance();
-            if (!(minecraft.screen instanceof FarmlandBoxScreen)) {
+            if (!(minecraft.gui.screen() instanceof FarmlandBoxScreen)) {
             }
         }
     }

@@ -7,8 +7,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import xaero.map.highlight.ChunkHighlighter;
 
 import java.util.ArrayList;
@@ -17,8 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class SimuKraftCityHighlighter extends ChunkHighlighter {
     private static final int[] CITY_COLORS = {
             0xFF1A6BB5, 0xFF2E7ECA, 0xFF3DA0DD, 0xFF4AB0EE, 0xFF5ABFFF,
@@ -52,7 +48,7 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
             return null;
         }
         ClientCityChunkCache cache = ClientCityChunkCache.getInstance();
-        long chunkLong = ChunkPos.asLong(chunkX, chunkZ);
+        long chunkLong = ChunkPos.pack(chunkX, chunkZ);
         UUID ownerCity = cache.getChunkOwner(chunkLong);
         if (ownerCity == null) {
             return null;
@@ -62,10 +58,10 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
         int fillColor = xaeroColor(baseColor, FILL_ALPHA);
         int borderColor = xaeroColor(baseColor, BORDER_ALPHA);
         this.resultStore[0] = fillColor;
-        this.resultStore[1] = ownerCity.equals(cache.getChunkOwner(ChunkPos.asLong(chunkX, chunkZ - 1))) ? fillColor : borderColor;
-        this.resultStore[2] = ownerCity.equals(cache.getChunkOwner(ChunkPos.asLong(chunkX + 1, chunkZ))) ? fillColor : borderColor;
-        this.resultStore[3] = ownerCity.equals(cache.getChunkOwner(ChunkPos.asLong(chunkX, chunkZ + 1))) ? fillColor : borderColor;
-        this.resultStore[4] = ownerCity.equals(cache.getChunkOwner(ChunkPos.asLong(chunkX - 1, chunkZ))) ? fillColor : borderColor;
+        this.resultStore[1] = ownerCity.equals(cache.getChunkOwner(ChunkPos.pack(chunkX, chunkZ - 1))) ? fillColor : borderColor;
+        this.resultStore[2] = ownerCity.equals(cache.getChunkOwner(ChunkPos.pack(chunkX + 1, chunkZ))) ? fillColor : borderColor;
+        this.resultStore[3] = ownerCity.equals(cache.getChunkOwner(ChunkPos.pack(chunkX, chunkZ + 1))) ? fillColor : borderColor;
+        this.resultStore[4] = ownerCity.equals(cache.getChunkOwner(ChunkPos.pack(chunkX - 1, chunkZ))) ? fillColor : borderColor;
         return this.resultStore;
     }
 
@@ -107,13 +103,13 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
     /** chunkIsHighlit: 判断指定区块是否被任意城市认领。 */
     @Override
     public boolean chunkIsHighlit(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
-        return isCurrentDimension(dimension) && ClientCityChunkCache.getInstance().isChunkOwned(ChunkPos.asLong(chunkX, chunkZ));
+        return isCurrentDimension(dimension) && ClientCityChunkCache.getInstance().isChunkOwned(ChunkPos.pack(chunkX, chunkZ));
     }
 
     /** getChunkHighlightSubtleTooltip: 鼠标悬停时显示城市名称。 */
     @Override
     public Component getChunkHighlightSubtleTooltip(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
-        return tooltip(dimension, ChunkPos.asLong(chunkX, chunkZ));
+        return tooltip(dimension, ChunkPos.pack(chunkX, chunkZ));
     }
 
     /** getChunkHighlightBluntTooltip: 复用轻提示，避免重复文案。 */
@@ -125,7 +121,7 @@ public final class SimuKraftCityHighlighter extends ChunkHighlighter {
     /** addMinimapBlockHighlightTooltips: 给 Xaero 小地图区块提示补充城市名称。 */
     @Override
     public void addMinimapBlockHighlightTooltips(List<Component> list, ResourceKey<Level> dimension, int blockX, int blockZ, int width) {
-        Component tooltip = tooltip(dimension, ChunkPos.asLong(blockX >> 4, blockZ >> 4));
+        Component tooltip = tooltip(dimension, ChunkPos.pack(blockX >> 4, blockZ >> 4));
         if (tooltip != null) {
             list.add(tooltip);
         }

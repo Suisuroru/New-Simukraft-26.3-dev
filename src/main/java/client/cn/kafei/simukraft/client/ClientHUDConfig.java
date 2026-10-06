@@ -1,13 +1,9 @@
 package client.cn.kafei.simukraft.client;
 
 import common.cn.kafei.simukraft.config.ClientConfig;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Locale;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class ClientHUDConfig {
     public enum Anchor {
         TOP_LEFT,

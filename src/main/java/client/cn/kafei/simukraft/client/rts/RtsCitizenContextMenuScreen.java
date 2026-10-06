@@ -1,20 +1,21 @@
 package client.cn.kafei.simukraft.client.rts;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import common.cn.kafei.simukraft.network.rts.RtsCitizenActionPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.UUID;
 
 /** RTS 市民右键菜单：提供信息、商店和移动三项操作。 */
-@OnlyIn(Dist.CLIENT)
 public final class RtsCitizenContextMenuScreen extends Screen {
     private static final int MENU_WIDTH = 76;
     private static final int HEADER_HEIGHT = 20;
@@ -45,7 +46,7 @@ public final class RtsCitizenContextMenuScreen extends Screen {
     /** open: 在系统光标旁打开指定市民的紧凑 RTS 操作菜单。 */
     public static void open(UUID citizenId, Component citizenName) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (citizenId == null || minecraft.screen != null) {
+        if (citizenId == null || minecraft.gui.screen() != null) {
             return;
         }
         int screenWidth = minecraft.getWindow().getScreenWidth();
@@ -54,7 +55,7 @@ public final class RtsCitizenContextMenuScreen extends Screen {
         int guiHeight = minecraft.getWindow().getGuiScaledHeight();
         int cursorX = screenWidth <= 0 ? guiWidth / 2 : (int) (minecraft.mouseHandler.xpos() * guiWidth / screenWidth);
         int cursorY = screenHeight <= 0 ? guiHeight / 2 : (int) (minecraft.mouseHandler.ypos() * guiHeight / screenHeight);
-        minecraft.setScreen(new RtsCitizenContextMenuScreen(citizenId, citizenName, cursorX, cursorY));
+        minecraft.gui.setScreen(new RtsCitizenContextMenuScreen(citizenId, citizenName, cursorX, cursorY));
     }
 
     @Override
@@ -81,15 +82,15 @@ public final class RtsCitizenContextMenuScreen extends Screen {
 
     /** sendAction: 发送单一市民的界面打开操作并关闭当前下拉菜单。 */
     private void sendAction(RtsCitizenActionPacket.Action action) {
-        PacketDistributor.sendToServer(new RtsCitizenActionPacket(action, List.of(citizenId), BlockPos.ZERO));
+        ClientPacketDistributor.sendToServer(new RtsCitizenActionPacket(action, List.of(citizenId), BlockPos.ZERO));
         onClose();
     }
 
     @Override
-    public void render( GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(menuX, menuY, menuX + MENU_WIDTH, menuY + 1, COLOR_BORDER);
         graphics.fill(menuX, menuY + 1, menuX + MENU_WIDTH, menuY + MENU_HEIGHT, COLOR_BACKGROUND);
-        graphics.drawString(font, fitTitle(citizenName.getString()), menuX + 6, menuY + 6, COLOR_TITLE, false);
+        graphics.text(font, fitTitle(citizenName.getString()), menuX + 6, menuY + 6, COLOR_TITLE, false);
 
         int rowY = menuY + HEADER_HEIGHT;
         graphics.fill(menuX, rowY, menuX + MENU_WIDTH, rowY + DIVIDER_HEIGHT, COLOR_DIVIDER);
@@ -106,7 +107,10 @@ public final class RtsCitizenContextMenuScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         int action = actionAt(mouseX, mouseY);
         if (button == 0 && action >= 0) {
             switch (action) {
@@ -131,12 +135,12 @@ public final class RtsCitizenContextMenuScreen extends Screen {
     }
 
     /** renderActionRow: 绘制一项带悬停色的紧凑下拉菜单操作。 */
-    private void renderActionRow(GuiGraphics graphics, int mouseX, int mouseY, int rowY, int action, String key) {
+    private void renderActionRow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, int rowY, int action, String key) {
         boolean hovered = actionAt(mouseX, mouseY) == action;
         if (hovered) {
             graphics.fill(menuX, rowY, menuX + MENU_WIDTH, rowY + ROW_HEIGHT, COLOR_HOVER);
         }
-        graphics.drawString(font, fitTitle(Component.translatable(key).getString()), menuX + 6, rowY + 4,
+        graphics.text(font, fitTitle(Component.translatable(key).getString()), menuX + 6, rowY + 4,
                 hovered ? COLOR_TITLE : COLOR_ACTION, false);
     }
 

@@ -6,15 +6,9 @@
     "CCC"
   ],
   "key": {
-    "W": {
-      "tag": "minecraft:planks"
-    },
-    "C": {
-      "item": "minecraft:cobblestone"
-    },
-    "B": {
-      "item": "simukraft:build_box"
-    }
+    "W": "#minecraft:planks",
+    "C": "minecraft:cobblestone",
+    "B": "simukraft:build_box"
   },
   "result": {
     "id": "simukraft:city_core",

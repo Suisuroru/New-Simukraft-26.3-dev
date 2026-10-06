@@ -33,9 +33,9 @@ public final class MineralDrillingBoxSqliteRepository {
                 delete.setString(1, dimensionId);
                 delete.executeUpdate();
             }
-            ListTag boxes = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+            ListTag boxes = tag.getListOrEmpty("Boxes");
             for (int index = 0; index < boxes.size(); index++) {
-                saveBox(connection, dimensionId, boxes.getCompound(index));
+                saveBox(connection, dimensionId, boxes.getCompoundOrEmpty(index));
             }
             return true;
         });
@@ -56,7 +56,7 @@ public final class MineralDrillingBoxSqliteRepository {
             return true;
         });
         if (saved == null || !saved) {
-            SimuKraft.LOGGER.error("Failed to save mineral drilling box at {} in {}", boxTag.getLong("BoxPos"), dimensionId);
+            SimuKraft.LOGGER.error("Failed to save mineral drilling box at {} in {}", boxTag.getLongOr("BoxPos", 0L), dimensionId);
             return false;
         }
         return true;
@@ -131,17 +131,17 @@ public final class MineralDrillingBoxSqliteRepository {
                         + "ON CONFLICT(dimension_id, box_pos_long) DO UPDATE SET drill_depth = excluded.drill_depth, lowest_reached_depth = excluded.lowest_reached_depth, running = excluded.running, status_key = excluded.status_key, status_text = excluded.status_text, selected_vein_id = excluded.selected_vein_id, inventory_nbt = excluded.inventory_nbt, updated_at = excluded.updated_at, revision = excluded.revision "
                         + "WHERE excluded.revision >= " + TABLE + ".revision")) {
             statement.setString(1, dimensionId);
-            statement.setLong(2, box.getLong("BoxPos"));
-            statement.setInt(3, box.getInt("DrillDepth"));
+            statement.setLong(2, box.getLongOr("BoxPos", 0L));
+            statement.setInt(3, box.getIntOr("DrillDepth", 0));
             statement.setInt(4, box.contains("LowestReachedDepth")
-                    ? box.getInt("LowestReachedDepth") : Integer.MAX_VALUE);
-            statement.setInt(5, box.getBoolean("Running") ? 1 : 0);
-            statement.setString(6, safeText(box.getString("StatusKey")));
-            statement.setString(7, safeText(box.getString("StatusText")));
-            statement.setString(8, safeText(box.getString("SelectedVeinId")));
-            statement.setString(9, inventoryText(box.getCompound("Inventory")));
-            statement.setLong(10, Math.max(0L, box.getLong("UpdatedAt")));
-            statement.setLong(11, Math.max(0L, box.getLong("Revision")));
+                    ? box.getIntOr("LowestReachedDepth", 0) : Integer.MAX_VALUE);
+            statement.setInt(5, box.getBooleanOr("Running", false) ? 1 : 0);
+            statement.setString(6, safeText(box.getStringOr("StatusKey", "")));
+            statement.setString(7, safeText(box.getStringOr("StatusText", "")));
+            statement.setString(8, safeText(box.getStringOr("SelectedVeinId", "")));
+            statement.setString(9, inventoryText(box.getCompoundOrEmpty("Inventory")));
+            statement.setLong(10, Math.max(0L, box.getLongOr("UpdatedAt", 0L)));
+            statement.setLong(11, Math.max(0L, box.getLongOr("Revision", 0L)));
             statement.executeUpdate();
         }
     }

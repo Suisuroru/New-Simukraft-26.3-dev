@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
@@ -32,8 +30,6 @@ import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 
 import java.util.List;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class BuildingConfirmScreen extends ModularUIScreen {
     private static final int MIN_BUTTON_WIDTH = 80;
     private static final int MIN_BUTTON_HEIGHT = 22;
@@ -90,7 +86,7 @@ public final class BuildingConfirmScreen extends ModularUIScreen {
         Button previewButton = createButton(Component.translatable("gui.building_confirm.preview"), () -> {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft != null) {
-                minecraft.setScreen(new BuildingPreviewScreen(Minecraft.getInstance().screen, building, buildBoxPos, structure));
+                minecraft.gui.setScreen(new BuildingPreviewScreen(Minecraft.getInstance().gui.screen(), building, buildBoxPos, structure));
             }
         });
         layoutButtonInRegion(previewButton, regions.previewButtonRegion(), 0.88F, 0.82F);
@@ -101,7 +97,7 @@ public final class BuildingConfirmScreen extends ModularUIScreen {
         Button backButton = createButton(Component.translatable("gui.button.back"), () -> {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft != null) {
-                minecraft.setScreen(parent);
+                minecraft.gui.setScreen(parent);
             }
         });
         layoutButtonInRegion(backButton, regions.backButtonRegion(), 0.88F, 0.82F);
@@ -251,7 +247,7 @@ public final class BuildingConfirmScreen extends ModularUIScreen {
             layout.top(0);
             layout.width(16);
             layout.height(16);
-        }).style(style -> style.backgroundTexture(new ItemStackTexture(new ItemStack(Items.RED_BED)))));
+        }).style(style -> style.backgroundTexture(new ItemStackTexture(new ItemStack(Blocks.BED.red().asItem())))));
         badge.addChild(new UIElement().layout(layout -> {
             layout.positionType(TaffyPosition.ABSOLUTE);
             layout.left(19);
@@ -357,5 +353,4 @@ public final class BuildingConfirmScreen extends ModularUIScreen {
         return false;
     }
 }
-
 

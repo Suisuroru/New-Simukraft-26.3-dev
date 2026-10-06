@@ -1,14 +1,9 @@
 package client.cn.kafei.simukraft.client.renderer;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
-import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CitizenAnimationActions {
     private CitizenAnimationActions() {
     }
@@ -18,7 +13,7 @@ public final class CitizenAnimationActions {
     }
 
     // applyBuilderWorkSwing：照抄原版攻击动画算法，但把旧版施工曲线固定应用到右手。
-    public static void applyBuilderWorkSwing(PlayerModel<CitizenEntity> model, float ageInTicks) {
+    public static void applyBuilderWorkSwing(CitizenModel model, float ageInTicks) {
         if (model == null) {
             return;
         }
@@ -41,12 +36,12 @@ public final class CitizenAnimationActions {
         arm.xRot -= swing * 1.2F + headOffset;
         arm.yRot += model.body.yRot * 2.0F;
         arm.zRot += Mth.sin(attackTime * (float) Math.PI) * -0.4F;
-        model.rightSleeve.copyFrom(model.rightArm);
-        model.leftSleeve.copyFrom(model.leftArm);
+        CitizenModel.copyPart(model.rightArm, model.rightSleeve);
+        CitizenModel.copyPart(model.leftArm, model.leftSleeve);
     }
 
     // applyBuilderWorkSwing：按旧版 tickCount + partialTick 入口调用施工动作。
-    public static void applyBuilderWorkSwing(PlayerModel<CitizenEntity> model, CitizenEntity entity, float partialTick) {
+    public static void applyBuilderWorkSwing(CitizenModel model, CitizenEntity entity, float partialTick) {
         if (entity == null) {
             return;
         }

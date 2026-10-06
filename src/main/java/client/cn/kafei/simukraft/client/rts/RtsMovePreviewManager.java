@@ -14,15 +14,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /** RTS 抓取预览状态：抓取时构建一次网格，鼠标移动时只平移网格。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class RtsMovePreviewManager {
     private static final int MAX_CAPTURED_BLOCKS = 32768;
     private static final long MAX_CAPTURE_VOLUME = 262144L;

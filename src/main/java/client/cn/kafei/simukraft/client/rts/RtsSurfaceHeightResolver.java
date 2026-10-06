@@ -5,14 +5,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 
-@OnlyIn(Dist.CLIENT)
 public final class RtsSurfaceHeightResolver {
     private static final long MAX_EXACT_COLUMNS = 65_536L;
     private static final int MAX_CACHED_COLUMNS = 65_536;
@@ -62,22 +59,22 @@ public final class RtsSurfaceHeightResolver {
     public static int resolveSurfaceY(ClientLevel level, int x, int z) {
         if (level == null || !level.getChunkSource().hasChunk(SectionPos.blockToSectionCoord(x),
                 SectionPos.blockToSectionCoord(z))) {
-            return level == null ? 0 : level.getMinBuildHeight();
+            return level == null ? 0 : level.getMinY();
         }
         return resolveColumnSurfaceY(level, x, z);
     }
 
     /** resolveColumnSurfaceY: 从世界顶端扫描到首个阻挡移动的非树叶方块。 */
     private static int resolveColumnSurfaceY(ClientLevel level, int x, int z) {
-        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(x, level.getMaxBuildHeight() - 1, z);
-        for (int y = level.getMaxBuildHeight() - 1; y >= level.getMinBuildHeight(); y--) {
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(x, level.getMaxY() + 1 - 1, z);
+        for (int y = level.getMaxY() + 1 - 1; y >= level.getMinY(); y--) {
             cursor.setY(y);
             BlockState state = level.getBlockState(cursor);
             if (SURFACE_BLOCK_PREDICATE.test(state)) {
                 return y + 1;
             }
         }
-        return level.getMinBuildHeight();
+        return level.getMinY();
     }
 
     /** areAllChunksLoaded：仅在可精确扫描的范围内检查是否已完整加载。 */

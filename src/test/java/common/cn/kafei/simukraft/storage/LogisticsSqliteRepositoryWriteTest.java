@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.junit.jupiter.api.Test;
@@ -49,10 +51,10 @@ class LogisticsSqliteRepositoryWriteTest {
 
             CompoundTag loaded = repository.loadAll();
             assertNotNull(loaded);
-            ListTag loadedWarehouses = loaded.getList("Warehouses", CompoundTag.TAG_COMPOUND);
+            ListTag loadedWarehouses = loaded.getListOrEmpty("Warehouses");
             assertEquals(1, loadedWarehouses.size(), "同位置旧仓库必须被顶替而不是并存");
-            assertEquals(replacementId, loadedWarehouses.getCompound(0).getUUID("WarehouseId"));
-            assertTrue(loaded.getList("Channels", CompoundTag.TAG_COMPOUND).isEmpty(), "旧仓库的通道必须一并清理");
+            assertEquals(replacementId, NbtUuid.read(loadedWarehouses.getCompoundOrEmpty(0), "WarehouseId"));
+            assertTrue(loaded.getListOrEmpty("Channels").isEmpty(), "旧仓库的通道必须一并清理");
             assertFalse(database.isDegraded(), "正常顶替不得触发降级");
         }
     }
@@ -79,12 +81,12 @@ class LogisticsSqliteRepositoryWriteTest {
 
             CompoundTag loaded = repository.loadAll();
             assertNotNull(loaded);
-            ListTag loadedContainers = loaded.getList("Warehouses", CompoundTag.TAG_COMPOUND)
-                    .getCompound(0).getList("Containers", CompoundTag.TAG_COMPOUND);
+            ListTag loadedContainers = loaded.getListOrEmpty("Warehouses")
+                    .getCompoundOrEmpty(0).getListOrEmpty("Containers");
             assertEquals(12, loadedContainers.size());
             for (int i = 0; i < 12; i++) {
                 // 修复前按 port_id 字典序加载，container_10 会排到 container_2 前面。
-                assertEquals(10_000L + i, loadedContainers.getCompound(i).getLong("Pos"),
+                assertEquals(10_000L + i, loadedContainers.getCompoundOrEmpty(i).getLongOr("Pos", 0L),
                         "容器必须按保存顺序（数值后缀序）加载回来");
             }
         }
@@ -92,7 +94,7 @@ class LogisticsSqliteRepositoryWriteTest {
 
     private static CompoundTag warehouseTag(UUID warehouseId, long boxPos) {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("WarehouseId", warehouseId);
+        NbtUuid.put(tag, "WarehouseId", warehouseId);
         tag.putLong("BoxPos", boxPos);
         tag.putString("DimensionId", "minecraft:overworld");
         tag.putLong("UpdatedAt", 1L);
@@ -101,8 +103,8 @@ class LogisticsSqliteRepositoryWriteTest {
 
     private static CompoundTag channelTag(UUID channelId, UUID warehouseId) {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("ChannelId", channelId);
-        tag.putUUID("WarehouseId", warehouseId);
+        NbtUuid.put(tag, "ChannelId", channelId);
+        NbtUuid.put(tag, "WarehouseId", warehouseId);
         tag.putString("Direction", "export");
         tag.putString("Name", "");
         tag.putBoolean("Enabled", true);

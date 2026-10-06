@@ -27,12 +27,11 @@ import common.cn.kafei.simukraft.mineraldrilling.MineralDrillingUiBridge;
 import common.cn.kafei.simukraft.registry.ModEntities;
 import common.cn.kafei.simukraft.registry.ModMenuTypes;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -45,8 +44,7 @@ import net.neoforged.neoforge.common.NeoForge;
  * ClientModBusSetup: 客户端 MOD 总线初始化入口，避免 common 主类直接引用客户端类。
  */
 @SuppressWarnings("removal")
-@OnlyIn(Dist.CLIENT)
-@EventBusSubscriber(modid = SimuKraft.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SimuKraft.MOD_ID, value = Dist.CLIENT)
 public final class ClientModBusSetup {
     private ClientModBusSetup() {
     }
@@ -93,7 +91,7 @@ public final class ClientModBusSetup {
     /** onBlockAtlasStitched: 方块图集重建后刷新地图贴图色。 */
     @SubscribeEvent
     public static void onBlockAtlasStitched(TextureAtlasStitchedEvent event) {
-        if (InventoryMenu.BLOCK_ATLAS.equals(event.getAtlas().location())) {
+        if (TextureAtlas.LOCATION_BLOCKS.equals(event.getAtlas().location())) {
             SimuMapManager.onBlockAtlasReloaded();
         }
     }

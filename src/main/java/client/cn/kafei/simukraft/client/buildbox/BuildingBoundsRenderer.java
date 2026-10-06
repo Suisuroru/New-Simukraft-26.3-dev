@@ -1,14 +1,7 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import client.cn.kafei.simukraft.client.city.ClientCityChunkCache;
 import client.cn.kafei.simukraft.client.rts.RtsMovePreviewManager;
 import client.cn.kafei.simukraft.client.rts.RtsSelectionManager;
@@ -17,14 +10,14 @@ import common.cn.kafei.simukraft.building.PlacedBuildingRecord;
 import common.cn.kafei.simukraft.building.PlacedBuildingService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import org.joml.Matrix4f;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -32,8 +25,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class BuildingBoundsRenderer {
     private static final int COLOR_CITY_BORDER = 0x553C66FF;
     private static final int COLOR_INTRUSION_AIR   = 0x28FFEE00; // 黄色实心面，低透明避免叠加过亮
@@ -65,6 +56,7 @@ public final class BuildingBoundsRenderer {
     private static int intrusionCacheRotation = Integer.MIN_VALUE;
     private static List<PreviewIntrusion> cachedIntrusions = List.of();
     private static List<AABB> cachedTouchedBuildingBounds = List.of();
+    private static SubmitNodeCollector activeCollector;
 
     private BuildingBoundsRenderer() {
     }
@@ -187,17 +179,15 @@ public final class BuildingBoundsRenderer {
         setBuildingBoundsVisible(controlBoxPos, bounds, residentialPoiPositions, true);
     }
 
-    @SubscribeEvent
-    public static void onRender(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            return;
-        }
+    public static void onRender(SubmitCustomGeometryEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.player == null) {
             return;
         }
         PoseStack poseStack = event.getPoseStack();
-        Vec3 cameraPos = event.getCamera().getPosition();
+        Vec3 cameraPos = event.getLevelRenderState().cameraRenderState.pos;
+        activeCollector = event.getSubmitNodeCollector();
+        try {
         boolean rtsPreview = BuildingPreviewManager.isPreviewActive() && RtsSelectionManager.isActive();
         boolean rtsMovePreview = RtsMovePreviewManager.isActive();
         // RTS 建筑预览只保留城市边界；普通预览仍显示侵入提示。
@@ -213,6 +203,9 @@ public final class BuildingBoundsRenderer {
         if (!rtsPreview) {
             renderSelectedBuildingBounds(poseStack, cameraPos);
             renderRtsTarget(poseStack, cameraPos);
+        }
+        } finally {
+            activeCollector = null;
         }
     }
 
@@ -260,52 +253,41 @@ public final class BuildingBoundsRenderer {
     private static void renderCityBoundary(PoseStack poseStack, Vec3 cameraPos, Minecraft minecraft) {
         ClientCityChunkCache cityData = ClientCityChunkCache.getInstance();
         var cityChunks = cityData.getCurrentCityChunks();
-        if (cityChunks.isEmpty()) {
+        if (cityChunks.isEmpty() || activeCollector == null) {
             return;
         }
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableCull();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix = poseStack.last().pose();
         float red = ((COLOR_CITY_BORDER >> 16) & 0xFF) / 255.0f;
         float green = ((COLOR_CITY_BORDER >> 8) & 0xFF) / 255.0f;
         float blue = (COLOR_CITY_BORDER & 0xFF) / 255.0f;
         float alpha = ((COLOR_CITY_BORDER >> 24) & 0xFF) / 255.0f;
         final double minY = -64 - cameraPos.y;
         final double maxY = 320 - cameraPos.y;
-        for (long chunkLong : cityChunks) {
-            net.minecraft.world.level.ChunkPos chunkPos = new net.minecraft.world.level.ChunkPos(chunkLong);
-            double minX = chunkPos.getMinBlockX() - cameraPos.x;
-            double maxX = chunkPos.getMaxBlockX() + 1 - cameraPos.x;
-            double minZ = chunkPos.getMinBlockZ() - cameraPos.z;
-            double maxZ = chunkPos.getMaxBlockZ() + 1 - cameraPos.z;
-            if (isBoundaryFace(cityChunks, chunkPos.x, chunkPos.z - 1)) {
-                drawQuad(buffer, matrix, minX, minY, minZ, maxX, minY, minZ, maxX, maxY, minZ, minX, maxY, minZ, red, green, blue, alpha);
+        activeCollector.submitCustomGeometry(poseStack, RenderTypes.debugQuads(), (pose, buffer) -> {
+            for (long chunkLong : cityChunks) {
+                net.minecraft.world.level.ChunkPos chunkPos = net.minecraft.world.level.ChunkPos.unpack(chunkLong);
+                double minX = chunkPos.getMinBlockX() - cameraPos.x;
+                double maxX = chunkPos.getMaxBlockX() + 1 - cameraPos.x;
+                double minZ = chunkPos.getMinBlockZ() - cameraPos.z;
+                double maxZ = chunkPos.getMaxBlockZ() + 1 - cameraPos.z;
+                if (isBoundaryFace(cityChunks, chunkPos.x(), chunkPos.z() - 1)) {
+                    drawQuad(buffer, pose, minX, minY, minZ, maxX, minY, minZ, maxX, maxY, minZ, minX, maxY, minZ, red, green, blue, alpha);
+                }
+                if (isBoundaryFace(cityChunks, chunkPos.x(), chunkPos.z() + 1)) {
+                    drawQuad(buffer, pose, maxX, minY, maxZ, minX, minY, maxZ, minX, maxY, maxZ, maxX, maxY, maxZ, red, green, blue, alpha);
+                }
+                if (isBoundaryFace(cityChunks, chunkPos.x() - 1, chunkPos.z())) {
+                    drawQuad(buffer, pose, minX, minY, maxZ, minX, minY, minZ, minX, maxY, minZ, minX, maxY, maxZ, red, green, blue, alpha);
+                }
+                if (isBoundaryFace(cityChunks, chunkPos.x() + 1, chunkPos.z())) {
+                    drawQuad(buffer, pose, maxX, minY, minZ, maxX, minY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, red, green, blue, alpha);
+                }
             }
-            if (isBoundaryFace(cityChunks, chunkPos.x, chunkPos.z + 1)) {
-                drawQuad(buffer, matrix, maxX, minY, maxZ, minX, minY, maxZ, minX, maxY, maxZ, maxX, maxY, maxZ, red, green, blue, alpha);
-            }
-            if (isBoundaryFace(cityChunks, chunkPos.x - 1, chunkPos.z)) {
-                drawQuad(buffer, matrix, minX, minY, maxZ, minX, minY, minZ, minX, maxY, minZ, minX, maxY, maxZ, red, green, blue, alpha);
-            }
-            if (isBoundaryFace(cityChunks, chunkPos.x + 1, chunkPos.z)) {
-                drawQuad(buffer, matrix, maxX, minY, minZ, maxX, minY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, red, green, blue, alpha);
-            }
-        }
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+        });
     }
 
     private static boolean isBoundaryFace(Set<Long> cityChunks, int neighborChunkX, int neighborChunkZ) {
         // 只画领地最外圈面，相邻同城 chunk 的公共面直接跳过。
-        return !cityChunks.contains(net.minecraft.world.level.ChunkPos.asLong(neighborChunkX, neighborChunkZ));
+        return !cityChunks.contains(net.minecraft.world.level.ChunkPos.pack(neighborChunkX, neighborChunkZ));
     }
 
     private static void renderIntrusions(PoseStack poseStack, Vec3 cameraPos, Minecraft minecraft) {
@@ -377,69 +359,33 @@ public final class BuildingBoundsRenderer {
 
     // 所有侵入方块合并为 2 次 draw call（实心面 + 线框），避免每块单独 draw call 卡顿。
     private static void renderIntrusionsBatched(PoseStack poseStack, Vec3 cameraPos) {
-        Matrix4f matrix = poseStack.last().pose();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-
-        // 实心面 batch：全部侵入块写入同一 buffer，一次提交
-        BufferBuilder faceBuffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        for (PreviewIntrusion intrusion : cachedIntrusions) {
-            addBoxFacesToBuffer(faceBuffer, matrix, cameraPos, new AABB(intrusion.pos()), intrusion.color());
+        if (activeCollector == null) {
+            return;
         }
-        BufferUploader.drawWithShader(faceBuffer.buildOrThrow());
-
-        // 线框 batch：同色但高透明度边框，让边界清晰可见
-        BufferBuilder lineBuffer = tesselator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        activeCollector.submitCustomGeometry(poseStack, RenderTypes.debugQuads(), (pose, buffer) -> {
+            for (PreviewIntrusion intrusion : cachedIntrusions) {
+                addBoxFacesToBuffer(buffer, pose, cameraPos, new AABB(intrusion.pos()), intrusion.color());
+            }
+        });
         for (PreviewIntrusion intrusion : cachedIntrusions) {
             int edgeColor = intrusion.color() == COLOR_INTRUSION_AIR ? COLOR_INTRUSION_AIR_EDGE : COLOR_INTRUSION_BLOCK_EDGE;
-            addWireBoxToBuffer(lineBuffer, matrix, cameraPos, new AABB(intrusion.pos()), edgeColor);
+            renderWireBox(poseStack, cameraPos, new AABB(intrusion.pos()), edgeColor, false);
         }
-        BufferUploader.drawWithShader(lineBuffer.buildOrThrow());
-
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
     }
 
-    private static void addBoxFacesToBuffer(BufferBuilder buffer, Matrix4f matrix, Vec3 cameraPos, AABB bounds, int color) {
+    private static void addBoxFacesToBuffer(VertexConsumer buffer, PoseStack.Pose pose, Vec3 cameraPos, AABB bounds, int color) {
         float r = ((color >> 16) & 0xFF) / 255.0f;
         float g = ((color >> 8) & 0xFF) / 255.0f;
         float b = (color & 0xFF) / 255.0f;
         float a = ((color >> 24) & 0xFF) / 255.0f;
         double x0 = bounds.minX - cameraPos.x, y0 = bounds.minY - cameraPos.y, z0 = bounds.minZ - cameraPos.z;
         double x1 = bounds.maxX - cameraPos.x, y1 = bounds.maxY - cameraPos.y, z1 = bounds.maxZ - cameraPos.z;
-        drawQuad(buffer, matrix, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, r, g, b, a); // 北
-        drawQuad(buffer, matrix, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, r, g, b, a); // 南
-        drawQuad(buffer, matrix, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, r, g, b, a); // 西
-        drawQuad(buffer, matrix, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0, r, g, b, a); // 东
-        drawQuad(buffer, matrix, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1, r, g, b, a); // 顶
-        drawQuad(buffer, matrix, x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0, r, g, b, a); // 底
-    }
-
-    private static void addWireBoxToBuffer(BufferBuilder buffer, Matrix4f matrix, Vec3 cameraPos, AABB bounds, int color) {
-        float r = ((color >> 16) & 0xFF) / 255.0f;
-        float g = ((color >> 8) & 0xFF) / 255.0f;
-        float b = (color & 0xFF) / 255.0f;
-        float a = ((color >> 24) & 0xFF) / 255.0f;
-        double x0 = bounds.minX - cameraPos.x, y0 = bounds.minY - cameraPos.y, z0 = bounds.minZ - cameraPos.z;
-        double x1 = bounds.maxX - cameraPos.x, y1 = bounds.maxY - cameraPos.y, z1 = bounds.maxZ - cameraPos.z;
-        drawLine(buffer, matrix, x0, y0, z0, x1, y0, z0, r, g, b, a);
-        drawLine(buffer, matrix, x1, y0, z0, x1, y0, z1, r, g, b, a);
-        drawLine(buffer, matrix, x1, y0, z1, x0, y0, z1, r, g, b, a);
-        drawLine(buffer, matrix, x0, y0, z1, x0, y0, z0, r, g, b, a);
-        drawLine(buffer, matrix, x0, y1, z0, x1, y1, z0, r, g, b, a);
-        drawLine(buffer, matrix, x1, y1, z0, x1, y1, z1, r, g, b, a);
-        drawLine(buffer, matrix, x1, y1, z1, x0, y1, z1, r, g, b, a);
-        drawLine(buffer, matrix, x0, y1, z1, x0, y1, z0, r, g, b, a);
-        drawLine(buffer, matrix, x0, y0, z0, x0, y1, z0, r, g, b, a);
-        drawLine(buffer, matrix, x1, y0, z0, x1, y1, z0, r, g, b, a);
-        drawLine(buffer, matrix, x1, y0, z1, x1, y1, z1, r, g, b, a);
-        drawLine(buffer, matrix, x0, y0, z1, x0, y1, z1, r, g, b, a);
+        drawQuad(buffer, pose, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, r, g, b, a);
+        drawQuad(buffer, pose, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, r, g, b, a);
+        drawQuad(buffer, pose, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, r, g, b, a);
+        drawQuad(buffer, pose, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0, r, g, b, a);
+        drawQuad(buffer, pose, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1, r, g, b, a);
+        drawQuad(buffer, pose, x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0, r, g, b, a);
     }
 
     private static void ensurePreviewDetectionCache(Minecraft minecraft) {
@@ -528,56 +474,26 @@ public final class BuildingBoundsRenderer {
     }
 
     private static void renderWireBox(PoseStack poseStack, Vec3 cameraPos, AABB bounds, int color, boolean throughWalls) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        if (throughWalls) {
-            RenderSystem.disableDepthTest();
+        if (activeCollector == null) {
+            return;
         }
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix = poseStack.last().pose();
-        float red = ((color >> 16) & 0xFF) / 255.0f;
-        float green = ((color >> 8) & 0xFF) / 255.0f;
-        float blue = (color & 0xFF) / 255.0f;
-        float alpha = ((color >> 24) & 0xFF) / 255.0f;
-        double minX = bounds.minX - cameraPos.x;
-        double minY = bounds.minY - cameraPos.y;
-        double minZ = bounds.minZ - cameraPos.z;
-        double maxX = bounds.maxX - cameraPos.x;
-        double maxY = bounds.maxY - cameraPos.y;
-        double maxZ = bounds.maxZ - cameraPos.z;
-        drawLine(buffer, matrix, minX, minY, minZ, maxX, minY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, minY, minZ, maxX, minY, maxZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, minY, maxZ, minX, minY, maxZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, minX, minY, maxZ, minX, minY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, minX, maxY, minZ, maxX, maxY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, maxY, minZ, maxX, maxY, maxZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, maxY, maxZ, minX, maxY, maxZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, minX, maxY, maxZ, minX, maxY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, minX, minY, minZ, minX, maxY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, minY, minZ, maxX, maxY, minZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, maxX, minY, maxZ, maxX, maxY, maxZ, red, green, blue, alpha);
-        drawLine(buffer, matrix, minX, minY, maxZ, minX, maxY, maxZ, red, green, blue, alpha);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        if (throughWalls) {
-            RenderSystem.enableDepthTest();
-        }
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+        poseStack.pushPose();
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        activeCollector.submitShapeOutline(
+                poseStack,
+                Shapes.create(bounds),
+                throughWalls ? RenderTypes.linesTranslucentNoDepthWrite() : RenderTypes.lines(),
+                color,
+                throughWalls ? 2.5F : 2.0F,
+                true);
+        poseStack.popPose();
     }
 
-    private static void drawQuad(BufferBuilder buffer, Matrix4f matrix, double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, double x4, double y4, double z4, float red, float green, float blue, float alpha) {
-        buffer.addVertex(matrix, (float) x1, (float) y1, (float) z1).setColor(red, green, blue, alpha);
-        buffer.addVertex(matrix, (float) x2, (float) y2, (float) z2).setColor(red, green, blue, alpha);
-        buffer.addVertex(matrix, (float) x3, (float) y3, (float) z3).setColor(red, green, blue, alpha);
-        buffer.addVertex(matrix, (float) x4, (float) y4, (float) z4).setColor(red, green, blue, alpha);
-    }
-
-    private static void drawLine(BufferBuilder buffer, Matrix4f matrix, double x1, double y1, double z1, double x2, double y2, double z2, float red, float green, float blue, float alpha) {
-        buffer.addVertex(matrix, (float) x1, (float) y1, (float) z1).setColor(red, green, blue, alpha);
-        buffer.addVertex(matrix, (float) x2, (float) y2, (float) z2).setColor(red, green, blue, alpha);
+    private static void drawQuad(VertexConsumer buffer, PoseStack.Pose pose, double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, double x4, double y4, double z4, float red, float green, float blue, float alpha) {
+        buffer.addVertex(pose, (float) x1, (float) y1, (float) z1).setColor(red, green, blue, alpha);
+        buffer.addVertex(pose, (float) x2, (float) y2, (float) z2).setColor(red, green, blue, alpha);
+        buffer.addVertex(pose, (float) x3, (float) y3, (float) z3).setColor(red, green, blue, alpha);
+        buffer.addVertex(pose, (float) x4, (float) y4, (float) z4).setColor(red, green, blue, alpha);
     }
 
     public record DisplayMarker(BlockPos pos, int color) {

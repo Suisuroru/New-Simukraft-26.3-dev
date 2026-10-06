@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.citizen;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
@@ -26,15 +28,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
 /** 参考证件卡草图实现的 NPC 信息、装备与双背包一体界面。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class CitizenInfoUiRoot extends UIElement {
     private static final int FRAME_OUTER = 0xFF171919;
     private static final int FRAME_INNER = 0xFF767A7A;
@@ -225,7 +224,7 @@ public final class CitizenInfoUiRoot extends UIElement {
                 stayEnabled = !stayEnabled;
             }
             refreshToggleLabel(button, translationKey, action);
-            PacketDistributor.sendToServer(new CitizenBehaviorActionPacket(packet.citizenId(), action));
+            ClientPacketDistributor.sendToServer(new CitizenBehaviorActionPacket(packet.citizenId(), action));
             event.stopPropagation();
         });
         return button;

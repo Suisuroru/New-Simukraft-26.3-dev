@@ -6,21 +6,11 @@
     "%&%"
   ],
   "key": {
-    "#": {
-      "tag": "minecraft:logs"
-    },
-    "$": {
-      "tag": "minecraft:planks"
-    },
-    "*": {
-      "item": "minecraft:barrel"
-    },
-    "%": {
-      "item": "minecraft:iron_ingot"
-    },
-    "&": {
-      "item": "minecraft:comparator"
-    }
+    "#": "#minecraft:logs",
+    "$": "#minecraft:planks",
+    "*": "minecraft:barrel",
+    "%": "minecraft:iron_ingot",
+    "&": "minecraft:comparator"
   },
   "result": {
     "id": "simukraft:logistics_server_box",

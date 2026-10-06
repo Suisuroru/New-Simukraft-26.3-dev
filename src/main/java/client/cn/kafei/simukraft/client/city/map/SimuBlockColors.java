@@ -1,12 +1,11 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.block.BlockTintSource;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
@@ -26,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Simukraft 自有方块颜色映射系统。
  * 优先用顶面纹理均值乘生物群系着色，接近 Xaero World Map 的地表质感。
  */
-@OnlyIn(Dist.CLIENT)
 public class SimuBlockColors {
     private static final SimuBlockColors INSTANCE = new SimuBlockColors();
     private final Map<Block, Integer> colorOverrides = new ConcurrentHashMap<>();
@@ -150,8 +148,13 @@ public class SimuBlockColors {
 
     private int readBlockTint(BlockState state, Level level, BlockPos pos, int tintIndex) {
         try {
-            BlockColors blockColors = Minecraft.getInstance().getBlockColors();
-            int tintColor = blockColors.getColor(state, level, pos, tintIndex);
+            BlockTintSource tintSource = Minecraft.getInstance().getBlockColors().getTintSource(state, tintIndex);
+            if (tintSource == null) {
+                return -1;
+            }
+            int tintColor = level instanceof BlockAndTintGetter tintGetter
+                    ? tintSource.colorInWorld(state, tintGetter, pos)
+                    : tintSource.color(state);
             if (tintColor != -1 && tintColor != 0) {
                 return tintColor;
             }
@@ -185,7 +188,7 @@ public class SimuBlockColors {
         if ((tint >>> 24) == 0) {
             tint = 0xFF000000 | (tint & 0x00FFFFFF);
         }
-        return FastColor.ARGB32.multiply(argb | 0xFF000000, tint);
+        return ARGB.multiply(argb | 0xFF000000, tint);
     }
 
     /**

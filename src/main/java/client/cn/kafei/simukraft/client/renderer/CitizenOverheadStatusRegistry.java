@@ -2,8 +2,6 @@ package client.cn.kafei.simukraft.client.renderer;
 
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,8 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CitizenOverheadStatusRegistry {
     public static final int PRIORITY_NAME = 300;
     public static final int PRIORITY_WORK_STATUS = 200;

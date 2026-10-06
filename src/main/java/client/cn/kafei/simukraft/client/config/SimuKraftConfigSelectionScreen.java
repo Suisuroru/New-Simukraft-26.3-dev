@@ -6,7 +6,7 @@ import common.cn.kafei.simukraft.SimuKraft;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
-import net.minecraft.Util;
+import com.mojang.blaze3d.Blaze3D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -110,12 +110,12 @@ public final class SimuKraftConfigSelectionScreen {
     }
 
     private static void open(Screen screen) {
-        Minecraft.getInstance().setScreen(screen);
+        Minecraft.getInstance().gui.setScreen(screen);
     }
 
     private static void openUrl(String url) {
         try {
-            Util.getPlatform().openUri(url);
+            Blaze3D.openUri(java.net.URI.create(url));
         } catch (RuntimeException exception) {
             SimuKraft.LOGGER.warn("Failed to open config link: {}", url, exception);
         }

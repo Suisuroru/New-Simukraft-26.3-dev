@@ -17,8 +17,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 
 public final class LogisticsClientBoxBlock extends Block {
-    public LogisticsClientBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.METAL));
+    public LogisticsClientBoxBlock(Properties properties) {
+        super(properties);
     }
 
     @Override

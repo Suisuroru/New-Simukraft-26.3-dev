@@ -17,6 +17,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -83,7 +84,7 @@ public record RtsDemolishPacket(BlockPos pos) implements CustomPacketPayload {
     }
 
     private static boolean canManageBuilding(ServerLevel level, ServerPlayer player, PlacedBuildingRecord building) {
-        if (player.hasPermissions(2)) {
+        if (player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             return true;
         }
         if (building.cityId() == null) {

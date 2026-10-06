@@ -3,8 +3,6 @@ package client.cn.kafei.simukraft.mixin;
 import client.cn.kafei.simukraft.client.compat.LdlibTextFieldImeCompat;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = TextField.class, remap = false)
-@OnlyIn(Dist.CLIENT)
 public abstract class MixinLdlibTextField {
     @Unique
     private Object simukraft$imeProxy;

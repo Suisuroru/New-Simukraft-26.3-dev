@@ -6,15 +6,9 @@
     "IRI"
   ],
   "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
-    },
-    "C": {
-      "item": "simukraft:city_core"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    }
+    "I": "minecraft:iron_ingot",
+    "C": "simukraft:city_core",
+    "R": "minecraft:redstone"
   },
   "result": {
     "id": "simukraft:portable_city_core",

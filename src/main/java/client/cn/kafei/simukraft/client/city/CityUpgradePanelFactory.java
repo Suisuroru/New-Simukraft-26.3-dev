@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.city;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.texture.Icons;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
@@ -22,8 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -31,7 +31,6 @@ import java.util.Locale;
 
 /** CityUpgradePanelFactory: 组合城市升级页并计算客户端展示进度。 */
 
-@OnlyIn(Dist.CLIENT)
 final class CityUpgradePanelFactory {
     private CityUpgradePanelFactory() {
     }
@@ -187,7 +186,7 @@ final class CityUpgradePanelFactory {
             }
             button.disabled();
             CityCoreScreenOpener.expectUpgradeRefresh(packet);
-            PacketDistributor.sendToServer(new CityUpgradeRequestPacket(packet.pos(), packet.cityLevel(), target.level()));
+            ClientPacketDistributor.sendToServer(new CityUpgradeRequestPacket(packet.pos(), packet.cityLevel(), target.level()));
         });
         button.layout(layout -> {
             layout.width(120);
@@ -384,7 +383,7 @@ final class CityUpgradePanelFactory {
                     Math.round(progress * 100.0F), formatDuration(remaining)));
             if (progress >= 1.0F && !refreshRequested) {
                 refreshRequested = true;
-                PacketDistributor.sendToServer(new CityCoreOpenRequestPacket(packet.pos()));
+                ClientPacketDistributor.sendToServer(new CityCoreOpenRequestPacket(packet.pos()));
             }
         }
     }

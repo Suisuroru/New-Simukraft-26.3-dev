@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.building;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
@@ -11,8 +9,6 @@ import net.minecraft.network.chat.Component;
 
 import java.util.Locale;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class BuildingIntegrityUi {
     private BuildingIntegrityUi() {
     }

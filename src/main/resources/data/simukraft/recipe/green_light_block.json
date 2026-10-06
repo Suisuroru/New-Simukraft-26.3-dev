@@ -6,12 +6,8 @@
     "WWW"
   ],
   "key": {
-    "W": {
-      "item": "minecraft:green_wool"
-    },
-    "T": {
-      "item": "minecraft:torch"
-    }
+    "W": "minecraft:green_wool",
+    "T": "minecraft:torch"
   },
   "result": {
     "id": "simukraft:green_light_block",

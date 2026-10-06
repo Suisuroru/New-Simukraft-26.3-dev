@@ -1,19 +1,18 @@
 package client.cn.kafei.simukraft.client.config;
 
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
 import client.cn.kafei.simukraft.client.toast.ClientToastConfig;
 import common.cn.kafei.simukraft.config.ClientConfig;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** ToastPositionEditorScreen: 预览并调整独立通知的尺寸与六锚点位置。 */
-@OnlyIn(Dist.CLIENT)
 
 public final class ToastPositionEditorScreen extends Screen {
     private static final int BUTTON_WIDTH = 90;
@@ -145,7 +144,7 @@ public final class ToastPositionEditorScreen extends Screen {
         ClientConfig.TOAST_WIDTH.set(toastWidth);
         ClientConfig.TOAST_HEIGHT.set(toastHeight);
         ClientConfig.SPEC.save();
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().gui.setScreen(parent);
     }
 
     /** resetLayout: 将编辑中的预览恢复为默认通知布局。 */
@@ -202,21 +201,21 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xCC000000);
         renderRegions(graphics);
-        graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
-        graphics.drawCenteredString(
+        graphics.centeredText(font, title, width / 2, 12, 0xFFFFFF);
+        graphics.centeredText(
                 font,
                 Component.translatable("gui.toast_editor.instruction"),
                 width / 2,
                 28,
                 0xAAAAAA);
-        graphics.drawCenteredString(
+        graphics.centeredText(
                 font,
                 Component.translatable(
                         "gui.toast_editor.status",
@@ -237,7 +236,7 @@ public final class ToastPositionEditorScreen extends Screen {
                 toastAbsoluteX + toastWidth,
                 toastAbsoluteY + toastHeight,
                 0x22000000);
-        graphics.renderOutline(toastAbsoluteX, toastAbsoluteY, toastWidth, toastHeight, outlineColor);
+        graphics.outline(toastAbsoluteX, toastAbsoluteY, toastWidth, toastHeight, outlineColor);
         renderResizeIndicators(graphics, mouseX, mouseY);
         ClientInfoToast.renderPreview(
                 graphics,
@@ -246,7 +245,7 @@ public final class ToastPositionEditorScreen extends Screen {
                 toastAbsoluteY,
                 toastWidth,
                 toastHeight);
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     /** outlineColor: 返回当前拖拽或悬停状态的预览边框颜色。 */
@@ -264,7 +263,7 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     /** renderResizeIndicators: 高亮当前可拖动的宽高边缘。 */
-    private void renderResizeIndicators(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderResizeIndicators(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (isOnLeftEdge(mouseX, mouseY) || dragMode == DragMode.RESIZE_LEFT) {
             graphics.fill(toastAbsoluteX - 1, toastAbsoluteY, toastAbsoluteX + 2, toastAbsoluteY + toastHeight, 0xCCFFAA00);
         }
@@ -280,7 +279,7 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     /** renderRegions: 绘制当前六锚点区域与选中区域提示。 */
-    private void renderRegions(GuiGraphics graphics) {
+    private void renderRegions(GuiGraphicsExtractor graphics) {
         int highlightX;
         int highlightY;
         int highlightWidth;
@@ -336,8 +335,11 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (super.mouseClicked(event, doubleClick)) {
             return true;
         }
         if (button != 0) {
@@ -378,9 +380,12 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button != 0 || dragMode == DragMode.NONE) {
-            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            return super.mouseDragged(event, dragX, dragY);
         }
         int deltaX = (int) mouseX - dragStartMouseX;
         int deltaY = (int) mouseY - dragStartMouseY;
@@ -432,16 +437,19 @@ public final class ToastPositionEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             dragMode = DragMode.NONE;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().gui.setScreen(parent);
     }
 
     @Override

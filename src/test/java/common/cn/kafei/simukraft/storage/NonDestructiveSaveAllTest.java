@@ -122,7 +122,7 @@ class NonDestructiveSaveAllTest {
     }
 
     private static int listSize(CompoundTag tag, String key) {
-        return tag == null ? 0 : tag.getList(key, CompoundTag.TAG_COMPOUND).size();
+        return tag == null ? 0 : tag.getListOrEmpty(key).size();
     }
 
     private static CompoundTag citizensTag(UUID... citizenIds) {

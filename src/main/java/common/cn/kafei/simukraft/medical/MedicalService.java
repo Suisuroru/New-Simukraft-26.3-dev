@@ -51,7 +51,7 @@ public final class MedicalService {
         try {
             runTick(level);
         } catch (Exception exception) {
-            common.cn.kafei.simukraft.SimuKraft.LOGGER.error("Simukraft: Medical service tick failed in {}", level.dimension().location(), exception);
+            common.cn.kafei.simukraft.SimuKraft.LOGGER.error("Simukraft: Medical service tick failed in {}", level.dimension().identifier(), exception);
         }
     }
 
@@ -118,14 +118,14 @@ public final class MedicalService {
         if (home == null || !home.active() || home.type() != CityPoiType.RESIDENTIAL) {
             return false;
         }
-        ChunkPos homeChunk = new ChunkPos(home.pos());
+        ChunkPos homeChunk = ChunkPos.containing(home.pos());
         for (PlacedBuildingRecord building : PlacedBuildingService.getBuildings(level)) {
             if (!citizen.cityId().equals(building.cityId())) continue;
             BlockPos boxPos = MedicalControlBoxService.resolveControlBoxPos(level, building);
             if (!MedicalControlBoxService.isOperational(level, building, boxPos)) continue;
             MedicalDefinition definition = MedicalDefinitionLoader.loadForBuilding(building).definition();
             int rings = definition != null ? definition.serviceRangeRings() : MedicalDefinition.DEFAULT_SERVICE_RANGE_RINGS;
-            if (isWithinRange(homeChunk, new ChunkPos(boxPos), rings)) {
+            if (isWithinRange(homeChunk, ChunkPos.containing(boxPos), rings)) {
                 return true;
             }
         }
@@ -181,7 +181,7 @@ public final class MedicalService {
         }
 
         List<CitizenData> citizens = CitizenManager.get(level).allCitizens().stream()
-                .filter(citizen -> level.dimension().location().toString().equals(citizen.dimensionId()))
+                .filter(citizen -> level.dimension().identifier().toString().equals(citizen.dimensionId()))
                 .filter(citizen -> !citizen.dead())
                 .filter(citizen -> CityRuntimeService.isCitizenActive(level, citizen))
                 .sorted(Comparator.comparing(citizen -> citizen.uuid().toString()))
@@ -282,12 +282,12 @@ public final class MedicalService {
         }
         if (canBypassResidentialCoverage(citizen)) {
             CitizenEntity entity = CitizenTeleportService.findCitizenEntity(level, citizen.uuid());
-            ChunkPos citizenChunk = entity != null ? new ChunkPos(entity.blockPosition()) : null;
+            ChunkPos citizenChunk = entity != null ? ChunkPos.containing(entity.blockPosition()) : null;
             return hospitals.stream()
                     .filter(hospital -> citizen.cityId().equals(hospital.building().cityId()))
                     .filter(hospital -> hospital.firstVacant(occupiedBeds) != null)
                     .min(Comparator.comparingInt((Hospital hospital) -> citizenChunk != null
-                                    ? chunkDistance(citizenChunk, new ChunkPos(hospital.controlBoxPos())) : 0)
+                                    ? chunkDistance(citizenChunk, ChunkPos.containing(hospital.controlBoxPos())) : 0)
                             .thenComparing(hospital -> hospital.controlBoxPos().asLong()))
                     .orElse(null);
         }
@@ -298,12 +298,12 @@ public final class MedicalService {
         if (home == null || !home.active() || home.type() != CityPoiType.RESIDENTIAL) {
             return null;
         }
-        ChunkPos homeChunk = new ChunkPos(home.pos());
+        ChunkPos homeChunk = ChunkPos.containing(home.pos());
         return hospitals.stream()
                 .filter(hospital -> citizen.cityId().equals(hospital.building().cityId()))
                 .filter(hospital -> hospital.firstVacant(occupiedBeds) != null)
-                .filter(hospital -> isWithinRange(homeChunk, new ChunkPos(hospital.controlBoxPos()), hospital.serviceRangeRings()))
-                .min(Comparator.comparingInt((Hospital hospital) -> chunkDistance(homeChunk, new ChunkPos(hospital.controlBoxPos())))
+                .filter(hospital -> isWithinRange(homeChunk, ChunkPos.containing(hospital.controlBoxPos()), hospital.serviceRangeRings()))
+                .min(Comparator.comparingInt((Hospital hospital) -> chunkDistance(homeChunk, ChunkPos.containing(hospital.controlBoxPos())))
                         .thenComparing(hospital -> hospital.controlBoxPos().asLong()))
                 .orElse(null);
     }
@@ -313,7 +313,7 @@ public final class MedicalService {
     }
 
     private static int chunkDistance(ChunkPos first, ChunkPos second) {
-        return Math.max(Math.abs(first.x - second.x), Math.abs(first.z - second.z));
+        return Math.max(Math.abs(first.x() - second.x()), Math.abs(first.z() - second.z()));
     }
 
     private static void processAdmittedPatient(ServerLevel level, CitizenData citizen, CityPoiData bed, long currentDay) {

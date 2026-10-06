@@ -10,6 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -169,7 +170,7 @@ public record ServerConfigSavePacket(
     }
 
     public static void handle(ServerConfigSavePacket p, IPayloadContext context) {
-        if (!(context.player() instanceof ServerPlayer player) || !player.hasPermissions(2)) {
+        if (!(context.player() instanceof ServerPlayer player) || !player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             return;
         }
         ServerConfig.CITY_CHUNK_PRICE.set(p.cityChunkPrice);

@@ -76,7 +76,7 @@ public record RtsBuildingBoundsRequestPacket() implements CustomPacketPayload {
         double maxX = Math.max(record.minPos().getX(), record.maxPos().getX()) + 1.0D;
         double maxY = Math.max(record.minPos().getY(), record.maxPos().getY()) + 1.0D;
         double maxZ = Math.max(record.minPos().getZ(), record.maxPos().getZ()) + 1.0D;
-        net.minecraft.world.level.ChunkPos center = RtsChunkViewService.viewCenter(player.serverLevel(), player);
+        net.minecraft.world.level.ChunkPos center = RtsChunkViewService.viewCenter(player.level(), player);
         double centerX = center.getMiddleBlockX();
         double centerZ = center.getMiddleBlockZ();
         double deltaX = centerX - Math.clamp(centerX, minX, maxX);

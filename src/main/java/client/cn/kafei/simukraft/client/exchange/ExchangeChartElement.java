@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.exchange;
 
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
@@ -18,6 +18,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import common.cn.kafei.simukraft.exchange.ExchangeQuote;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
@@ -25,16 +26,13 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
 /** ExchangeChartElement: Ore 面板内的 K 线或成交量画布，双击用 GraphView 全屏。 */
-@OnlyIn(Dist.CLIENT)
 public final class ExchangeChartElement extends UIElement {
     private static final int CHART_BG = 0xFF2D2D33;
     private static final int PAD = 4;
@@ -251,7 +249,7 @@ public final class ExchangeChartElement extends UIElement {
         overlay.style(style -> style.zIndex(200)
                 .backgroundTexture(new ColorRectTexture(CHART_BG)));
         overlay.addEventListener(UIEvents.KEY_DOWN, event -> {
-            if (event.keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (event.keyCode == InputConstants.KEY_ESCAPE) {
                 removeOverlay(overlay);
                 event.stopPropagation();
             }
@@ -264,8 +262,7 @@ public final class ExchangeChartElement extends UIElement {
             layout.minHeight(80);
         });
         graphView.style(style -> style.backgroundTexture(new ColorRectTexture(CHART_BG)));
-        graphView.graphViewStyle(style -> style.allowPan(false).allowZoom(false)
-                .gridTexture(IGuiTexture.EMPTY));
+        graphView.graphViewStyle(style -> style.allowPan(false).allowZoom(false));
         ExchangeChartElement fullChart = new ExchangeChartElement(mode, quote, true);
         fullChart.setId(FULLSCREEN_CHART_ID);
 
@@ -409,7 +406,8 @@ public final class ExchangeChartElement extends UIElement {
         }
 
         @Override
-        public void drawBackgroundAdditional(@Nonnull GUIContext guiContext) {
+        public void drawBackgroundAdditional(IGUIContext context) {
+            GUIContext guiContext = (GUIContext) context;
             int x = Math.round(getPositionX());
             int y = Math.round(getPositionY());
             int width = Math.round(getSizeWidth());

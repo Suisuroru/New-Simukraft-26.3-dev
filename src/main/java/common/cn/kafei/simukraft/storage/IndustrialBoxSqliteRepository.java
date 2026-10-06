@@ -28,13 +28,13 @@ public final class IndustrialBoxSqliteRepository {
      * 关服时逐维度保存会让每个维度都清空全表，最终只剩最后一个维度的数据。删除只走 {@link #delete(Connection, long)}。
      */
     public void saveAll(Connection connection, CompoundTag tag) throws SQLException {
-        ListTag boxes = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
+        ListTag boxes = tag.getListOrEmpty("Boxes");
         if (boxes.isEmpty()) {
             return;
         }
         try (PreparedStatement statement = connection.prepareStatement(UPSERT_SQL)) {
             for (int i = 0; i < boxes.size(); i++) {
-                bindBox(statement, boxes.getCompound(i));
+                bindBox(statement, boxes.getCompoundOrEmpty(i));
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -89,19 +89,19 @@ public final class IndustrialBoxSqliteRepository {
     }
 
     private static void bindBox(PreparedStatement statement, CompoundTag box) throws SQLException {
-        statement.setLong(1, box.getLong("BoxPos"));
-        statement.setString(2, box.getString("BuildingId"));
-        statement.setString(3, box.getString("DefinitionId"));
-        statement.setString(4, box.getString("SelectedRecipeId"));
-        statement.setInt(5, box.getBoolean("Running") ? 1 : 0);
-        statement.setInt(6, box.getBoolean("SpawnEntityDone") ? 1 : 0);
-        statement.setInt(7, box.getInt("CurrentStep"));
-        statement.setString(8, box.getString("StatusKey"));
-        statement.setString(9, box.getString("StatusText"));
-        statement.setString(10, box.getString("MachineState"));
-        statement.setString(11, box.getString("WorkState"));
-        statement.setLong(12, box.getLong("UpdatedAt"));
-        statement.setLong(13, box.getLong("StepElapsedTicks"));
-        statement.setLong(14, box.contains("WorkerWorkPos") ? box.getLong("WorkerWorkPos") : Long.MIN_VALUE);
+        statement.setLong(1, box.getLongOr("BoxPos", 0L));
+        statement.setString(2, box.getStringOr("BuildingId", ""));
+        statement.setString(3, box.getStringOr("DefinitionId", ""));
+        statement.setString(4, box.getStringOr("SelectedRecipeId", ""));
+        statement.setInt(5, box.getBooleanOr("Running", false) ? 1 : 0);
+        statement.setInt(6, box.getBooleanOr("SpawnEntityDone", false) ? 1 : 0);
+        statement.setInt(7, box.getIntOr("CurrentStep", 0));
+        statement.setString(8, box.getStringOr("StatusKey", ""));
+        statement.setString(9, box.getStringOr("StatusText", ""));
+        statement.setString(10, box.getStringOr("MachineState", ""));
+        statement.setString(11, box.getStringOr("WorkState", ""));
+        statement.setLong(12, box.getLongOr("UpdatedAt", 0L));
+        statement.setLong(13, box.getLongOr("StepElapsedTicks", 0L));
+        statement.setLong(14, box.contains("WorkerWorkPos") ? box.getLongOr("WorkerWorkPos", 0L) : Long.MIN_VALUE);
     }
 }

@@ -12,11 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** MineralDrillingUiFactory: 按客户端逻辑分辨率创建钻井容器并连接本地辅助界面。 */
-@OnlyIn(Dist.CLIENT)
 public final class MineralDrillingUiFactory {
     private static final MineralDrillingUiLayout.ClientActions CLIENT_ACTIONS = new ClientActions();
 

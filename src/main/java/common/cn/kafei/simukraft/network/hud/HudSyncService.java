@@ -41,14 +41,14 @@ public final class HudSyncService {
     }
 
     public static void syncToPlayer(ServerPlayer player, boolean force) {
-        syncToPlayer(player, force, CitizenManager.get(player.serverLevel()).getWorldPopulation());
+        syncToPlayer(player, force, CitizenManager.get(player.level()).getWorldPopulation());
     }
 
     private static void syncToPlayer(ServerPlayer player, boolean force, int worldPopulation) {
         if (player == null) {
             return;
         }
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         Optional<CityData> city = CityService.findPlayerCity(level, player.getUUID());
         int currentDay = (int) Math.max(1L, level.getDefaultClockTime() / 24000L + 1L);
         boolean creativeMode = player.isCreative();

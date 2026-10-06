@@ -85,9 +85,9 @@ final class SimuKraftMaterialConfigPage {
         UIElement footer = SimuKraftConfigWidgets.footerRow(FOOTER_HEIGHT, 8);
         footer.addChild(footerButton("gui.simukraft.config.save", () -> {
             draft.saveToLive();
-            Minecraft.getInstance().setScreen(SimuKraftServerConfigScreen.createMaterialsTab(parent, draft));
+            Minecraft.getInstance().gui.setScreen(SimuKraftServerConfigScreen.createMaterialsTab(parent, draft));
         }));
-        footer.addChild(footerButton("gui.button.back", () -> Minecraft.getInstance().setScreen(SimuKraftServerConfigScreen.createMaterialsTab(parent, draft))));
+        footer.addChild(footerButton("gui.button.back", () -> Minecraft.getInstance().gui.setScreen(SimuKraftServerConfigScreen.createMaterialsTab(parent, draft))));
         return footer;
     }
 

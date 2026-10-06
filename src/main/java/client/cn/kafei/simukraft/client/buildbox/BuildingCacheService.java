@@ -3,15 +3,12 @@ package client.cn.kafei.simukraft.client.buildbox;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.building.BuildingCatalog;
 import common.cn.kafei.simukraft.building.BuildingPackageCatalog;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@OnlyIn(Dist.CLIENT)
 public final class BuildingCacheService {
     private static final Map<String, List<BuildingMeta>> CACHE = new ConcurrentHashMap<>();
     private static volatile boolean initialized;

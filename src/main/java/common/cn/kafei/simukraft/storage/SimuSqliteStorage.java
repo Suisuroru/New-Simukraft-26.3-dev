@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.exchange.ExchangeCandle;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinConsumption;
@@ -184,10 +186,10 @@ public final class SimuSqliteStorage {
     }
 
     public static void saveCity(ServerLevel level, CompoundTag cityTag) {
-        if (cityTag == null || !cityTag.hasUUID("CityId")) {
+        if (cityTag == null || !NbtUuid.has(cityTag, "CityId")) {
             return;
         }
-        write(level, "cities:" + cityTag.getUUID("CityId"), (storage, connection) -> storage.cities.upsert(connection, cityTag));
+        write(level, "cities:" + NbtUuid.read(cityTag, "CityId"), (storage, connection) -> storage.cities.upsert(connection, cityTag));
     }
 
     public static void deleteCity(ServerLevel level, UUID cityId) {
@@ -254,11 +256,11 @@ public final class SimuSqliteStorage {
     }
 
     public static void saveCityPoi(ServerLevel level, CompoundTag poiTag) {
-        if (poiTag == null || !poiTag.hasUUID("PoiId")) {
+        if (poiTag == null || !NbtUuid.has(poiTag, "PoiId")) {
             return;
         }
         String dimensionId = dimensionId(level);
-        write(level, "city_pois:" + poiTag.getUUID("PoiId"), (storage, connection) -> storage.cityPois.upsert(connection, poiTag, dimensionId));
+        write(level, "city_pois:" + NbtUuid.read(poiTag, "PoiId"), (storage, connection) -> storage.cityPois.upsert(connection, poiTag, dimensionId));
     }
 
     /** deleteCityPoi: 删除单个 POI。合并键与 {@link #saveCityPoi} 相同，同一 POI 的 upsert 与 delete 天然定序。 */
@@ -291,10 +293,10 @@ public final class SimuSqliteStorage {
     }
 
     public static void saveCitizen(ServerLevel level, CompoundTag citizenTag) {
-        if (citizenTag == null || !citizenTag.hasUUID("Uuid")) {
+        if (citizenTag == null || !NbtUuid.has(citizenTag, "Uuid")) {
             return;
         }
-        write(level, "citizens:" + citizenTag.getUUID("Uuid"), (storage, connection) -> storage.citizens.upsert(connection, citizenTag));
+        write(level, "citizens:" + NbtUuid.read(citizenTag, "Uuid"), (storage, connection) -> storage.citizens.upsert(connection, citizenTag));
     }
 
     public static void deleteCitizen(ServerLevel level, UUID citizenId) {
@@ -348,7 +350,7 @@ public final class SimuSqliteStorage {
         if (boxTag == null) {
             return;
         }
-        write(level, "farmland_boxes:" + boxTag.getLong("BoxPos"), (storage, connection) -> storage.farmlandBoxes.upsert(connection, boxTag));
+        write(level, "farmland_boxes:" + boxTag.getLongOr("BoxPos", 0L), (storage, connection) -> storage.farmlandBoxes.upsert(connection, boxTag));
     }
 
     public static void deleteFarmlandBox(ServerLevel level, long boxPosLong) {
@@ -373,7 +375,7 @@ public final class SimuSqliteStorage {
         if (boxTag == null) {
             return;
         }
-        write(level, "industrial_boxes:" + boxTag.getLong("BoxPos"), (storage, connection) -> storage.industrialBoxes.upsert(connection, boxTag));
+        write(level, "industrial_boxes:" + boxTag.getLongOr("BoxPos", 0L), (storage, connection) -> storage.industrialBoxes.upsert(connection, boxTag));
     }
 
     public static void deleteIndustrialBox(ServerLevel level, long boxPosLong) {
@@ -427,7 +429,7 @@ public final class SimuSqliteStorage {
             return;
         }
         String dimensionId = dimensionId(level);
-        write(level, "commercial_boxes:" + dimensionId + ":" + boxTag.getLong("BoxPos"),
+        write(level, "commercial_boxes:" + dimensionId + ":" + boxTag.getLongOr("BoxPos", 0L),
                 (storage, connection) -> storage.commercial.upsertBox(connection, boxTag, dimensionId));
     }
 
@@ -455,7 +457,7 @@ public final class SimuSqliteStorage {
             return;
         }
         String dimensionId = dimensionId(level);
-        write(level, "commercial_stock:" + dimensionId + ":" + stockTag.getLong("BoxPos") + ":" + stockTag.getString("ItemId"),
+        write(level, "commercial_stock:" + dimensionId + ":" + stockTag.getLongOr("BoxPos", 0L) + ":" + stockTag.getStringOr("ItemId", ""),
                 (storage, connection) -> storage.commercial.upsertStockEntry(connection, stockTag, dimensionId));
     }
 
@@ -519,26 +521,26 @@ public final class SimuSqliteStorage {
     }
 
     public static void saveLogisticsWarehouse(ServerLevel level, CompoundTag warehouseTag) {
-        if (warehouseTag == null || !warehouseTag.hasUUID("WarehouseId")) {
+        if (warehouseTag == null || !NbtUuid.has(warehouseTag, "WarehouseId")) {
             return;
         }
-        write(level, "logistics_warehouses:" + warehouseTag.getUUID("WarehouseId"),
+        write(level, "logistics_warehouses:" + NbtUuid.read(warehouseTag, "WarehouseId"),
                 (storage, connection) -> storage.logistics.upsertWarehouse(connection, warehouseTag));
     }
 
     public static void saveLogisticsClient(ServerLevel level, CompoundTag clientTag) {
-        if (clientTag == null || !clientTag.hasUUID("ClientId")) {
+        if (clientTag == null || !NbtUuid.has(clientTag, "ClientId")) {
             return;
         }
-        write(level, "logistics_clients:" + clientTag.getUUID("ClientId"),
+        write(level, "logistics_clients:" + NbtUuid.read(clientTag, "ClientId"),
                 (storage, connection) -> storage.logistics.upsertClient(connection, clientTag));
     }
 
     public static void saveLogisticsChannel(ServerLevel level, CompoundTag channelTag) {
-        if (channelTag == null || !channelTag.hasUUID("ChannelId")) {
+        if (channelTag == null || !NbtUuid.has(channelTag, "ChannelId")) {
             return;
         }
-        write(level, "logistics_channels:" + channelTag.getUUID("ChannelId"),
+        write(level, "logistics_channels:" + NbtUuid.read(channelTag, "ChannelId"),
                 (storage, connection) -> storage.logistics.upsertChannel(connection, channelTag));
     }
 
@@ -731,6 +733,6 @@ public final class SimuSqliteStorage {
     }
 
     private static String dimensionId(ServerLevel level) {
-        return level != null ? level.dimension().location().toString() : "minecraft:overworld";
+        return level != null ? level.dimension().identifier().toString() : "minecraft:overworld";
     }
 }

@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.junit.jupiter.api.Test;
@@ -64,9 +66,9 @@ class CitySqliteRepositoryTest {
 
             CompoundTag loaded = repository.loadAll(DIMENSION);
             assertNotNull(loaded);
-            ListTag cities = loaded.getList("Cities", CompoundTag.TAG_COMPOUND);
+            ListTag cities = loaded.getListOrEmpty("Cities");
             assertEquals(1, cities.size());
-            assertEquals(keptCityId, cities.getCompound(0).getUUID("CityId"));
+            assertEquals(keptCityId, NbtUuid.read(cities.getCompoundOrEmpty(0), "CityId"));
         }
     }
 
@@ -78,7 +80,7 @@ class CitySqliteRepositoryTest {
 
         ListTag members = new ListTag();
         CompoundTag member = new CompoundTag();
-        member.putUUID("PlayerId", memberId);
+        NbtUuid.put(member, "PlayerId", memberId);
         member.putString("PlayerName", "Mayor");
         member.putString("PermissionLevel", "MAYOR");
         members.add(member);
@@ -87,7 +89,7 @@ class CitySqliteRepositoryTest {
         ListTag transactions = new ListTag();
         CompoundTag transaction = new CompoundTag();
         transaction.putLong("Time", 1234L);
-        transaction.putUUID("ActorId", memberId);
+        NbtUuid.put(transaction, "ActorId", memberId);
         transaction.putString("ActorName", "Mayor");
         transaction.putDouble("Amount", -25.5D);
         transaction.putDouble("BalanceAfter", 74.5D);
@@ -104,17 +106,17 @@ class CitySqliteRepositoryTest {
 
             CompoundTag loaded = repository.loadAll(DIMENSION);
             assertNotNull(loaded);
-            CompoundTag loadedCity = loaded.getList("Cities", CompoundTag.TAG_COMPOUND).getCompound(0);
-            assertEquals(100.0D, loadedCity.getDouble("Funds"));
+            CompoundTag loadedCity = loaded.getListOrEmpty("Cities").getCompoundOrEmpty(0);
+            assertEquals(100.0D, loadedCity.getDoubleOr("Funds", 0.0D));
 
-            ListTag loadedMembers = loadedCity.getList("Members", CompoundTag.TAG_COMPOUND);
+            ListTag loadedMembers = loadedCity.getListOrEmpty("Members");
             assertEquals(1, loadedMembers.size());
-            assertEquals(memberId, loadedMembers.getCompound(0).getUUID("PlayerId"));
+            assertEquals(memberId, NbtUuid.read(loadedMembers.getCompoundOrEmpty(0), "PlayerId"));
 
-            ListTag loadedTransactions = loadedCity.getList("FinanceTransactions", CompoundTag.TAG_COMPOUND);
+            ListTag loadedTransactions = loadedCity.getListOrEmpty("FinanceTransactions");
             assertEquals(1, loadedTransactions.size());
-            assertEquals(-25.5D, loadedTransactions.getCompound(0).getDouble("Amount"));
-            assertEquals("construction", loadedTransactions.getCompound(0).getString("Reason"));
+            assertEquals(-25.5D, loadedTransactions.getCompoundOrEmpty(0).getDoubleOr("Amount", 0.0D));
+            assertEquals("construction", loadedTransactions.getCompoundOrEmpty(0).getStringOr("Reason", ""));
         }
     }
 
@@ -127,7 +129,7 @@ class CitySqliteRepositoryTest {
 
     private static int loadedCityCount(CitySqliteRepository repository) {
         CompoundTag loaded = repository.loadAll(DIMENSION);
-        return loaded == null ? 0 : loaded.getList("Cities", CompoundTag.TAG_COMPOUND).size();
+        return loaded == null ? 0 : loaded.getListOrEmpty("Cities").size();
     }
 
     private static CompoundTag citiesTag(CompoundTag... cities) {
@@ -142,7 +144,7 @@ class CitySqliteRepositoryTest {
 
     private static CompoundTag cityTag(UUID cityId, String name) {
         CompoundTag city = new CompoundTag();
-        city.putUUID("CityId", cityId);
+        NbtUuid.put(city, "CityId", cityId);
         city.putString("CityName", name);
         city.putString("DimensionId", DIMENSION);
         city.putInt("CoreX", 1);

@@ -1,5 +1,9 @@
 package client.cn.kafei.simukraft.client.logistics;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.selection.TwoPointSelectionScreen;
 import common.cn.kafei.simukraft.logistics.LogisticsConstants;
@@ -11,21 +15,17 @@ import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenRespons
 import common.cn.kafei.simukraft.network.logistics.LogisticsWarehouseGridOpenRequestPacket;
 import common.cn.kafei.simukraft.network.npc.hire.NpcHireFirePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class LogisticsServerBoxScreenOpener {
     private static ActiveTab activeTab = ActiveTab.OVERVIEW;
 
@@ -40,26 +40,26 @@ public final class LogisticsServerBoxScreenOpener {
     /** request: 请求打开旧版服务端主界面。 */
     public static void request(BlockPos pos) {
         activeTab = ActiveTab.OVERVIEW;
-        PacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
     /** requestMap: 请求打开旧版地图 Tab。 */
     public static void requestMap(BlockPos pos) {
         activeTab = ActiveTab.MAP;
-        PacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
     /** requestManage: 请求打开旧版仓库总览 Tab。 */
     public static void requestManage(BlockPos pos) {
         activeTab = ActiveTab.OVERVIEW;
-        PacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new LogisticsServerBoxOpenRequestPacket(pos));
     }
 
     /** open: 接收服务端快照并打开原生 Screen。 */
     public static void open(LogisticsServerBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new LogisticsServerBoxScreen(packet, activeTab)));
+            minecraft.execute(() -> minecraft.gui.setScreen(new LogisticsServerBoxScreen(packet, activeTab)));
         }
     }
 
@@ -117,7 +117,10 @@ public final class LogisticsServerBoxScreenOpener {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
             if (currentTab == ActiveTab.ROUTES && maxRouteScroll() > 0) {
                 int panelR = this.width - 6;
                 int sbX = panelR - SCROLLBAR_W - 1;
@@ -133,7 +136,7 @@ public final class LogisticsServerBoxScreenOpener {
                     return true;
                 }
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, doubleClick);
         }
 
         @Override
@@ -155,15 +158,14 @@ public final class LogisticsServerBoxScreenOpener {
 
         /** renderBackground: 绘制旧版深色背景。 */
         @Override
-        public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
         }
 
         /** render: 绘制标题、左侧栏、分隔线和当前 Tab 文本。 */
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            renderBackground(graphics, mouseX, mouseY, partialTick);
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.server.title"), TAB_X, 10, LogisticsNativeStyle.TEXT, true);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.title"), TAB_X, 10, LogisticsNativeStyle.TEXT, true);
             LogisticsNativeStyle.drawPanel(graphics, TAB_X - 2, 26, TAB_WIDTH + 4, this.height - 31);
             int lineX = TAB_X + TAB_WIDTH + 6;
             graphics.fill(lineX, 26, lineX + 1, this.height - 5, LogisticsNativeStyle.PANEL_LINE);
@@ -174,7 +176,7 @@ public final class LogisticsServerBoxScreenOpener {
                 case MAP -> renderMapTab(graphics, contentX, contentY);
                 case ROUTES -> renderRoutes(graphics, contentX, contentY);
             }
-            super.render(graphics, mouseX, mouseY, partialTick);
+            super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -235,7 +237,7 @@ public final class LogisticsServerBoxScreenOpener {
             delete.active = hasWarehouse;
             Button manage = addRenderableWidget(LogisticsNativeStyle.button(Component.translatable("gui.simukraft.logistics.inventory"),
                     x, y + gap * 4, buttonWidth, buttonHeight,
-                    () -> PacketDistributor.sendToServer(new LogisticsWarehouseGridOpenRequestPacket(packet.boxPos()))));
+                    () -> ClientPacketDistributor.sendToServer(new LogisticsWarehouseGridOpenRequestPacket(packet.boxPos()))));
             manage.active = hasWarehouse;
         }
 
@@ -284,7 +286,12 @@ public final class LogisticsServerBoxScreenOpener {
             net.minecraft.client.gui.components.EditBox box = new net.minecraft.client.gui.components.EditBox(this.font, x, y, 38, 12, Component.empty());
             box.setValue(String.valueOf(Math.max(0, value)));
             box.setMaxLength(7);
-            box.setFilter(s -> s.matches("\\d*"));
+            box.setResponder(text -> {
+                String digits = text == null ? "" : text.replaceAll("\\D", "");
+                if (!digits.equals(text)) {
+                    box.setValue(digits);
+                }
+            });
             return box;
         }
 
@@ -302,28 +309,28 @@ public final class LogisticsServerBoxScreenOpener {
         }
 
         /** renderOverview: 绘制仓库状态和费用说明。 */
-        private void renderOverview(GuiGraphics graphics, int x, int y) {
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.server.tab.overview"), x, y, LogisticsNativeStyle.TEXT_WARN);
+        private void renderOverview(GuiGraphicsExtractor graphics, int x, int y) {
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.tab.overview"), x, y, LogisticsNativeStyle.TEXT_WARN);
             y += 14;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.city_line", packet.hasCity() ? packet.cityName() : "-"), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.city_line", packet.hasCity() ? packet.cityName() : "-"), x, y, LogisticsNativeStyle.TEXT_DIM);
             y += 11;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.funds_line", String.format(Locale.ROOT, "%.2f", packet.cityBalance())), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.funds_line", String.format(Locale.ROOT, "%.2f", packet.cityBalance())), x, y, LogisticsNativeStyle.TEXT_DIM);
             y += 11;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.worker_line", packet.hasWorker() ? packet.workerName() : "-"), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.worker_line", packet.hasWorker() ? packet.workerName() : "-"), x, y, LogisticsNativeStyle.TEXT_DIM);
             y += 11;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.container_count", packet.containers().size()), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.container_count", packet.containers().size()), x, y, LogisticsNativeStyle.TEXT_DIM);
             y += 11;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel_count", packet.channels().size()), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel_count", packet.channels().size()), x, y, LogisticsNativeStyle.TEXT_DIM);
             y += 22;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.transfer_cost_hint"), x, y, LogisticsNativeStyle.TEXT_WARN);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.transfer_cost_hint"), x, y, LogisticsNativeStyle.TEXT_WARN);
             y += 14;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.containers"), x, y, LogisticsNativeStyle.TEXT);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.containers"), x, y, LogisticsNativeStyle.TEXT);
             y += 12;
             if (packet.containers().isEmpty()) {
-                graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.empty"), x, y, LogisticsNativeStyle.TEXT_MUTED);
+                graphics.text(this.font, Component.translatable("gui.simukraft.logistics.empty"), x, y, LogisticsNativeStyle.TEXT_MUTED);
             } else {
                 for (BlockPos container : packet.containers()) {
-                    graphics.drawString(this.font, LogisticsNativeStyle.posText(container), x + 8, y, LogisticsNativeStyle.TEXT_DIM);
+                    graphics.text(this.font, LogisticsNativeStyle.posText(container), x + 8, y, LogisticsNativeStyle.TEXT_DIM);
                     y += 10;
                     if (y > this.height - 12) {
                         break;
@@ -333,24 +340,24 @@ public final class LogisticsServerBoxScreenOpener {
         }
 
         /** renderMapTab: 绘制旧版地图页提示。 */
-        private void renderMapTab(GuiGraphics graphics, int x, int y) {
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.server.tab.map"), x, y, LogisticsNativeStyle.TEXT_WARN);
+        private void renderMapTab(GuiGraphicsExtractor graphics, int x, int y) {
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.tab.map"), x, y, LogisticsNativeStyle.TEXT_WARN);
             y += 16;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.map.hint"), x, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.map.hint"), x, y, LogisticsNativeStyle.TEXT_DIM);
         }
 
         /** renderRoutes: 绘制路径列表（与 buildRouteButtons 共用滚动窗口）。 */
-        private void renderRoutes(GuiGraphics graphics, int x, int y) {
+        private void renderRoutes(GuiGraphicsExtractor graphics, int x, int y) {
             List<LogisticsControlBoxService.ChannelEntry> channels = packet.channels();
             Component header = Component.translatable("gui.simukraft.logistics.server.tab.routes")
                     .append(Component.literal(" (" + channels.size() + ")"));
-            graphics.drawString(this.font, header, x, y, LogisticsNativeStyle.TEXT_WARN);
+            graphics.text(this.font, header, x, y, LogisticsNativeStyle.TEXT_WARN);
             int panelL = x - 6;
             int panelT = routeViewportTop() - 6;
             int panelR = this.width - 6;
             int panelB = routeViewportBottom() + 4;
             if (channels.isEmpty()) {
-                graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.empty"), x, y + 30, LogisticsNativeStyle.TEXT_MUTED);
+                graphics.text(this.font, Component.translatable("gui.simukraft.logistics.empty"), x, y + 30, LogisticsNativeStyle.TEXT_MUTED);
                 return;
             }
             int top = routeViewportTop();
@@ -366,8 +373,8 @@ public final class LogisticsServerBoxScreenOpener {
                         x + 31, rowY, 198, LogisticsNativeStyle.TEXT);
                 LogisticsNativeStyle.drawFitString(graphics, this.font, clientName(channel.clientId()) + " | " + LogisticsItemDisplayName.filterText(channel.filters()),
                         x + 10, rowY + 11, 225, LogisticsNativeStyle.TEXT_DIM);
-                graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.keep_source"), x + 10, rowY + 28, LogisticsNativeStyle.TEXT_DIM);
-                graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.keep_target"), x + 116, rowY + 28, LogisticsNativeStyle.TEXT_DIM);
+                graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.keep_source"), x + 10, rowY + 28, LogisticsNativeStyle.TEXT_DIM);
+                graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.keep_target"), x + 116, rowY + 28, LogisticsNativeStyle.TEXT_DIM);
             }
             graphics.disableScissor();
             int sbX = panelR - SCROLLBAR_W - 1;
@@ -384,14 +391,14 @@ public final class LogisticsServerBoxScreenOpener {
         /** send: 发送物流服务端盒动作包。 */
         private void send(LogisticsBoxActionPacket.Action action, UUID clientId, UUID channelId, BlockPos targetPos,
                           String value, LogisticsDirection direction, List<String> filters) {
-            PacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, clientId, channelId, targetPos, value, direction,
+            ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, clientId, channelId, targetPos, value, direction,
                     BlockPos.ZERO, BlockPos.ZERO, filters));
         }
 
         /** fireWorker: 解雇当前仓储管理员。 */
         private void fireWorker() {
             if (packet.hasWorker() && packet.workerId() != null) {
-                PacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), LogisticsConstants.SERVER_SOURCE_TYPE,
+                ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), LogisticsConstants.SERVER_SOURCE_TYPE,
                         LogisticsConstants.STORAGE_ROLE, packet.workerId()));
             }
         }

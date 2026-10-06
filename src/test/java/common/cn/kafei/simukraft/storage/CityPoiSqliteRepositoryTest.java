@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -110,10 +112,10 @@ class CityPoiSqliteRepositoryTest {
         if (loaded == null) {
             return List.of();
         }
-        ListTag pois = loaded.getList("Pois", CompoundTag.TAG_COMPOUND);
+        ListTag pois = loaded.getListOrEmpty("Pois");
         List<UUID> ids = new ArrayList<>(pois.size());
         for (int i = 0; i < pois.size(); i++) {
-            ids.add(pois.getCompound(i).getUUID("PoiId"));
+            ids.add(NbtUuid.read(pois.getCompoundOrEmpty(i), "PoiId"));
         }
         return ids;
     }
@@ -130,8 +132,8 @@ class CityPoiSqliteRepositoryTest {
 
     private static CompoundTag poiTag(UUID poiId, UUID cityId, int x) {
         CompoundTag poi = new CompoundTag();
-        poi.putUUID("PoiId", poiId);
-        poi.putUUID("CityId", cityId);
+        NbtUuid.put(poi, "PoiId", poiId);
+        NbtUuid.put(poi, "CityId", cityId);
         poi.putLong("Pos", new BlockPos(x, 64, 0).asLong());
         poi.putString("Type", "RESIDENTIAL");
         poi.putInt("Capacity", 2);

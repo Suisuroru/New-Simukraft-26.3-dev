@@ -21,7 +21,6 @@ import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -31,7 +30,6 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 
-@OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = SimuKraft.MOD_ID, value = Dist.CLIENT)
 public final class ClientSetup {
     private ClientSetup() {
@@ -39,7 +37,7 @@ public final class ClientSetup {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onRenderGuiPost(RenderGuiEvent.Post event) {
-        if (Minecraft.getInstance().options.hideGui) {
+        if (Minecraft.getInstance().gui.hud.isHidden()) {
             return;
         }
         ClientHUDOverlay.render(event);
@@ -47,7 +45,7 @@ public final class ClientSetup {
         CityEntryHud.render(event.getGuiGraphics(), event.getPartialTick().getGameTimeDeltaPartialTick(true));
         RtsMiniMapRenderer.render(event.getGuiGraphics());
         RtsSelectionManager.renderHoldProgress(event.getGuiGraphics());
-        if (Minecraft.getInstance().screen == null) {
+        if (Minecraft.getInstance().gui.screen() == null) {
             ClientInfoToast.render(event.getGuiGraphics());
         }
     }

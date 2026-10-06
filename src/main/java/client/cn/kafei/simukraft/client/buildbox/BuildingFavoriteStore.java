@@ -1,8 +1,6 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -19,7 +17,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@OnlyIn(Dist.CLIENT)
 public final class BuildingFavoriteStore {
     private static final String DATABASE_FILE = "simukraft_client.sqlite";
     private static final String JDBC_PREFIX = "jdbc:sqlite:";

@@ -23,8 +23,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 /** BankControlBoxBlock: 银行控制箱，打开存取转账界面。 */
 public final class BankControlBoxBlock extends Block {
-    public BankControlBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL));
+    public BankControlBoxBlock(Properties properties) {
+        super(properties);
         registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
 

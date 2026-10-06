@@ -1,28 +1,21 @@
 package client.cn.kafei.simukraft.client.path;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import common.cn.kafei.simukraft.network.path.NpcPathDebugRequestPacket;
 import common.cn.kafei.simukraft.network.path.NpcPathDebugSyncPacket;
 import common.cn.kafei.simukraft.config.ClientConfig;
 import common.cn.kafei.simukraft.path.MovementMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.Locale;
@@ -30,8 +23,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class NpcPathDebugRenderer {
     private static final Map<UUID, DebugPath> PATHS = new ConcurrentHashMap<>();
     private static final double MARKER_RADIUS = 0.12D;
@@ -77,12 +68,12 @@ public final class NpcPathDebugRenderer {
     }
 
     public static boolean handleToggleShortcut(long window, int key, int action, int modifiers) {
-        if (key != GLFW.GLFW_KEY_P || action != GLFW.GLFW_PRESS) {
+        if (key != InputConstants.KEY_P || action != InputConstants.PRESS) {
             return false;
         }
-        boolean altDown = (modifiers & GLFW.GLFW_MOD_ALT) != 0
-                || isKeyDown(window, GLFW.GLFW_KEY_LEFT_ALT)
-                || isKeyDown(window, GLFW.GLFW_KEY_RIGHT_ALT);
+        boolean altDown = (modifiers & InputConstants.MOD_ALT) != 0
+                || InputConstants.isKeyDown(InputConstants.KEY_LALT)
+                || InputConstants.isKeyDown(InputConstants.KEY_RALT);
         if (!altDown) {
             return false;
         }
@@ -90,42 +81,25 @@ public final class NpcPathDebugRenderer {
         return true;
     }
 
-    @SubscribeEvent
-    public static void onRender(RenderLevelStageEvent event) {
-        if (!visible || PATHS.isEmpty() || event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+    public static void onRender(SubmitCustomGeometryEvent event) {
+        if (!visible || PATHS.isEmpty()) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.player == null) {
             return;
         }
-
         PoseStack poseStack = event.getPoseStack();
-        Vec3 cameraPos = event.getCamera().getPosition();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.lineWidth(3.0F);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix = poseStack.last().pose();
-        for (DebugPath path : PATHS.values()) {
-            renderPath(buffer, matrix, cameraPos, path);
-        }
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-
-        RenderSystem.lineWidth(1.0F);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+        Vec3 cameraPos = event.getLevelRenderState().cameraRenderState.pos;
+        event.getSubmitNodeCollector().submitCustomGeometry(poseStack, RenderTypes.linesTranslucentNoDepthWrite(), (pose, buffer) -> {
+            buffer.setLineWidth(3.0F);
+            for (DebugPath path : PATHS.values()) {
+                renderPath(buffer, pose, cameraPos, path);
+            }
+        });
     }
 
-    private static void renderPath(BufferBuilder buffer, Matrix4f matrix, Vec3 cameraPos, DebugPath path) {
+    private static void renderPath(VertexConsumer buffer, PoseStack.Pose pose, Vec3 cameraPos, DebugPath path) {
         List<DebugPoint> points = path.points();
         if (points.isEmpty()) {
             return;
@@ -133,31 +107,31 @@ public final class NpcPathDebugRenderer {
         for (int index = 0; index < points.size() - 1; index++) {
             DebugPoint from = points.get(index);
             DebugPoint to = points.get(index + 1);
-            drawLine(buffer, matrix, cameraPos, from.x(), from.y() + 0.12D, from.z(), to.x(), to.y() + 0.12D, to.z(), colorFor(path.status(), to.mode()));
+            drawLine(buffer, pose, cameraPos, from.x(), from.y() + 0.12D, from.z(), to.x(), to.y() + 0.12D, to.z(), colorFor(path.status(), to.mode()));
         }
         for (int index = 0; index < points.size(); index++) {
             DebugPoint point = points.get(index);
             int color = index == 0 ? 0xFFFFFFFF : colorFor(path.status(), point.mode());
-            renderMarker(buffer, matrix, cameraPos, point, color);
+            renderMarker(buffer, pose, cameraPos, point, color);
         }
     }
 
-    private static void renderMarker(BufferBuilder buffer, Matrix4f matrix, Vec3 cameraPos, DebugPoint point, int color) {
+    private static void renderMarker(VertexConsumer buffer, PoseStack.Pose pose, Vec3 cameraPos, DebugPoint point, int color) {
         double x = point.x();
         double y = point.y() + 0.12D;
         double z = point.z();
-        drawLine(buffer, matrix, cameraPos, x - MARKER_RADIUS, y, z, x + MARKER_RADIUS, y, z, color);
-        drawLine(buffer, matrix, cameraPos, x, y - MARKER_RADIUS, z, x, y + MARKER_RADIUS, z, color);
-        drawLine(buffer, matrix, cameraPos, x, y, z - MARKER_RADIUS, x, y, z + MARKER_RADIUS, color);
+        drawLine(buffer, pose, cameraPos, x - MARKER_RADIUS, y, z, x + MARKER_RADIUS, y, z, color);
+        drawLine(buffer, pose, cameraPos, x, y - MARKER_RADIUS, z, x, y + MARKER_RADIUS, z, color);
+        drawLine(buffer, pose, cameraPos, x, y, z - MARKER_RADIUS, x, y, z + MARKER_RADIUS, color);
     }
 
-    private static void drawLine(BufferBuilder buffer, Matrix4f matrix, Vec3 cameraPos, double x1, double y1, double z1, double x2, double y2, double z2, int color) {
+    private static void drawLine(VertexConsumer buffer, PoseStack.Pose pose, Vec3 cameraPos, double x1, double y1, double z1, double x2, double y2, double z2, int color) {
         float red = ((color >> 16) & 0xFF) / 255.0F;
         float green = ((color >> 8) & 0xFF) / 255.0F;
         float blue = (color & 0xFF) / 255.0F;
         float alpha = ((color >> 24) & 0xFF) / 255.0F;
-        buffer.addVertex(matrix, (float) (x1 - cameraPos.x), (float) (y1 - cameraPos.y), (float) (z1 - cameraPos.z)).setColor(red, green, blue, alpha);
-        buffer.addVertex(matrix, (float) (x2 - cameraPos.x), (float) (y2 - cameraPos.y), (float) (z2 - cameraPos.z)).setColor(red, green, blue, alpha);
+        buffer.addVertex(pose, (float) (x1 - cameraPos.x), (float) (y1 - cameraPos.y), (float) (z1 - cameraPos.z)).setColor(red, green, blue, alpha);
+        buffer.addVertex(pose, (float) (x2 - cameraPos.x), (float) (y2 - cameraPos.y), (float) (z2 - cameraPos.z)).setColor(red, green, blue, alpha);
     }
 
     private static MovementMode parseMode(String mode) {
@@ -198,13 +172,9 @@ public final class NpcPathDebugRenderer {
     private static void toggleVisible() {
         visible = !visible;
         if (visible && ClientConfig.pathDebugRequestOnToggle()) {
-            PacketDistributor.sendToServer(new NpcPathDebugRequestPacket(true));
+            ClientPacketDistributor.sendToServer(new NpcPathDebugRequestPacket(true));
         }
         showActionBar(Component.translatable(visible ? "message.simukraft.path_debug.enabled" : "message.simukraft.path_debug.disabled"));
-    }
-
-    private static boolean isKeyDown(long window, int key) {
-        return GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
     }
 
     private static void showActionBar(Component message) {

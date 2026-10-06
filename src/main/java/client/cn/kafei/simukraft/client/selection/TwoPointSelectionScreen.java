@@ -1,7 +1,11 @@
 package client.cn.kafei.simukraft.client.selection;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.KeyEvent;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.buildbox.PlannerOperationScreenOpener;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraScreen;
@@ -17,7 +21,7 @@ import common.cn.kafei.simukraft.network.farmland.FarmlandBoxSetAreaPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
 import common.cn.kafei.simukraft.planner.PlanOperation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -26,14 +30,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class TwoPointSelectionScreen extends Screen implements FreeCameraScreen {
     private static final double REACH_DISTANCE = 128.0D;
 
@@ -63,7 +65,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
     public static void openPlanning(BlockPos buildBoxPos, PlanOperation operation) {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
-        mc.execute(() -> mc.setScreen(new TwoPointSelectionScreen(
+        mc.execute(() -> mc.gui.setScreen(new TwoPointSelectionScreen(
                 TwoPointSelectionManager.SelectionMode.PLANNING, buildBoxPos, operation, null)));
     }
 
@@ -71,7 +73,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
     public static void openFarmland(FarmlandBoxOpenResponsePacket packet) {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
-        mc.execute(() -> mc.setScreen(new TwoPointSelectionScreen(
+        mc.execute(() -> mc.gui.setScreen(new TwoPointSelectionScreen(
                 TwoPointSelectionManager.SelectionMode.FARMLAND, packet.boxPos(), null, null)));
     }
 
@@ -79,7 +81,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
     public static void openLogistics(BlockPos boxPos, LogisticsBoxActionPacket.Action action) {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
-        mc.execute(() -> mc.setScreen(new TwoPointSelectionScreen(
+        mc.execute(() -> mc.gui.setScreen(new TwoPointSelectionScreen(
                 TwoPointSelectionManager.SelectionMode.LOGISTICS, boxPos, null, action)));
     }
 
@@ -100,12 +102,12 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         // 不绘制暗底，保持世界可见
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         if (rtsPreviewMode) {
             return;
         }
@@ -114,7 +116,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         // ── 顶部标题条 ──
         g.fill(0, 0, sw, 18, 0xAA000000);
         g.fill(0, 17, sw, 18, 0x55AAAACC);
-        g.drawCenteredString(font, modeTitle(), sw / 2, 5, SimuKraftUiTheme.TEXT_WARNING_COLOR);
+        g.centeredText(font, modeTitle(), sw / 2, 5, SimuKraftUiTheme.TEXT_WARNING_COLOR);
         // ── 面板内容 ──
         int kh = 10, iX = panel.getInnerX();
         int curY = 18 + 7;
@@ -143,7 +145,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
             panel.drawKeyCapAt(g, mc.options.keyJump.getTranslatedKeyMessage(),   modX, curY + step,     spaceW, kh);
             int ctrlCapW = Math.max(kw, font.width(Component.literal("Ctrl")) + 6);
             panel.drawKeyCapAt(g, Component.literal("Ctrl"), modX, curY + step * 2 + 2, ctrlCapW, kh);
-            g.drawString(font, Component.translatable("gui.building_preview.label.boost"),
+            g.text(font, Component.translatable("gui.building_preview.label.boost"),
                     modX + ctrlCapW + 3, curY + step * 2 + 2 + (kh - font.lineHeight) / 2,
                     SimuKraftUiTheme.TEXT_MUTED_COLOR, false);
             curY += step * 2 + font.lineHeight + 5;
@@ -153,15 +155,15 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         panel.drawSectionTitle(g, Component.translatable("gui.simukraft.area_selection.section.data"), curY);
         curY += font.lineHeight + 8;
         TwoPointSelectionManager.SelectionState state = TwoPointSelectionManager.state();
-        g.drawString(font, pointLine("gui.simukraft.area_selection.point1", state.point1()),
+        g.text(font, pointLine("gui.simukraft.area_selection.point1", state.point1()),
                 iX, curY, SimuKraftUiTheme.TEXT_SECONDARY_COLOR, false); curY += font.lineHeight + 2;
-        g.drawString(font, pointLine("gui.simukraft.area_selection.point2", state.point2()),
+        g.text(font, pointLine("gui.simukraft.area_selection.point2", state.point2()),
                 iX, curY, SimuKraftUiTheme.TEXT_SECONDARY_COLOR, false); curY += font.lineHeight + 2;
         if (state.point1() != null && state.point2() != null) {
             BlockPos min = TwoPointSelectionManager.min(state.point1(), state.point2());
             BlockPos max = TwoPointSelectionManager.max(state.point1(), state.point2());
             int vol = (max.getX()-min.getX()+1)*(max.getY()-min.getY()+1)*(max.getZ()-min.getZ()+1);
-            g.drawString(font, Component.translatable("gui.simukraft.area_selection.volume", vol),
+            g.text(font, Component.translatable("gui.simukraft.area_selection.volume", vol),
                     iX, curY, SimuKraftUiTheme.TEXT_SUCCESS_COLOR, false);
             curY += font.lineHeight + 2;
         }
@@ -176,8 +178,11 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_TAB) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.keycode();
+        int modifiers = event.modifiers();
+        if (keyCode == InputConstants.KEY_TAB) {
             if (!rtsPreviewMode) {
                 panel.toggle();
                 sPanelVisible = panel.isVisible();
@@ -196,12 +201,15 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         if (SimuKraftKeyMappings.matches(SimuKraftKeyMappings.SELECTION_CANCEL, keyCode, scanCode)) {
             cancel(); return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (rtsPreviewMode && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && RtsSelectionManager.isCameraRotationActive()) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (rtsPreviewMode && button == InputConstants.MOUSE_BUTTON_RIGHT && RtsSelectionManager.isCameraRotationActive()) {
             return true;
         }
         if (SimuKraftKeyMappings.matchesMouse(SimuKraftKeyMappings.SELECTION_POINT_1, button)) {
@@ -210,7 +218,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         if (SimuKraftKeyMappings.matchesMouse(SimuKraftKeyMappings.SELECTION_POINT_2, button)) {
             setPoint(false); return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     /** mouseScrolled: 在 RTS 两点选择中将 Alt 滚轮交给俯视相机缩放。 */
@@ -287,16 +295,16 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         BlockPos min = TwoPointSelectionManager.min(state.point1(), state.point2());
         BlockPos max = TwoPointSelectionManager.max(state.point1(), state.point2());
         if (mode == TwoPointSelectionManager.SelectionMode.FARMLAND) {
-            PacketDistributor.sendToServer(new FarmlandBoxSetAreaPacket(ownerPos, min, max));
+            ClientPacketDistributor.sendToServer(new FarmlandBoxSetAreaPacket(ownerPos, min, max));
             closeSelection(null);
             return;
         }
         if (mode == TwoPointSelectionManager.SelectionMode.LOGISTICS && logisticsAction != null) {
             TwoPointSelectionManager.clear();
-            PacketDistributor.sendToServer(new LogisticsBoxActionPacket(
+            ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(
                     ownerPos, logisticsAction, new UUID(0, 0), new UUID(0, 0),
                     BlockPos.ZERO, "", LogisticsDirection.WAREHOUSE_TO_CLIENT, min, max, List.of()));
-            if (this.minecraft != null) this.minecraft.setScreen(null);
+            if (this.minecraft != null) this.minecraft.gui.setScreen(null);
             return;
         }
         if (operation != null) {
@@ -306,13 +314,13 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
 
     private void cancel() {
         if (mode == TwoPointSelectionManager.SelectionMode.FARMLAND) {
-            PacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(ownerPos));
+            ClientPacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(ownerPos));
             closeSelection(null);
             return;
         }
         if (mode == TwoPointSelectionManager.SelectionMode.LOGISTICS) {
             TwoPointSelectionManager.clear();
-            if (this.minecraft != null) this.minecraft.setScreen(null);
+            if (this.minecraft != null) this.minecraft.gui.setScreen(null);
             return;
         }
         closeSelection(() -> PlannerOperationScreenOpener.open(ownerPos));
@@ -327,7 +335,7 @@ public final class TwoPointSelectionScreen extends Screen implements FreeCameraS
         }
         releaseSelectionMouse();
         if (minecraft != null) {
-            minecraft.setScreen(null);
+            minecraft.gui.setScreen(null);
             if (next != null) minecraft.execute(next);
         }
     }

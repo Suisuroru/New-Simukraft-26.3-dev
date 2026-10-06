@@ -1,14 +1,11 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import java.util.Arrays;
 
 /**
  * 单个地图 region 的地形数据。
  * 一个 region 覆盖 512x512 方块，即 32x32 个 chunk。
  */
-@OnlyIn(Dist.CLIENT)
 public class SimuMapRegionData {
 
     public static final int SIZE = 512;

@@ -6,12 +6,8 @@
     "CCC"
   ],
   "key": {
-    "C": {
-      "item": "minecraft:cobblestone"
-    },
-    "E": {
-      "item": "minecraft:emerald"
-    }
+    "C": "minecraft:cobblestone",
+    "E": "minecraft:emerald"
   },
   "result": {
     "id": "simukraft:exchange_control_box",

@@ -63,7 +63,7 @@ public record CityChunkBatchPurchasePacket(BlockPos pos, List<ChunkEntry> chunks
         if (!(context.player() instanceof ServerPlayer player)) {
             return;
         }
-        ServerLevel serverLevel = player.serverLevel();
+        ServerLevel serverLevel = player.level();
         if (!CityCoreAccessValidator.canAccess(serverLevel, player, packet.pos())) {
             return;
         }

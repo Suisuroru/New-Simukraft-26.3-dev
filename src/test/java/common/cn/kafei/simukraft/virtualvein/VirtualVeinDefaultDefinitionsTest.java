@@ -107,7 +107,7 @@ class VirtualVeinDefaultDefinitionsTest {
                         .get(MultiNoiseBiomeSourceParameterList.Preset.OVERWORLD)
                         .values();
         long matches = values.stream()
-                .filter(pair -> pair.getSecond().location().toString().equals("minecraft:cherry_grove"))
+                .filter(pair -> pair.getSecond().identifier().toString().equals("minecraft:cherry_grove"))
                 .filter(pair -> VirtualVeinService.isSurfaceParameterPoint(pair.getFirst()))
                 .count();
         assertTrue(matches > 0);

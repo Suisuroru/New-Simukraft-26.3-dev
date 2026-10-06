@@ -1,22 +1,20 @@
 package client.cn.kafei.simukraft.client.logistics;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import common.cn.kafei.simukraft.logistics.LogisticsDirection;
 import common.cn.kafei.simukraft.logistics.LogisticsPortData;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsClientBoxOpenResponsePacket;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 final class LogisticsClientPortManageScreen extends Screen {
     private final LogisticsClientBoxOpenResponsePacket packet;
     private EditBox nameField;
@@ -54,19 +52,18 @@ final class LogisticsClientPortManageScreen extends Screen {
 
     /** renderBackground: 绘制旧版深色背景。 */
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
     }
 
     /** render: 绘制端口列表。 */
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 10, LogisticsNativeStyle.TEXT);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.centeredText(this.font, this.title, this.width / 2, 10, LogisticsNativeStyle.TEXT);
         int startX = this.width / 2 - 150;
         int rowY = 38;
         if (packet.ports().isEmpty()) {
-            graphics.drawCenteredString(this.font, Component.translatable("gui.simukraft.logistics.empty"), this.width / 2, this.height / 2, LogisticsNativeStyle.TEXT_MUTED);
+            graphics.centeredText(this.font, Component.translatable("gui.simukraft.logistics.empty"), this.width / 2, this.height / 2, LogisticsNativeStyle.TEXT_MUTED);
         } else {
             for (LogisticsPortData port : packet.ports()) {
                 LogisticsNativeStyle.drawFitString(graphics, this.font,
@@ -78,7 +75,7 @@ final class LogisticsClientPortManageScreen extends Screen {
                 }
             }
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -88,7 +85,7 @@ final class LogisticsClientPortManageScreen extends Screen {
 
     /** send: 向服务端发送客户端端口管理操作。 */
     private void send(LogisticsBoxActionPacket.Action action, UUID channelId, String value) {
-        PacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, value, LogisticsDirection.WAREHOUSE_TO_CLIENT));
+        ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, value, LogisticsDirection.WAREHOUSE_TO_CLIENT));
     }
 
     /** renameEndpoint: 把输入框中的名称提交为当前客户端端点名。 */

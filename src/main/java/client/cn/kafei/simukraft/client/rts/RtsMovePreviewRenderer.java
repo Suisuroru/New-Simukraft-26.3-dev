@@ -1,20 +1,17 @@
 package client.cn.kafei.simukraft.client.rts;
 
 import client.cn.kafei.simukraft.client.buildbox.BuildingPreviewRenderer;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
-/** RTS 移动预览渲染器：复用建筑预览网格的分层 VBO 绘制逻辑。 */
-@OnlyIn(Dist.CLIENT)
+/** RTS 移动预览渲染器：复用建筑预览的几何提交。 */
 public final class RtsMovePreviewRenderer {
     private RtsMovePreviewRenderer() {
     }
 
-    /** onRender: 在各世界渲染阶段绘制当前抓取物的预览网格。 */
-    public static void onRender(RenderLevelStageEvent event) {
+    /** onRender: 提交当前抓取物的预览方块。 */
+    public static void onRender(SubmitCustomGeometryEvent event) {
         if (RtsMovePreviewManager.isActive()) {
-            BuildingPreviewRenderer.renderPreviewMesh(RtsMovePreviewManager.mesh(), event);
+            BuildingPreviewRenderer.submitMesh(RtsMovePreviewManager.mesh(), event);
         }
     }
 }

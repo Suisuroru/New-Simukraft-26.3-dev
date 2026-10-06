@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    { "item": "simukraft:cheese_block" }
+    "simukraft:cheese_block"
   ],
   "result": {
     "id": "simukraft:cheese_chunk",

@@ -1,12 +1,9 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 /**
  * 地图渲染样式枚举。
  * 决定城市地图使用哪种底层地图纹理数据源。
  */
-@OnlyIn(Dist.CLIENT)
 public enum MapRenderStyle {
 
     /**

@@ -1,15 +1,15 @@
 package client.cn.kafei.simukraft.client.config;
 
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.ClientHUDConfig;
 import client.cn.kafei.simukraft.client.ClientHUDOverlay;
 import common.cn.kafei.simukraft.config.ClientConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.List;
 
@@ -19,7 +19,6 @@ import java.util.List;
  *   - 拖拽内部/上下边框 → 移动位置
  * 锚点决定文本对齐方向，实际 HUD 渲染同步生效。
  */
-@OnlyIn(Dist.CLIENT)
 
 public final class HUDPositionEditorScreen extends Screen {
     private static final int PADDING = 6;
@@ -123,7 +122,7 @@ public final class HUDPositionEditorScreen extends Screen {
         ClientHUDOverlay.resetCache();
     }
 
-    private void saveAndClose() { saveAbsolutePosition(); Minecraft.getInstance().setScreen(parent); }
+    private void saveAndClose() { saveAbsolutePosition(); Minecraft.getInstance().gui.setScreen(parent); }
     private void resetPosition() {
         ClientHUDConfig.reset();
         previewMaxWidth = ClientConfig.DEFAULT_HUD_MAX_WIDTH;
@@ -156,19 +155,19 @@ public final class HUDPositionEditorScreen extends Screen {
 
     // ── 渲染 ──────────────────────────────────────────────────
 
-    @Override public void renderBackground(GuiGraphics g, int mx, int my, float pt) {}
+    @Override public void extractBackground(GuiGraphicsExtractor g, int mx, int my, float pt) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, width, height, 0xCC000000);
         renderRegions(g);
-        g.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
-        g.drawCenteredString(font, Component.translatable("gui.hud_editor.instruction"), width / 2, 28, 0xAAAAAA);
+        g.centeredText(font, title, width / 2, 12, 0xFFFFFF);
+        g.centeredText(font, Component.translatable("gui.hud_editor.instruction"), width / 2, 28, 0xAAAAAA);
 
         String widthLabel = previewMaxWidth <= 0
                 ? Component.translatable("gui.hud_editor.width_unlimited").getString()
                 : previewMaxWidth + "px";
-        g.drawCenteredString(font,
+        g.centeredText(font,
                 Component.translatable("gui.hud_editor.status_with_width",
                         Component.translatable("gui.hud_editor.anchor." + currentAnchor.name().toLowerCase(java.util.Locale.ROOT)),
                         hudAbsoluteX, hudAbsoluteY, widthLabel),
@@ -183,7 +182,7 @@ public final class HUDPositionEditorScreen extends Screen {
                 : (onLeft || onRight) ? 0xFFFFDD55
                 : (dragMode == DragMode.MOVE) ? 0xFF00FF00
                 : 0xFF4A90A4;
-        g.renderOutline(hudAbsoluteX - PADDING, hudAbsoluteY - PADDING,
+        g.outline(hudAbsoluteX - PADDING, hudAbsoluteY - PADDING,
                 previewBoxWidth + PADDING * 2, previewBoxHeight + PADDING * 2, boxColor);
         g.fill(hudAbsoluteX - PADDING, hudAbsoluteY - PADDING,
                 hudAbsoluteX + previewBoxWidth + PADDING, hudAbsoluteY + previewBoxHeight + PADDING, 0x66000000);
@@ -210,13 +209,13 @@ public final class HUDPositionEditorScreen extends Screen {
                 case TOP_CENTER, BOTTOM_CENTER -> hudAbsoluteX + (previewBoxWidth - lw) / 2;
                 default -> hudAbsoluteX;
             };
-            g.drawString(font, line, tx, hudAbsoluteY + i * lineStep, 0xFFFFFF, true);
+            g.text(font, line, tx, hudAbsoluteY + i * lineStep, 0xFFFFFF, true);
         }
 
-        super.render(g, mouseX, mouseY, partialTick);
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
     }
 
-    private void renderRegions(GuiGraphics g) {
+    private void renderRegions(GuiGraphicsExtractor g) {
         int hx, hy, hw, hh;
         switch (currentAnchor) {
             case TOP_LEFT    -> { hx = 0;        hy = 0;        hw = regionX1;            hh = regionY2; }
@@ -236,8 +235,11 @@ public final class HUDPositionEditorScreen extends Screen {
     // ── 鼠标事件 ──────────────────────────────────────────────
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (super.mouseClicked(event, doubleClick)) return true;
         if (button == 0) {
             // 左/右边框优先于内部区域
             if (isOnLeftEdge(mouseX, mouseY)) {
@@ -266,14 +268,20 @@ public final class HUDPositionEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) dragMode = DragMode.NONE;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-        if (button != 0) return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (button != 0) return super.mouseDragged(event, dx, dy);
         int deltaX = (int) (mouseX - dragStartMouseX);
 
         if (dragMode == DragMode.RESIZE_RIGHT) {
@@ -306,9 +314,9 @@ public final class HUDPositionEditorScreen extends Screen {
             return true;
         }
 
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        return super.mouseDragged(event, dx, dy);
     }
 
-    @Override public void onClose() { Minecraft.getInstance().setScreen(parent); }
+    @Override public void onClose() { Minecraft.getInstance().gui.setScreen(parent); }
     @Override public boolean isPauseScreen() { return true; }
 }

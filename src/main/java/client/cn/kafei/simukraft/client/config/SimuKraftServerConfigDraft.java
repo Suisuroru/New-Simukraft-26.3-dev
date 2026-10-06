@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.config;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import common.cn.kafei.simukraft.citizen.CitizenNameStyle;
 import common.cn.kafei.simukraft.config.MaterialConfigDefaults;
 import common.cn.kafei.simukraft.config.ServerConfig;
@@ -209,7 +211,7 @@ final class SimuKraftServerConfigDraft {
 
     /** saveToLive: 发包至服务端保存配置。 */
     void saveToLive() {
-        PacketDistributor.sendToServer(new ServerConfigSavePacket(
+        ClientPacketDistributor.sendToServer(new ServerConfigSavePacket(
                 cityChunkPrice, blacklistProtection, logBlacklistSkippedBlocks, claimProtection,
                 npcNameStyle,
                 familyPregnancyDurationDays, familyPostpartumRecoveryDays, familyMarriageChancePerDay, familyPregnancyChancePerDay,

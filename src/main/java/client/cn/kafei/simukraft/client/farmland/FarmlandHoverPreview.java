@@ -1,6 +1,7 @@
 package client.cn.kafei.simukraft.client.farmland;
 
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import common.cn.kafei.simukraft.network.farmland.FarmlandBoxBoundsRequestPacket;
 import common.cn.kafei.simukraft.registry.ModBlocks;
@@ -21,9 +22,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * 复用 BuildingBoundsRenderer 渲染；离开视线或打开界面时清除。设置界面期间(有屏幕)不参与，避免和候选区域冲突。
  */
 
-
 @EventBusSubscriber(value = Dist.CLIENT)
-@OnlyIn(Dist.CLIENT)
 public final class FarmlandHoverPreview {
     private static final double SHOW_AFTER_TICKS = 20.0D; // 1 秒
 
@@ -38,7 +37,7 @@ public final class FarmlandHoverPreview {
     @SubscribeEvent
     public static void onRenderFrame(RenderFrameEvent.Pre event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.level == null || minecraft.player == null || minecraft.screen != null) {
+        if (minecraft.level == null || minecraft.player == null || minecraft.gui.screen() != null) {
             reset();
             return;
         }
@@ -56,7 +55,7 @@ public final class FarmlandHoverPreview {
         lookTicks += Mth.clamp(event.getPartialTick().getRealtimeDeltaTicks(), 0.0F, 4.0F);
         if (lookTicks >= SHOW_AFTER_TICKS && !requested) {
             requested = true;
-            PacketDistributor.sendToServer(new FarmlandBoxBoundsRequestPacket(target));
+            ClientPacketDistributor.sendToServer(new FarmlandBoxBoundsRequestPacket(target));
         }
     }
 

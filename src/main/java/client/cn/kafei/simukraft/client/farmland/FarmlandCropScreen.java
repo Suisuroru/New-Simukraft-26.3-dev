@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.farmland;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -27,8 +27,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * 作物选择弹出菜单：列出全部受支持作物，点选后发给服务端；服务端回包会自动重开农田盒主界面。
  */
 
-
-@OnlyIn(Dist.CLIENT)
 public final class FarmlandCropScreen {
     private static final int ITEM_HEIGHT = 22;
 
@@ -40,7 +38,7 @@ public final class FarmlandCropScreen {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new CropScreen(createUi(packet), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new CropScreen(createUi(packet), Component.empty())));
     }
 
     private static ModularUI createUi(FarmlandBoxOpenResponsePacket packet) {
@@ -127,11 +125,11 @@ public final class FarmlandCropScreen {
 
     private static void select(BlockPos boxPos, FarmCrop crop) {
         // 发送选择后，服务端回包会自动重开农田盒主界面，无需客户端再请求。
-        PacketDistributor.sendToServer(new FarmlandBoxSetCropPacket(boxPos, crop.id()));
+        ClientPacketDistributor.sendToServer(new FarmlandBoxSetCropPacket(boxPos, crop.id()));
     }
 
     private static void back(BlockPos boxPos) {
-        PacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(boxPos));
+        ClientPacketDistributor.sendToServer(new FarmlandBoxOpenRequestPacket(boxPos));
     }
 
     private static final class CropScreen extends ModularUIScreen {

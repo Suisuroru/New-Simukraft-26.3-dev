@@ -21,8 +21,8 @@ import java.util.Optional;
 
 
 public final class PortableCityCoreItem extends Item {
-    public PortableCityCoreItem() {
-        super(new Item.Properties().stacksTo(1));
+    public PortableCityCoreItem(Properties properties) {
+        super(properties.stacksTo(1));
     }
 
     @Override

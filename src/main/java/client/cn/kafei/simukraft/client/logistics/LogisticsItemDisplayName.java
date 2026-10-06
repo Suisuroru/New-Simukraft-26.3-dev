@@ -20,7 +20,7 @@ final class LogisticsItemDisplayName {
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return safeItemId(itemId);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         return item == Items.AIR ? safeItemId(itemId) : new ItemStack(item).getHoverName().getString();
     }
 
@@ -51,7 +51,7 @@ final class LogisticsItemDisplayName {
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return new ItemStack(Items.BARRIER);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         return item == Items.AIR ? new ItemStack(Items.BARRIER) : new ItemStack(item);
     }
 

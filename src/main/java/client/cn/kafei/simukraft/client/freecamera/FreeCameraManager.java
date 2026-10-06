@@ -1,6 +1,7 @@
 package client.cn.kafei.simukraft.client.freecamera;
 
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -16,11 +17,9 @@ import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import common.cn.kafei.simukraft.network.rts.RtsChunkViewPacket;
 import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
-
+import com.mojang.blaze3d.platform.InputConstants;
 
 @EventBusSubscriber(value = Dist.CLIENT)
-@OnlyIn(Dist.CLIENT)
 public final class FreeCameraManager {
     private static final double RTS_CAMERA_HEIGHT = 30.0D;
     private static final float RTS_INITIAL_YAW = -135.0F;
@@ -99,7 +98,7 @@ public final class FreeCameraManager {
         if (rtsMode) {
             RtsViewAreaSynchronizer.restore();
             if (Minecraft.getInstance().getConnection() != null) {
-                PacketDistributor.sendToServer(new RtsChunkViewPacket(false, 0, 0));
+                ClientPacketDistributor.sendToServer(new RtsChunkViewPacket(false, 0, 0));
             }
         }
         active = false;
@@ -301,7 +300,7 @@ public final class FreeCameraManager {
     @SubscribeEvent
     public static void onComputeFov(ViewportEvent.ComputeFov event) {
         if (isRtsActive()) {
-            event.setFOV(180.0D);
+            event.setFOV(180.0F);
         }
     }
 
@@ -322,7 +321,7 @@ public final class FreeCameraManager {
         if (chunkX == lastRtsViewChunkX && chunkZ == lastRtsViewChunkZ && dimension.equals(lastRtsViewDimension)) {
             return;
         }
-        PacketDistributor.sendToServer(new RtsChunkViewPacket(true, chunkX, chunkZ));
+        ClientPacketDistributor.sendToServer(new RtsChunkViewPacket(true, chunkX, chunkZ));
         lastRtsViewChunkX = chunkX;
         lastRtsViewChunkZ = chunkZ;
         lastRtsViewDimension = dimension;
@@ -350,9 +349,8 @@ public final class FreeCameraManager {
         if (!rtsMode || minecraft == null) {
             return false;
         }
-        long window = minecraft.getWindow().getWindow();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL)
+                || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
     }
 
     /** setRtsEdgePanBlocked: 设置 RTS 边缘平移是否暂时让给小地图等界面。 */
@@ -362,8 +360,8 @@ public final class FreeCameraManager {
 
     /** isRtsEdgePanActive: 判断当前帧是否允许鼠标边缘平移。 */
     private static boolean isRtsEdgePanActive(Minecraft minecraft) {
-        return isRtsActive() && !rtsEdgePanBlocked && (minecraft.screen == null
-                || minecraft.screen instanceof FreeCameraScreen) && !isRtsCameraRotationActive(minecraft);
+        return isRtsActive() && !rtsEdgePanBlocked && (minecraft.gui.screen() == null
+                || minecraft.gui.screen() instanceof FreeCameraScreen) && !isRtsCameraRotationActive(minecraft);
     }
 
     /** rtsEdgePanHorizontal: 计算鼠标靠近左右边缘时的相机输入。 */
@@ -401,10 +399,9 @@ public final class FreeCameraManager {
 
     /** isRtsCameraRotationActive: 判断 Alt+右键旋转期间是否应暂停边缘平移。 */
     private static boolean isRtsCameraRotationActive(Minecraft minecraft) {
-        long window = minecraft.getWindow().getWindow();
-        boolean alt = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
-        return alt && GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+        boolean alt = InputConstants.isKeyDown(InputConstants.KEY_LALT)
+                || InputConstants.isKeyDown(InputConstants.KEY_RALT);
+        return alt && minecraft.mouseHandler.isRightPressed();
     }
 
     private static void normalizeYaw() {

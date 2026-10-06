@@ -1,8 +1,8 @@
 package client.cn.kafei.simukraft.client.hire;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.mineraldrilling.MineralDrillingControlBoxScreenOpener;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.buildbox.BuildBoxScreenOpener;
 import client.cn.kafei.simukraft.client.commercial.CommercialControlBoxScreenOpener;
 import client.cn.kafei.simukraft.client.industrial.IndustrialControlBoxScreenOpener;
@@ -44,8 +44,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class NpcHireScreen {
     private static final int CARD_TEXT_COLOR = SimuKraftUiTheme.CARD_TEXT_COLOR;
     private static final int MAX_NPC_PER_PAGE = 12;
@@ -97,7 +95,7 @@ public final class NpcHireScreen {
         showFavoritesOnly = false;
         sortMode = SortMode.NAME;
         sortDescending = false;
-        PacketDistributor.sendToServer(new NpcHireListRequestPacket(sourcePos, sourceType, role));
+        ClientPacketDistributor.sendToServer(new NpcHireListRequestPacket(sourcePos, sourceType, role));
     }
 
     public static void open(NpcHireListResponsePacket packet) {
@@ -107,7 +105,7 @@ public final class NpcHireScreen {
         }
         minecraft.execute(() -> {
             try {
-                minecraft.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet), Component.empty()));
+                minecraft.gui.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet), Component.empty()));
             } catch (Exception exception) {
                 SimuKraft.LOGGER.error("Simukraft: Failed to set hire screen for sourceType={} role={}", packet.sourceType(), packet.role(), exception);
             }
@@ -314,7 +312,6 @@ public final class NpcHireScreen {
         });
     }
 
-
     private static UIElement levelBadge(int level) {
         UIElement badge = new UIElement();
         badge.addClass("simukraft_badge");
@@ -512,7 +509,7 @@ public final class NpcHireScreen {
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.setScreen(null);
+            minecraft.gui.setScreen(null);
         }
     }
 
@@ -714,7 +711,7 @@ public final class NpcHireScreen {
             layoutButtonInRegion(confirmButton, regions.confirmRegion(), 0.88F, 0.82F);
             if (selectedNpcId != null) {
                 confirmButton.setOnClick(event -> {
-                    PacketDistributor.sendToServer(new NpcHireAssignPacket(packet.sourcePos(), packet.sourceType(), packet.role(), selectedNpcId));
+                    ClientPacketDistributor.sendToServer(new NpcHireAssignPacket(packet.sourcePos(), packet.sourceType(), packet.role(), selectedNpcId));
                     returnToSource(packet.sourceType(), packet.sourcePos());
                 });
             } else {
@@ -819,5 +816,4 @@ public final class NpcHireScreen {
         }
     }
 }
-
 

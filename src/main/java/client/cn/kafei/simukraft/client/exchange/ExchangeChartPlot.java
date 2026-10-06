@@ -10,8 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -19,7 +17,6 @@ import java.util.List;
 import java.util.Locale;
 
 /** ExchangeChartPlot: 真实行情图的坐标、均线、十字光标和悬浮文案。 */
-@OnlyIn(Dist.CLIENT)
 final class ExchangeChartPlot {
     static final int UP = 0xFF55FF55;
     static final int DOWN = 0xFFFF5555;
@@ -84,7 +81,7 @@ final class ExchangeChartPlot {
                      int clipLeft, int clipRight) {
         Font font = Minecraft.getInstance().font;
         if (layout.candles.isEmpty()) {
-            guiContext.graphics.drawString(font, Component.translatable("gui.simukraft.exchange.no_candles"),
+            guiContext.graphics.text(font, Component.translatable("gui.simukraft.exchange.no_candles"),
                     layout.plotX + 4, layout.plotY + Math.max(0, layout.plotH / 2 - 4), MUTED, false);
             return;
         }
@@ -239,7 +236,7 @@ final class ExchangeChartPlot {
             String label = layout.mode == ExchangeChartElement.Mode.VOLUME
                     ? Integer.toString((int) Math.round(value))
                     : CoinDenominations.formatYuan(value);
-            guiContext.graphics.drawString(font, label, layout.plotX + layout.plotW + 2, Math.max(layout.plotY, y - 4), MUTED, false);
+            guiContext.graphics.text(font, label, layout.plotX + layout.plotW + 2, Math.max(layout.plotY, y - 4), MUTED, false);
         }
         if (layout.candles.isEmpty()) {
             return;
@@ -270,7 +267,7 @@ final class ExchangeChartPlot {
         String text = axisTime(candle, withDay);
         int width = font.width(text);
         int x = Math.min(layout.plotX + layout.plotW - width, Math.max(layout.plotX, layout.centerX(index) - width / 2));
-        guiContext.graphics.drawString(font, text, x, layout.plotY + layout.plotH + 2, MUTED, false);
+        guiContext.graphics.text(font, text, x, layout.plotY + layout.plotH + 2, MUTED, false);
     }
 
     private static String axisTime(ExchangeCandle candle, boolean withDay) {
@@ -286,14 +283,14 @@ final class ExchangeChartPlot {
             String time = ExchangeMarketClock.clockLabel(layout.candles.get(index).hourIndex());
             guiContext.graphics.fill(layout.centerX(index) - 14, layout.plotY + layout.plotH + 1,
                     layout.centerX(index) + 14, layout.plotY + layout.plotH + AXIS_BOTTOM, 0xAA000000);
-            guiContext.graphics.drawString(font, time, layout.centerX(index) - 12, layout.plotY + layout.plotH + 2, 0xFFFFFFFF, false);
+            guiContext.graphics.text(font, time, layout.centerX(index) - 12, layout.plotY + layout.plotH + 2, 0xFFFFFFFF, false);
         }
         if (layout.mode == ExchangeChartElement.Mode.CANDLE) {
             double price = layout.priceOf(mouseY);
             String text = CoinDenominations.formatYuan(price);
             guiContext.graphics.fill(layout.plotX + layout.plotW, mouseY - 5,
                     layout.x + layout.w, mouseY + 6, 0xAA000000);
-            guiContext.graphics.drawString(font, text, layout.plotX + layout.plotW + 2, mouseY - 4, 0xFFFFFFFF, false);
+            guiContext.graphics.text(font, text, layout.plotX + layout.plotW + 2, mouseY - 4, 0xFFFFFFFF, false);
         }
     }
 
@@ -325,10 +322,10 @@ final class ExchangeChartPlot {
         }
         int boxY = layout.plotY + 4;
         guiContext.graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, HUD);
-        guiContext.graphics.renderOutline(boxX, boxY, boxW, boxH, 0x66FFFFFF);
+        guiContext.graphics.outline(boxX, boxY, boxW, boxH, 0x66FFFFFF);
         int textY = boxY + 2;
         for (Component line : lines) {
-            guiContext.graphics.drawString(font, line, boxX + 3, textY, 0xFFE8E8E8, false);
+            guiContext.graphics.text(font, line, boxX + 3, textY, 0xFFE8E8E8, false);
             textY += lineH;
         }
     }

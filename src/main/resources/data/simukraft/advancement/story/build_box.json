@@ -19,7 +19,7 @@
     "craft_build_box": {
       "trigger": "minecraft:recipe_crafted",
       "conditions": {
-        "recipe_id": "simukraft:build_box"
+        "recipes": "simukraft:build_box"
       }
     }
   },

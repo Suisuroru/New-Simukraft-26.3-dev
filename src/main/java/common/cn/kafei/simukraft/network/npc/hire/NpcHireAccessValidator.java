@@ -101,7 +101,7 @@ final class NpcHireAccessValidator {
 
     private static UUID resolveCityId(ServerLevel level, BlockPos sourcePos, String sourceType, String role) {
         if (BUILD_BOX_SOURCE_TYPE.equals(sourceType) && isBuildBoxRole(role) && level.getBlockState(sourcePos).is(ModBlocks.BUILD_BOX.get())) {
-            return CityChunkManager.get(level).getChunkOwner(new ChunkPos(sourcePos).toLong());
+            return CityChunkManager.get(level).getChunkOwner(ChunkPos.containing(sourcePos).pack());
         }
         if (FarmlandBoxService.HIRE_SOURCE_TYPE.equals(sourceType)
                 && FarmlandBoxService.HIRE_ROLE.equals(role)

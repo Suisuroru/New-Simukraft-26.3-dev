@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -50,7 +51,7 @@ public record LogisticsWarehouseGridShiftClickPacket(BlockPos pos, ItemStack tar
         if (!remaining.isEmpty()) {
             ItemStack returned = LogisticsWarehouseInventoryService.insert(level, packet.pos(), remaining);
             if (!returned.isEmpty()) {
-                player.drop(returned, false);
+                player.drop(returned, false, Prediction.SERVER_ONLY);
             }
         }
         player.containerMenu.broadcastChanges();

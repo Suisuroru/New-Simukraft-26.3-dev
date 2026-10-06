@@ -19,7 +19,7 @@
     "craft_city_core": {
       "trigger": "minecraft:recipe_crafted",
       "conditions": {
-        "recipe_id": "simukraft:city_core"
+        "recipes": "simukraft:city_core"
       }
     }
   },

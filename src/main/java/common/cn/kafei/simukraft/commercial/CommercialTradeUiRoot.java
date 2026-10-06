@@ -22,8 +22,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import javax.annotation.Nullable;
@@ -31,7 +29,6 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
 
 public final class CommercialTradeUiRoot extends UIElement {
     private static final Identifier VILLAGER_LOCATION = Identifier.withDefaultNamespace("textures/gui/container/villager.png");
@@ -103,7 +100,6 @@ public final class CommercialTradeUiRoot extends UIElement {
     }
 
     /** refreshActive: 刷新当前打开的商业交易界面快照。 */
-    @OnlyIn(Dist.CLIENT)
     public static void refreshActive(CommercialTradeOpenResponsePacket packet) {
         CommercialTradeUiRoot root = activeRoot.get();
         if (root != null && root.isSameSession(packet)) {
@@ -112,7 +108,6 @@ public final class CommercialTradeUiRoot extends UIElement {
     }
 
     /** drawBackgroundAdditional: 绘制原版村民风格交易内容和左侧 Tab。 */
-    @OnlyIn(Dist.CLIENT)
     @Override
     public void drawBackgroundAdditional(IGUIContext context) {
         GUIContext guiContext = (GUIContext) context;
@@ -131,7 +126,6 @@ public final class CommercialTradeUiRoot extends UIElement {
     }
 
     /** onTabMouseDown: 只在左侧 Tab 命中区切换交易分类。 */
-    @OnlyIn(Dist.CLIENT)
     private void renderLeftPanelBackground(GUIContext guiContext, int left, int top) {
         guiContext.graphics.fill(left + ROW_X, top + CommercialTradeTabStrip.HIT_Y,
                 left + CommercialTradeTabStrip.HIT_X + CommercialTradeTabStrip.HIT_WIDTH, top + ROW_Y, LEFT_PANEL_BACKGROUND);
@@ -215,7 +209,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         event.stopImmediatePropagation();
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderLabels(GUIContext guiContext, Font font, int left, int top) {
         drawCenteredStringNoShadow(guiContext, font, CommercialTradeMenuProvider.title(packet), left + 187, top + 6, TEXT_COLOR);
         int tradesWidth = font.width(TRADES_LABEL);
@@ -225,7 +218,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         guiContext.graphics.text(font, fitText(font, balance, 116), left + 136, top + 18, MUTED_COLOR, false);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderSearchBox(GUIContext guiContext, int left, int top) {
         RecipeBookSearchUi.renderFrame(guiContext, left + SEARCH_FRAME_X, top + SEARCH_FRAME_Y,
                 RecipeBookSearchUi.FRAME_WIDTH, RecipeBookSearchUi.FRAME_TEXTURE_WIDTH, RecipeBookSearchUi.FRAME_HEIGHT,
@@ -233,7 +225,6 @@ public final class CommercialTradeUiRoot extends UIElement {
                 RecipeBookSearchUi.TEXT_WIDTH, RecipeBookSearchUi.TEXT_HEIGHT);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderSelectedOffer(GUIContext guiContext, Font font, int left, int top) {
         CommercialTradeOpenResponsePacket.OfferEntry offer = selectedOffer();
         if (offer == null) {
@@ -251,7 +242,6 @@ public final class CommercialTradeUiRoot extends UIElement {
                 left + 136, top + 70, CommercialTradeUiSupport.stockColor(offer, 1), false);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderOfferList(GUIContext guiContext, Font font, int left, int top) {
         List<CommercialTradeOpenResponsePacket.OfferEntry> offers = filteredOffers();
         if (offers.isEmpty()) {
@@ -267,7 +257,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderOfferRow(GUIContext guiContext, int left, int top, int row, CommercialTradeOpenResponsePacket.OfferEntry offer) {
         int rowLeft = left + ROW_X;
         int rowTop = top + ROW_Y + row * ROW_HEIGHT;
@@ -282,12 +271,10 @@ public final class CommercialTradeUiRoot extends UIElement {
         renderResource(guiContext, first(offer.result(), 0), left + 73, itemY);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderTradeArrow(GUIContext guiContext, boolean canTrade, int x, int y) {
         guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, canTrade ? TRADE_ARROW_SPRITE : TRADE_ARROW_OUT_OF_STOCK_SPRITE, x, y, 10, 9);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderScroller(GUIContext guiContext, int left, int top) {
         if (!canScroll()) {
             guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED_SPRITE, left + SCROLL_X, top + SCROLL_Y, SCROLL_WIDTH, SCROLLER_HEIGHT);
@@ -303,7 +290,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         guiContext.graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, left + SCROLL_X, top + SCROLL_Y + scrollY, SCROLL_WIDTH, SCROLLER_HEIGHT);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void renderResource(GUIContext guiContext, @Nullable CommercialTradeOpenResponsePacket.ResourceEntry resource, int x, int y) {
         if (resource == null) {
             return;
@@ -317,7 +303,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void onHoverTooltips(UIEvent event) {
         int left = (int) getPositionX();
         int top = (int) getPositionY();
@@ -338,7 +323,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     private void drawResourceCount(GUIContext guiContext, String label, int x, int y) {
         if (label.isBlank()) {
             return;
@@ -561,7 +545,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         event.stopPropagation();
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static void drawCenteredStringNoShadow(GUIContext guiContext, Font font, Component text, int centerX, int y, int color) {
         guiContext.graphics.text(font, text, centerX - font.width(text) / 2, y, color, false);
     }
@@ -599,7 +582,6 @@ public final class CommercialTradeUiRoot extends UIElement {
         return RecipeBookSearchUi.createField(SEARCH_TEXT_X, SEARCH_TEXT_Y, "", this::onSearchChanged);
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static String fitText(Font font, String text, int maxWidth) {
         if (font.width(text) <= maxWidth) {
             return text;

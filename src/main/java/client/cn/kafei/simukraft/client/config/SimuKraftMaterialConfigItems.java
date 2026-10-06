@@ -69,8 +69,8 @@ final class SimuKraftMaterialConfigItems {
         if (id == null) {
             return false;
         }
-        return BuiltInRegistries.ITEM.containsKey(id) && BuiltInRegistries.ITEM.get(id) != Items.AIR
-                || BuiltInRegistries.BLOCK.containsKey(id) && BuiltInRegistries.BLOCK.get(id) != Blocks.AIR;
+        return BuiltInRegistries.ITEM.getOptional(id).filter(item -> item != Items.AIR).isPresent()
+                || BuiltInRegistries.BLOCK.getOptional(id).filter(block -> block != Blocks.AIR).isPresent();
     }
 
     /** stack: 获取列表图标使用的物品堆。 */
@@ -79,11 +79,11 @@ final class SimuKraftMaterialConfigItems {
         if (id == null) {
             return new ItemStack(Items.BARRIER);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         if (item != Items.AIR) {
             return new ItemStack(item);
         }
-        Block block = BuiltInRegistries.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.AIR);
         Item blockItem = block.asItem();
         return blockItem == Items.AIR ? new ItemStack(Items.BARRIER) : new ItemStack(blockItem);
     }
@@ -94,11 +94,11 @@ final class SimuKraftMaterialConfigItems {
         if (id == null) {
             return Component.literal(itemId);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         if (item != Items.AIR) {
             return new ItemStack(item).getHoverName();
         }
-        Block block = BuiltInRegistries.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.AIR);
         if (block != Blocks.AIR) {
             return block.getName();
         }

@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.mixin;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraScreen;
 import client.cn.kafei.simukraft.client.rts.RtsSelectionManager;
@@ -16,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MouseHandler.class)
-@OnlyIn(Dist.CLIENT)
 public final class MixinMouseHandler {
     @Shadow private double accumulatedDX;
     @Shadow private double accumulatedDY;
@@ -25,7 +22,7 @@ public final class MixinMouseHandler {
     @Unique private double simukraft$lastY = Double.NaN;
 
     @Inject(method = "onMove", at = @At("HEAD"))
-    private void simukraft$onMove(long window, double xpos, double ypos, CallbackInfo callbackInfo) {
+    private void simukraft$onMove(long window, double xpos, double ypos, double xrel, double yrel, CallbackInfo callbackInfo) {
         if (RtsSelectionManager.isActive()) {
             if (RtsSelectionManager.isCameraRotationActive()) {
                 if (Double.isNaN(simukraft$lastX)) {
@@ -54,7 +51,7 @@ public final class MixinMouseHandler {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        Screen screen = minecraft.screen;
+        Screen screen = minecraft.gui.screen();
         if (!(screen instanceof FreeCameraScreen) && screen != null) {
             return;
         }
@@ -78,8 +75,8 @@ public final class MixinMouseHandler {
         accumulatedDY = 0.0D;
     }
 
-    @Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
-    private void simukraft$turnPlayer(CallbackInfo callbackInfo) {
+    @Inject(method = "turnPlayer(D)V", at = @At("HEAD"), cancellable = true)
+    private void simukraft$turnPlayer(double movementTime, CallbackInfo callbackInfo) {
         if (RtsSelectionManager.isActive()) {
             accumulatedDX = 0.0D;
             accumulatedDY = 0.0D;
@@ -88,7 +85,7 @@ public final class MixinMouseHandler {
         }
         if (FreeCameraManager.isActive()) {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.screen == null || minecraft.screen instanceof FreeCameraScreen) {
+            if (minecraft.gui.screen() == null || minecraft.gui.screen() instanceof FreeCameraScreen) {
                 callbackInfo.cancel();
                 accumulatedDX = 0.0D;
                 accumulatedDY = 0.0D;

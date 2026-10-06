@@ -34,7 +34,10 @@ final class RtsViewAreaSynchronizer {
         if (viewArea != currentViewArea
                 || focusSectionX != currentSectionX
                 || focusSectionZ != currentSectionZ) {
-            currentViewArea.repositionCamera(focus.x, focus.z);
+            currentViewArea.repositionCamera(SectionPos.of(
+                    SectionPos.posToSectionCoord(focus.x),
+                    SectionPos.posToSectionCoord(focus.y),
+                    SectionPos.posToSectionCoord(focus.z)));
             viewArea = currentViewArea;
             focusSectionX = currentSectionX;
             focusSectionZ = currentSectionZ;
@@ -50,7 +53,10 @@ final class RtsViewAreaSynchronizer {
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (viewArea != null && minecraft.player != null) {
-            viewArea.repositionCamera(minecraft.player.getX(), minecraft.player.getZ());
+            viewArea.repositionCamera(SectionPos.of(
+                    SectionPos.posToSectionCoord(minecraft.player.getX()),
+                    SectionPos.posToSectionCoord(minecraft.player.getY()),
+                    SectionPos.posToSectionCoord(minecraft.player.getZ())));
         }
         clear();
     }

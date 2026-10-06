@@ -1,6 +1,7 @@
 package common.cn.kafei.simukraft.network.rts;
 
 import common.cn.kafei.simukraft.mixin.MixinChunkMapAccessor;
+import common.cn.kafei.simukraft.registry.ModTicketTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkTrackingView;
@@ -10,7 +11,6 @@ import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
-import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -19,9 +19,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class RtsChunkViewService {
     private static final long FOCUS_UPDATE_INTERVAL_TICKS = 2L;
-    private static final TicketType<UUID> RTS_VIEW_TICKET = TicketType.create("simukraft_rts_view",
-            Comparator.comparingLong(UUID::getMostSignificantBits)
-                    .thenComparingLong(UUID::getLeastSignificantBits));
+    private static final TicketType RTS_VIEW_TICKET = ModTicketTypes.RTS_VIEW.get();
     private static final ConcurrentMap<UUID, RtsView> VIEWS = new ConcurrentHashMap<>();
     private static final ThreadLocal<ServerPlayer> TRACKING_PLAYER = new ThreadLocal<>();
 
@@ -51,7 +49,7 @@ public final class RtsChunkViewService {
         }
         VIEWS.put(player.getUUID(), nextView);
         releaseTicket(player.getUUID(), previousView);
-        level.getChunkSource().addRegionTicket(RTS_VIEW_TICKET, focus, viewDistance, player.getUUID());
+        level.getChunkSource().addTicketWithRadius(RTS_VIEW_TICKET, focus, viewDistance);
         if (chunkMap != null) {
             refreshTracking(chunkMap, player);
         }
@@ -125,7 +123,7 @@ public final class RtsChunkViewService {
         if (view == null) {
             return player.blockPosition().closerThan(target, vanillaDistance);
         }
-        return ChunkTrackingView.isWithinDistance(view.focus().x, view.focus().z, view.viewDistance(),
+        return ChunkTrackingView.isWithinDistance(view.focus().x(), view.focus().z(), view.viewDistance(),
                 target.getX() >> 4, target.getZ() >> 4, false);
     }
 
@@ -157,7 +155,7 @@ public final class RtsChunkViewService {
         }
         ServerLevel level = view.server().getLevel(view.dimension());
         if (level != null) {
-            level.getChunkSource().removeRegionTicket(RTS_VIEW_TICKET, view.focus(), view.viewDistance(), playerId);
+            level.getChunkSource().removeTicketWithRadius(RTS_VIEW_TICKET, view.focus(), view.viewDistance());
         }
     }
 

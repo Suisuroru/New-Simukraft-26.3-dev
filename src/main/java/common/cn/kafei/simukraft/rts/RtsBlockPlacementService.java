@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -51,7 +52,7 @@ public final class RtsBlockPlacementService {
         if (!result.consumesAction()) {
             return PlacementStatus.INVALID;
         }
-        player.swing(InteractionHand.MAIN_HAND, true);
+        player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
         return PlacementStatus.SUCCESS;
     }
 
@@ -66,7 +67,7 @@ public final class RtsBlockPlacementService {
         if (city == null) {
             return false;
         }
-        return city.cityId().equals(CityChunkManager.get(level).getChunkOwner(new ChunkPos(targetPos).toLong()));
+        return city.cityId().equals(CityChunkManager.get(level).getChunkOwner(ChunkPos.containing(targetPos).pack()));
     }
 
     /** PlacementStatus: RTS 放置请求的服务端处理结果。 */

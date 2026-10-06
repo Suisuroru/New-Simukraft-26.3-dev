@@ -1,17 +1,14 @@
 package client.cn.kafei.simukraft.client.ui;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /**
  * 通用右侧滑动信息面板，供各自由视角操作界面复用。
  * 使用方式：声明实例字段，render() 中调用 beginRender()，keyPressed() 中调用 toggle()。
  */
 
-@OnlyIn(Dist.CLIENT)
 public final class SlidingInfoPanel {
 
     private static final int PANEL_W = 132;
@@ -42,7 +39,7 @@ public final class SlidingInfoPanel {
      * 每帧调用：更新滑动动画并绘制面板框（拉片 + 背景）。
      * @param panelTop 面板顶部 Y（通常为标题栏底部，如 18）
      */
-    public void beginRender(GuiGraphics g, Font font, int screenW, int screenH, int panelTop) {
+    public void beginRender(GuiGraphicsExtractor g, Font font, int screenW, int screenH, int panelTop) {
         this.font  = font;
         this.panelW = PANEL_W;
         this.panelY = panelTop;
@@ -57,7 +54,7 @@ public final class SlidingInfoPanel {
         g.fill(tabX, tabY, tabX + 12, tabY + 16, 0xAA000000);
         g.fill(tabX, tabY, tabX + 12, tabY + 1,  0x44AAAACC);
         g.fill(tabX, tabY, tabX + 1,  tabY + 16, 0x44AAAACC);
-        g.drawCenteredString(font, Component.literal(visible ? "▶" : "◀"), tabX + 6, tabY + 4, 0xFF8888AA);
+        g.centeredText(font, Component.literal(visible ? "▶" : "◀"), tabX + 6, tabY + 4, 0xFF8888AA);
         // 面板背景
         g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xAA000000);
         g.fill(panelX, panelY, panelX + panelW, panelY + 1,           0x66AAAACC);
@@ -77,39 +74,39 @@ public final class SlidingInfoPanel {
     // ── 绘制辅助 ───────────────────────────────────────────────
 
     /** 绘制橙色区段标题。 */
-    public void drawSectionTitle(GuiGraphics g, Component text, int y) {
-        g.drawCenteredString(font, text, getCenterX(), y, 0xFFCC9944);
+    public void drawSectionTitle(GuiGraphicsExtractor g, Component text, int y) {
+        g.centeredText(font, text, getCenterX(), y, 0xFFCC9944);
     }
 
     /** 绘制水平分隔线。 */
-    public void drawSeparator(GuiGraphics g, int y) {
+    public void drawSeparator(GuiGraphicsExtractor g, int y) {
         g.fill(innerX, y, getInnerRight(), y + 1, 0x33FFFFFF);
     }
 
     /** 绘制以 (cx,cy) 为中心的键帽。 */
-    public void drawKeyCap(GuiGraphics g, Component label, int cx, int cy, int w, int h) {
+    public void drawKeyCap(GuiGraphicsExtractor g, Component label, int cx, int cy, int w, int h) {
         drawKeyCapAt(g, label, cx - w / 2, cy - h / 2, w, h);
     }
 
     /** 绘制以 (x,y) 为左上角的键帽。 */
-    public void drawKeyCapAt(GuiGraphics g, Component label, int x, int y, int w, int h) {
+    public void drawKeyCapAt(GuiGraphicsExtractor g, Component label, int x, int y, int w, int h) {
         g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xCC1E1E2E);
         g.fill(x, y, x + w, y + 1,         0xFF9999BB);
         g.fill(x, y, x + 1, y + h,         0xFF9999BB);
         g.fill(x, y + h - 1, x + w, y + h, 0xFF333344);
         g.fill(x + w - 1, y, x + w, y + h, 0xFF333344);
-        g.drawCenteredString(font, label, x + w / 2, y + (h - font.lineHeight) / 2, 0xFFFFFFFF);
+        g.centeredText(font, label, x + w / 2, y + (h - font.lineHeight) / 2, 0xFFFFFFFF);
     }
 
     /**
      * 绘制一行"键帽 + 动作说明"：键帽在左，说明紧跟右侧。
      * @return 下一行的 Y 坐标（curY + kh + 3）
      */
-    public int drawKeyAction(GuiGraphics g, Component key, int x, int y,
+    public int drawKeyAction(GuiGraphicsExtractor g, Component key, int x, int y,
                              int kh, Component label, int labelColor) {
         int kw = Math.max(10, font.width(key) + 6);
         drawKeyCapAt(g, key, x, y, kw, kh);
-        g.drawString(font, label, x + kw + 3, y + (kh - font.lineHeight) / 2, labelColor, false);
+        g.text(font, label, x + kw + 3, y + (kh - font.lineHeight) / 2, labelColor, false);
         return y + kh + 3;
     }
 
@@ -133,7 +130,7 @@ public final class SlidingInfoPanel {
      * 布局：左3 / 分隔1 / 中3 / 分隔1 / 右3 = 11px 内宽。
      * @param mouseButton MOUSE_LEFT / MOUSE_MIDDLE / MOUSE_RIGHT，其他值=无高亮
      */
-    public void drawMouseIcon(GuiGraphics g, int x, int y, int mouseButton) {
+    public void drawMouseIcon(GuiGraphicsExtractor g, int x, int y, int mouseButton) {
         final int BODY   = 0xFF1E1E2E;
         final int BTN    = 0xFF383852;
         final int BTN_HL = 0xFF484864; // 按键顶部高光行
@@ -187,10 +184,10 @@ public final class SlidingInfoPanel {
      * @param mouseButton 高亮按钮：MOUSE_LEFT / MOUSE_MIDDLE / MOUSE_RIGHT
      * @return 下一行 Y 坐标
      */
-    public int drawMouseAction(GuiGraphics g, int mouseButton, int x, int y,
+    public int drawMouseAction(GuiGraphicsExtractor g, int mouseButton, int x, int y,
                                Component label, int labelColor) {
         drawMouseIcon(g, x, y, mouseButton);
-        g.drawString(font, label, x + MOUSE_W + 4, y + (MOUSE_H - font.lineHeight) / 2, labelColor, false);
+        g.text(font, label, x + MOUSE_W + 4, y + (MOUSE_H - font.lineHeight) / 2, labelColor, false);
         return y + MOUSE_H + 3;
     }
 }

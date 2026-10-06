@@ -20,8 +20,8 @@ import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 
 public class BuildBoxBlock extends Block {
-    public BuildBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(0.8F).sound(SoundType.WOOD));
+    public BuildBoxBlock(Properties properties) {
+        super(properties);
     }
 
     @Override

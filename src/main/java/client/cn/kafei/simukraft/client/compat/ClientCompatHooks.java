@@ -1,11 +1,8 @@
 package client.cn.kafei.simukraft.client.compat;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.ModList;
 
-@OnlyIn(Dist.CLIENT)
 public final class ClientCompatHooks {
     private static final String XAERO_WORLD_MAP_MOD_ID = "xaeroworldmap";
     private static final String XAERO_INTEGRATION_CLASS = "client.cn.kafei.simukraft.client.compat.xaero.XaeroWorldMapIntegration";

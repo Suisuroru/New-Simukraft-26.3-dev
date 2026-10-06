@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.city;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import client.cn.kafei.simukraft.client.city.map.SimuMapStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -17,7 +15,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@OnlyIn(Dist.CLIENT)
 public final class ClientCityChunkCache {
     private static final ClientCityChunkCache INSTANCE = new ClientCityChunkCache();
     private final Map<CacheScope, ScopeCache> scopedCaches = new ConcurrentHashMap<>();
@@ -121,7 +118,7 @@ public final class ClientCityChunkCache {
     }
 
     private static String dimensionToId(ResourceKey<Level> dimension) {
-        return dimension.location().getNamespace() + ":" + dimension.location().getPath();
+        return dimension.identifier().getNamespace() + ":" + dimension.identifier().getPath();
     }
 
     private static Map<UUID, Set<Long>> snapshotChunks(Map<UUID, Set<Long>> chunks) {

@@ -66,19 +66,19 @@ class CommercialSqliteRepositoryTest {
                 repository.upsertStockEntry(connection, netherStock, NETHER);
             }
 
-            assertEquals("overworld-shop", firstBox(repository.loadBoxes(OVERWORLD)).getString("DefinitionId"));
-            assertEquals("nether-shop", firstBox(repository.loadBoxes(NETHER)).getString("DefinitionId"));
-            assertEquals(4, firstStock(repository.loadStock(OVERWORLD)).getInt("CurrentStock"));
-            assertEquals(16, firstStock(repository.loadStock(NETHER)).getInt("CurrentStock"));
+            assertEquals("overworld-shop", firstBox(repository.loadBoxes(OVERWORLD)).getStringOr("DefinitionId", ""));
+            assertEquals("nether-shop", firstBox(repository.loadBoxes(NETHER)).getStringOr("DefinitionId", ""));
+            assertEquals(4, firstStock(repository.loadStock(OVERWORLD)).getIntOr("CurrentStock", 0));
+            assertEquals(16, firstStock(repository.loadStock(NETHER)).getIntOr("CurrentStock", 0));
 
             try (Connection connection = database.borrowConnection()) {
-                repository.deleteBox(connection, overworldBox.getLong("BoxPos"), OVERWORLD);
+                repository.deleteBox(connection, overworldBox.getLongOr("BoxPos", 0L), OVERWORLD);
             }
 
             assertNull(repository.loadBoxes(OVERWORLD));
             assertNull(repository.loadStock(OVERWORLD));
-            assertEquals("nether-shop", firstBox(repository.loadBoxes(NETHER)).getString("DefinitionId"));
-            assertEquals(16, firstStock(repository.loadStock(NETHER)).getInt("CurrentStock"));
+            assertEquals("nether-shop", firstBox(repository.loadBoxes(NETHER)).getStringOr("DefinitionId", ""));
+            assertEquals(16, firstStock(repository.loadStock(NETHER)).getIntOr("CurrentStock", 0));
         }
     }
 
@@ -105,8 +105,8 @@ class CommercialSqliteRepositoryTest {
 
         try (SimuSqliteDatabase database = openDatabase(databasePath)) {
             CommercialSqliteRepository repository = new CommercialSqliteRepository(database);
-            assertEquals("legacy-shop", firstBox(repository.loadBoxes(OVERWORLD)).getString("DefinitionId"));
-            assertEquals(7, firstStock(repository.loadStock(OVERWORLD)).getInt("CurrentStock"));
+            assertEquals("legacy-shop", firstBox(repository.loadBoxes(OVERWORLD)).getStringOr("DefinitionId", ""));
+            assertEquals(7, firstStock(repository.loadStock(OVERWORLD)).getIntOr("CurrentStock", 0));
             assertNull(repository.loadBoxes(NETHER));
             assertNull(repository.loadStock(NETHER));
         }
@@ -154,12 +154,12 @@ class CommercialSqliteRepositoryTest {
     }
 
     private static CompoundTag firstBox(CompoundTag tag) {
-        ListTag boxes = tag.getList("Boxes", CompoundTag.TAG_COMPOUND);
-        return boxes.getCompound(0);
+        ListTag boxes = tag.getListOrEmpty("Boxes");
+        return boxes.getCompoundOrEmpty(0);
     }
 
     private static CompoundTag firstStock(CompoundTag tag) {
-        ListTag stock = tag.getList("Stock", CompoundTag.TAG_COMPOUND);
-        return stock.getCompound(0);
+        ListTag stock = tag.getListOrEmpty("Stock");
+        return stock.getCompoundOrEmpty(0);
     }
 }

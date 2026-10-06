@@ -4,16 +4,14 @@ import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
 import dev.vfyjxf.taffy.style.TaffyPosition;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.function.Consumer;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class RecipeBookSearchUi {
     public static final int FRAME_WIDTH = 95;
     public static final int FRAME_TEXTURE_WIDTH = 89;
@@ -83,7 +81,7 @@ public final class RecipeBookSearchUi {
                                    int frameHeight, int textOffsetX, int textOffsetY, int textWidth, int textHeight) {
         int textureTop = top + Math.max(0, (frameHeight - FRAME_HEIGHT) / 2);
         int textureHeight = Math.min(frameHeight, FRAME_HEIGHT);
-        guiContext.graphics.blit(RECIPE_BOOK_LOCATION, left, textureTop, 0, 9.0F, 12.0F, frameTextureWidth, textureHeight, 256, 256);
+        guiContext.graphics.blit(RenderPipelines.GUI_TEXTURED, RECIPE_BOOK_LOCATION, left, textureTop, 9.0F, 12.0F, frameTextureWidth, textureHeight, 256, 256);
         int textBorderRight = Math.min(left + frameWidth - 1, left + textOffsetX + textWidth + 2);
         guiContext.graphics.fill(left + textOffsetX - 1, top + textOffsetY - 1, textBorderRight,
                 top + textOffsetY + textHeight + 1, 0xFF101010);
@@ -113,8 +111,8 @@ public final class RecipeBookSearchUi {
 
         /** drawBackgroundAdditional: 绘制搜索框外框，不参与交互。 */
         @Override
-        public void drawBackgroundAdditional(GUIContext guiContext) {
-            renderFrame(guiContext, (int) getPositionX(), (int) getPositionY(), frameWidth, frameTextureWidth,
+        public void drawBackgroundAdditional(IGUIContext context) {
+            renderFrame((GUIContext) context, (int) getPositionX(), (int) getPositionY(), frameWidth, frameTextureWidth,
                     frameHeight, textOffsetX, textOffsetY, textWidth, textHeight);
         }
     }

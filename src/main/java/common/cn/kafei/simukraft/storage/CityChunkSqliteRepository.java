@@ -1,9 +1,12 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.NumericTag;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,14 +29,14 @@ public final class CityChunkSqliteRepository {
      */
     public void saveAll(Connection connection, CompoundTag tag, String dimensionId) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("INSERT OR IGNORE INTO city_chunks(city_id, chunk_long, dimension_id) VALUES(?, ?, ?)")) {
-            ListTag cityTags = tag.getList("CityChunks", CompoundTag.TAG_COMPOUND);
+            ListTag cityTags = tag.getListOrEmpty("CityChunks");
             for (int i = 0; i < cityTags.size(); i++) {
-                CompoundTag cityTag = cityTags.getCompound(i);
-                String cityId = cityTag.getUUID("CityId").toString();
-                ListTag chunks = cityTag.getList("Chunks", LongTag.TAG_LONG);
+                CompoundTag cityTag = cityTags.getCompoundOrEmpty(i);
+                String cityId = NbtUuid.read(cityTag, "CityId").toString();
+                ListTag chunks = cityTag.getListOrEmpty("Chunks");
                 for (int j = 0; j < chunks.size(); j++) {
                     statement.setString(1, cityId);
-                    statement.setLong(2, ((LongTag) chunks.get(j)).getAsLong());
+                    statement.setLong(2, chunks.get(j) instanceof NumericTag numeric ? numeric.longValue() : 0L);
                     statement.setString(3, dimensionId);
                     statement.addBatch();
                 }
@@ -91,7 +94,7 @@ public final class CityChunkSqliteRepository {
             }
             chunksByCity.forEach((cityId, chunks) -> {
                 CompoundTag cityTag = new CompoundTag();
-                cityTag.putUUID("CityId", UUID.fromString(cityId));
+                NbtUuid.put(cityTag, "CityId", UUID.fromString(cityId));
                 cityTag.put("Chunks", chunks);
                 cityTags.add(cityTag);
             });

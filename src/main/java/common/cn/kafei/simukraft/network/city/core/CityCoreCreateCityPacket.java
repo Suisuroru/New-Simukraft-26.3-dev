@@ -74,13 +74,13 @@ public record CityCoreCreateCityPacket(BlockPos pos, String cityName) implements
             return;
         }
         CityChunkManager chunkManager = CityChunkManager.get(level);
-        ChunkPos centerChunk = new ChunkPos(pos);
+        ChunkPos centerChunk = ChunkPos.containing(pos);
         if (!chunkManager.isAreaAvailable(centerChunk)) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.city_core.chunks_occupied"));
             CityCoreOpenRequestPacket.openFor(level, player, pos);
             return;
         }
-        CityData city = CityService.createCity(level, cityName, player.getUUID(), player.getGameProfile().getName(), pos);
+        CityData city = CityService.createCity(level, cityName, player.getUUID(), player.getGameProfile().name(), pos);
         if (!chunkManager.assignInitialArea(city.cityId(), centerChunk)) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.city_core.chunks_occupied"));
             CityCoreOpenRequestPacket.openFor(level, player, pos);

@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.storage;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -30,9 +32,9 @@ public final class CitizenSqliteRepository {
      * 居民的删除只走 {@link #delete(Connection, java.util.UUID)}。
      */
     public void saveAll(Connection connection, CompoundTag tag) throws SQLException {
-        ListTag citizens = tag.getList("Citizens", CompoundTag.TAG_COMPOUND);
+        ListTag citizens = tag.getListOrEmpty("Citizens");
         for (int i = 0; i < citizens.size(); i++) {
-            saveCitizen(connection, citizens.getCompound(i));
+            saveCitizen(connection, citizens.getCompoundOrEmpty(i));
         }
     }
 
@@ -76,7 +78,7 @@ public final class CitizenSqliteRepository {
                 while (resultSet.next()) {
                     String uuid = resultSet.getString("uuid");
                     CompoundTag citizen = new CompoundTag();
-                    citizen.putUUID("Uuid", java.util.UUID.fromString(uuid));
+                    NbtUuid.put(citizen, "Uuid", java.util.UUID.fromString(uuid));
                     citizen.putString("Name", resultSet.getString("name"));
                     citizen.putString("Gender", resultSet.getString("gender"));
                     citizen.putInt("Age", resultSet.getInt("age"));
@@ -132,63 +134,63 @@ public final class CitizenSqliteRepository {
     }
 
     private void saveCitizen(Connection connection, CompoundTag citizen) throws SQLException {
-        String uuid = citizen.getUUID("Uuid").toString();
+        String uuid = NbtUuid.read(citizen, "Uuid").toString();
         try (PreparedStatement citizenStatement = connection.prepareStatement(UPSERT_SQL);
              PreparedStatement deleteSkills = connection.prepareStatement("DELETE FROM citizen_skills WHERE citizen_id = ?");
              PreparedStatement skillStatement = connection.prepareStatement("INSERT INTO citizen_skills(citizen_id, skill_key, skill_value) VALUES(?, ?, ?)")) {
             citizenStatement.setString(1, uuid);
-            citizenStatement.setString(2, citizen.getString("Name"));
-            citizenStatement.setString(3, citizen.getString("Gender"));
-            citizenStatement.setInt(4, citizen.getInt("Age"));
-            citizenStatement.setInt(5, citizen.getInt("Lifespan"));
-            citizenStatement.setString(6, citizen.getString("JobType"));
-            citizenStatement.setString(7, citizen.getString("JobId"));
-            citizenStatement.setString(8, citizen.getString("Status"));
-            citizenStatement.setString(9, citizen.getString("WorkStatus"));
-            citizenStatement.setString(10, citizen.getString("WorkNeedDetail"));
-            citizenStatement.setString(11, citizen.getString("StatusLabel"));
-            citizenStatement.setInt(12, citizen.getBoolean("IsWorking") ? 1 : 0);
-            citizenStatement.setInt(13, citizen.getInt("NpcId"));
-            citizenStatement.setString(14, citizen.getString("SkinPath"));
-            SqliteNbtHelper.setNullableString(citizenStatement, 15, citizen.hasUUID("CityId") ? citizen.getUUID("CityId").toString() : null);
-            SqliteNbtHelper.setNullableString(citizenStatement, 16, citizen.hasUUID("HomeId") ? citizen.getUUID("HomeId").toString() : null);
-            SqliteNbtHelper.setNullableString(citizenStatement, 17, citizen.hasUUID("WorkplaceId") ? citizen.getUUID("WorkplaceId").toString() : null);
+            citizenStatement.setString(2, citizen.getStringOr("Name", ""));
+            citizenStatement.setString(3, citizen.getStringOr("Gender", ""));
+            citizenStatement.setInt(4, citizen.getIntOr("Age", 0));
+            citizenStatement.setInt(5, citizen.getIntOr("Lifespan", 0));
+            citizenStatement.setString(6, citizen.getStringOr("JobType", ""));
+            citizenStatement.setString(7, citizen.getStringOr("JobId", ""));
+            citizenStatement.setString(8, citizen.getStringOr("Status", ""));
+            citizenStatement.setString(9, citizen.getStringOr("WorkStatus", ""));
+            citizenStatement.setString(10, citizen.getStringOr("WorkNeedDetail", ""));
+            citizenStatement.setString(11, citizen.getStringOr("StatusLabel", ""));
+            citizenStatement.setInt(12, citizen.getBooleanOr("IsWorking", false) ? 1 : 0);
+            citizenStatement.setInt(13, citizen.getIntOr("NpcId", 0));
+            citizenStatement.setString(14, citizen.getStringOr("SkinPath", ""));
+            SqliteNbtHelper.setNullableString(citizenStatement, 15, NbtUuid.toStringOrNull(citizen, "CityId"));
+            SqliteNbtHelper.setNullableString(citizenStatement, 16, NbtUuid.toStringOrNull(citizen, "HomeId"));
+            SqliteNbtHelper.setNullableString(citizenStatement, 17, NbtUuid.toStringOrNull(citizen, "WorkplaceId"));
             if (citizen.contains("WorkplacePos")) {
-                citizenStatement.setLong(18, citizen.getLong("WorkplacePos"));
+                citizenStatement.setLong(18, citizen.getLongOr("WorkplacePos", 0L));
             } else {
                 citizenStatement.setObject(18, null);
             }
-            citizenStatement.setDouble(19, citizen.getDouble("Health"));
-            citizenStatement.setDouble(20, citizen.getDouble("Happiness"));
-            citizenStatement.setInt(21, citizen.getBoolean("Sick") ? 1 : 0);
-            citizenStatement.setInt(22, citizen.getBoolean("Child") ? 1 : 0);
-            citizenStatement.setLong(23, citizen.getLong("ChildGrowthDueDay"));
-            citizenStatement.setLong(24, citizen.getLong("BornDay"));
-            String dimId = citizen.contains("DimensionId") ? citizen.getString("DimensionId") : "minecraft:overworld";
+            citizenStatement.setDouble(19, citizen.getDoubleOr("Health", 0.0D));
+            citizenStatement.setDouble(20, citizen.getDoubleOr("Happiness", 0.0D));
+            citizenStatement.setInt(21, citizen.getBooleanOr("Sick", false) ? 1 : 0);
+            citizenStatement.setInt(22, citizen.getBooleanOr("Child", false) ? 1 : 0);
+            citizenStatement.setLong(23, citizen.getLongOr("ChildGrowthDueDay", 0L));
+            citizenStatement.setLong(24, citizen.getLongOr("BornDay", 0L));
+            String dimId = citizen.contains("DimensionId") ? citizen.getStringOr("DimensionId", "") : "minecraft:overworld";
             citizenStatement.setString(25, dimId.isBlank() ? "minecraft:overworld" : dimId);
-            SqliteNbtHelper.setNullableString(citizenStatement, 26, citizen.hasUUID("FamilyId") ? citizen.getUUID("FamilyId").toString() : null);
-            SqliteNbtHelper.setNullableString(citizenStatement, 27, citizen.hasUUID("OriginFamilyId") ? citizen.getUUID("OriginFamilyId").toString() : null);
-            citizenStatement.setInt(28, citizen.getBoolean("Pregnant") ? 1 : 0);
-            citizenStatement.setLong(29, citizen.getLong("PregnantSince"));
-            citizenStatement.setLong(30, citizen.getLong("LastAgeGrowthDay"));
-            citizenStatement.setString(31, citizen.getString("DiseaseId"));
-            citizenStatement.setLong(32, citizen.getLong("DiseaseSinceDay"));
-            citizenStatement.setLong(33, citizen.getLong("DiseaseTreatmentTicks"));
-            SqliteNbtHelper.setNullableString(citizenStatement, 34, citizen.hasUUID("MedicalBedPoiId") ? citizen.getUUID("MedicalBedPoiId").toString() : null);
-            citizenStatement.setLong(35, citizen.getLong("PostpartumUntilDay"));
-            citizenStatement.setLong(36, citizen.contains("LastHospitalMealDay") ? citizen.getLong("LastHospitalMealDay") : -1L);
+            SqliteNbtHelper.setNullableString(citizenStatement, 26, NbtUuid.toStringOrNull(citizen, "FamilyId"));
+            SqliteNbtHelper.setNullableString(citizenStatement, 27, NbtUuid.toStringOrNull(citizen, "OriginFamilyId"));
+            citizenStatement.setInt(28, citizen.getBooleanOr("Pregnant", false) ? 1 : 0);
+            citizenStatement.setLong(29, citizen.getLongOr("PregnantSince", 0L));
+            citizenStatement.setLong(30, citizen.getLongOr("LastAgeGrowthDay", 0L));
+            citizenStatement.setString(31, citizen.getStringOr("DiseaseId", ""));
+            citizenStatement.setLong(32, citizen.getLongOr("DiseaseSinceDay", 0L));
+            citizenStatement.setLong(33, citizen.getLongOr("DiseaseTreatmentTicks", 0L));
+            SqliteNbtHelper.setNullableString(citizenStatement, 34, NbtUuid.toStringOrNull(citizen, "MedicalBedPoiId"));
+            citizenStatement.setLong(35, citizen.getLongOr("PostpartumUntilDay", 0L));
+            citizenStatement.setLong(36, citizen.contains("LastHospitalMealDay") ? citizen.getLongOr("LastHospitalMealDay", 0L) : -1L);
             SqliteNbtHelper.setNullableString(citizenStatement, 37,
-                    citizen.hasUUID("ReservedBabyBedPoiId") ? citizen.getUUID("ReservedBabyBedPoiId").toString() : null);
+                    NbtUuid.toStringOrNull(citizen, "ReservedBabyBedPoiId"));
             citizenStatement.setLong(38,
-                    citizen.contains("LastHospitalProgressDayTime") ? citizen.getLong("LastHospitalProgressDayTime") : 0L);
+                    citizen.contains("LastHospitalProgressDayTime") ? citizen.getLongOr("LastHospitalProgressDayTime", 0L) : 0L);
             citizenStatement.executeUpdate();
             deleteSkills.setString(1, uuid);
             deleteSkills.executeUpdate();
-            CompoundTag skills = citizen.getCompound("Skills");
-            for (String key : skills.getAllKeys()) {
+            CompoundTag skills = citizen.getCompoundOrEmpty("Skills");
+            for (String key : skills.keySet()) {
                 skillStatement.setString(1, uuid);
                 skillStatement.setString(2, key);
-                skillStatement.setInt(3, skills.getInt(key));
+                skillStatement.setInt(3, skills.getIntOr(key, 0));
                 skillStatement.addBatch();
             }
             skillStatement.executeBatch();

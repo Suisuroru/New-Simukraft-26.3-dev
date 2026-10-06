@@ -2,7 +2,7 @@ package client.cn.kafei.simukraft.client.logistics;
 
 import common.cn.kafei.simukraft.logistics.LogisticsInventoryEntry;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -51,7 +51,7 @@ final class LogisticsItemFilterGrid {
     }
 
     /** render: 绘制物品过滤网格、选中框和悬浮提示。 */
-    void render(GuiGraphics graphics, Font font, int x, int y, int mouseX, int mouseY) {
+    void render(GuiGraphicsExtractor graphics, Font font, int x, int y, int mouseX, int mouseY) {
         graphics.fill(x - 2, y - 2, x + COLS * SLOT + 2, y + ROWS * SLOT + 2, 0xFF10101C);
         int start = scrollRow * COLS;
         for (int row = 0; row < ROWS; row++) {
@@ -65,14 +65,14 @@ final class LogisticsItemFilterGrid {
                 }
                 LogisticsInventoryEntry entry = items.get(index);
                 ItemStack stack = LogisticsItemDisplayName.stackFor(entry.itemId());
-                graphics.renderItem(stack, slotX, slotY);
+                graphics.item(stack, slotX, slotY);
                 drawCount(graphics, font, slotX, slotY, entry.count());
                 if (selectedItemIds.contains(entry.itemId())) {
                     drawSelection(graphics, slotX, slotY);
                 }
             }
         }
-        graphics.drawString(font, Component.translatable("gui.simukraft.logistics.channel.selected_count", selectedItemIds.size()),
+        graphics.text(font, Component.translatable("gui.simukraft.logistics.channel.selected_count", selectedItemIds.size()),
                 x, y + ROWS * SLOT + 4, LogisticsNativeStyle.TEXT, true);
         renderTooltip(graphics, font, x, y, mouseX, mouseY);
     }
@@ -121,13 +121,13 @@ final class LogisticsItemFilterGrid {
     }
 
     /** renderTooltip: 显示物品名称和 ID，便于区分同名物品。 */
-    private void renderTooltip(GuiGraphics graphics, Font font, int x, int y, int mouseX, int mouseY) {
+    private void renderTooltip(GuiGraphicsExtractor graphics, Font font, int x, int y, int mouseX, int mouseY) {
         int index = hoveredIndex(mouseX, mouseY, x, y);
         if (index < 0 || index >= items.size()) {
             return;
         }
         LogisticsInventoryEntry entry = items.get(index);
-        graphics.renderComponentTooltip(font, List.of(
+        graphics.setComponentTooltipForNextFrame(font, List.of(
                 LogisticsItemDisplayName.stackFor(entry.itemId()).getHoverName(),
                 Component.translatable("gui.simukraft.logistics.grid.count", Math.max(1, entry.count())),
                 Component.literal(entry.itemId())
@@ -141,7 +141,7 @@ final class LogisticsItemFilterGrid {
     }
 
     /** drawSelection: 绘制旧版橙色选中边框。 */
-    private static void drawSelection(GuiGraphics graphics, int x, int y) {
+    private static void drawSelection(GuiGraphicsExtractor graphics, int x, int y) {
         graphics.fill(x - 1, y - 1, x + 17, y, 0xFFFF8800);
         graphics.fill(x - 1, y + 16, x + 17, y + 17, 0xFFFF8800);
         graphics.fill(x - 1, y, x, y + 16, 0xFFFF8800);
@@ -149,18 +149,17 @@ final class LogisticsItemFilterGrid {
     }
 
     /** drawCount: 在图标右下角上层绘制小号数量。 */
-    private static void drawCount(GuiGraphics graphics, Font font, int x, int y, int count) {
+    private static void drawCount(GuiGraphicsExtractor graphics, Font font, int x, int y, int count) {
         if (count <= 1) {
             return;
         }
         String text = formatCount(count);
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 200.0F);
-        graphics.pose().scale(COUNT_SCALE, COUNT_SCALE, 1.0F);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(COUNT_SCALE, COUNT_SCALE);
         int textX = Math.round((x + 17 - font.width(text) * COUNT_SCALE) / COUNT_SCALE);
         int textY = Math.round((y + 10) / COUNT_SCALE);
-        graphics.drawString(font, text, textX, textY, LogisticsNativeStyle.TEXT, true);
-        graphics.pose().popPose();
+        graphics.text(font, text, textX, textY, LogisticsNativeStyle.TEXT, true);
+        graphics.pose().popMatrix();
     }
 
     /** formatCount: 将库存数量压缩成过滤格可读的短文本。 */

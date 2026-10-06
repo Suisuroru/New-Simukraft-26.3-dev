@@ -2,6 +2,7 @@ package common.cn.kafei.simukraft.registry;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.block.BankControlBoxBlock;
+import common.cn.kafei.simukraft.block.BuildBoxBlock;
 import common.cn.kafei.simukraft.block.CommercialControlBoxBlock;
 import common.cn.kafei.simukraft.block.CityCoreBlock;
 import common.cn.kafei.simukraft.block.ExchangeControlBoxBlock;
@@ -14,8 +15,6 @@ import common.cn.kafei.simukraft.block.MineralDrillingControlBoxBlock;
 import common.cn.kafei.simukraft.block.MilkLiquidBlock;
 import common.cn.kafei.simukraft.block.IndustrialHousingTrapdoorBlock;
 import common.cn.kafei.simukraft.block.ResidentialControlBoxBlock;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -37,42 +36,53 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 
 public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(SimuKraft.MOD_ID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SimuKraft.MOD_ID);
 
-    public static final DeferredBlock<Block> BLUE_LIGHT_BLOCK = registerBlock("blue_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> BUILD_BOX = registerBlock("build_box", common.cn.kafei.simukraft.block.BuildBoxBlock::new);
-    public static final DeferredBlock<Block> CHEESE_BLOCK = registerBlock("cheese_block", ModBlocks::cheeseBlock);
-    public static final DeferredBlock<Block> CITY_CORE = registerBlock("city_core", CityCoreBlock::new);
-    public static final DeferredBlock<Block> COMMERCIAL_CONTROL_BOX = registerBlock("commercial_control_box", CommercialControlBoxBlock::new);
-    public static final DeferredBlock<Block> GREEN_LIGHT_BLOCK = registerBlock("green_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> INDUSTRIAL_CONTROL_BOX = registerBlock("industrial_control_box", IndustrialControlBoxBlock::new);
-    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING = registerBlock("industrial_housing", ModBlocks::industrialHousing);
-    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_SLAB = registerBlock("industrial_housing_slab", ModBlocks::industrialHousingSlab);
-    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_STAIRS = registerBlock("industrial_housing_stairs", ModBlocks::industrialHousingStairs);
+    public static final DeferredBlock<Block> BLUE_LIGHT_BLOCK = registerLightBlock("blue_light_block");
+    public static final DeferredBlock<Block> BUILD_BOX = registerBlock("build_box", BuildBoxBlock::new, woodBox());
+    public static final DeferredBlock<Block> CHEESE_BLOCK = registerBlock("cheese_block", Block::new, () -> cheeseProperties());
+    public static final DeferredBlock<Block> CITY_CORE = registerBlock("city_core", CityCoreBlock::new,
+            p -> p.mapColor(MapColor.METAL).strength(1.0F).explosionResistance(3600000.0F).sound(SoundType.METAL));
+    public static final DeferredBlock<Block> COMMERCIAL_CONTROL_BOX = registerBlock("commercial_control_box", CommercialControlBoxBlock::new, metalBox(1.0F));
+    public static final DeferredBlock<Block> GREEN_LIGHT_BLOCK = registerLightBlock("green_light_block");
+    public static final DeferredBlock<Block> INDUSTRIAL_CONTROL_BOX = registerBlock("industrial_control_box", IndustrialControlBoxBlock::new, metalBox(0.8F));
+    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING = registerBlock("industrial_housing", Block::new, () -> industrialHousingProperties());
+    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_SLAB = registerBlock("industrial_housing_slab", SlabBlock::new, () -> industrialHousingProperties());
+    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_STAIRS = registerBlock("industrial_housing_stairs",
+            props -> new StairBlock(Blocks.IRON_BLOCK.defaultBlockState(), props), () -> industrialHousingProperties());
     /** INDUSTRIAL_HOUSING_TRAPDOOR: 黄色铁质栈道，仅水平上/下置，不可打开 */
-    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_TRAPDOOR = registerBlock("industrial_housing_trapdoor", ModBlocks::industrialHousingTrapdoor);
-    public static final DeferredBlock<Block> MINERAL_DRILLING_CONTROL_BOX = registerBlock("mineral_drilling_control_box", MineralDrillingControlBoxBlock::new);
-    public static final DeferredBlock<Block> LOGISTICS_CLIENT_BOX = registerBlock("logistics_client_box", LogisticsClientBoxBlock::new);
-    public static final DeferredBlock<Block> LOGISTICS_SERVER_BOX = registerBlock("logistics_server_box", LogisticsServerBoxBlock::new);
-    public static final DeferredBlock<Block> MEDICAL_CONTROL_BOX = registerBlock("medical_control_box", MedicalControlBoxBlock::new);
-    public static final DeferredBlock<Block> BANK_CONTROL_BOX = registerBlock("bank_control_box", BankControlBoxBlock::new);
-    public static final DeferredBlock<Block> EXCHANGE_CONTROL_BOX = registerBlock("exchange_control_box", ExchangeControlBoxBlock::new);
-    public static final DeferredBlock<LiquidBlock> MILK_BLOCK = BLOCKS.register("milk_fluid", ModBlocks::milkBlock);
-    public static final DeferredBlock<Block> NSUK_FARMLAND_BOX = registerBlock("nsuk_farmland_box", FarmlandBoxBlock::new);
-    public static final DeferredBlock<Block> ORANGE_LIGHT_BLOCK = registerBlock("orange_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> OTHER_CONTROL_BOX = registerBlock("other_control_box", ModBlocks::controlBox);
-    public static final DeferredBlock<Block> PURPLE_LIGHT_BLOCK = registerBlock("purple_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> RAINBOW_LIGHT_BLOCK = registerBlock("rainbow_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> RED_LIGHT_BLOCK = registerBlock("red_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> RESIDENTIAL_CONTROL_BOX = registerBlock("residential_control_box", ResidentialControlBoxBlock::new);
-    public static final DeferredBlock<Block> WHITE_LIGHT_BLOCK = registerBlock("white_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> YELLOW_LIGHT_BLOCK = registerBlock("yellow_light_block", ModBlocks::lightBlock);
-    public static final DeferredBlock<Block> METAL_RAILING = registerBlock("metal_railing", ModBlocks::metalRailing);
+    public static final DeferredBlock<Block> INDUSTRIAL_HOUSING_TRAPDOOR = registerBlock("industrial_housing_trapdoor", IndustrialHousingTrapdoorBlock::new,
+            () -> industrialHousingProperties().noOcclusion()
+                    .isViewBlocking((s, b, pos, aabb) -> false)
+                    .isSuffocating((s, b, pos) -> false));
+    public static final DeferredBlock<Block> MINERAL_DRILLING_CONTROL_BOX = registerBlock("mineral_drilling_control_box", MineralDrillingControlBoxBlock::new, metalBox(0.8F));
+    public static final DeferredBlock<Block> LOGISTICS_CLIENT_BOX = registerBlock("logistics_client_box", LogisticsClientBoxBlock::new,
+            p -> p.mapColor(MapColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.METAL));
+    public static final DeferredBlock<Block> LOGISTICS_SERVER_BOX = registerBlock("logistics_server_box", LogisticsServerBoxBlock::new,
+            p -> p.mapColor(MapColor.COLOR_BLUE).strength(1.0F).sound(SoundType.METAL));
+    public static final DeferredBlock<Block> MEDICAL_CONTROL_BOX = registerBlock("medical_control_box", MedicalControlBoxBlock::new, metalBox(1.0F));
+    public static final DeferredBlock<Block> BANK_CONTROL_BOX = registerBlock("bank_control_box", BankControlBoxBlock::new, metalBox(1.0F));
+    public static final DeferredBlock<Block> EXCHANGE_CONTROL_BOX = registerBlock("exchange_control_box", ExchangeControlBoxBlock::new, metalBox(1.0F));
+    public static final DeferredBlock<LiquidBlock> MILK_BLOCK = BLOCKS.registerBlock("milk_fluid",
+            props -> new MilkLiquidBlock(ModFluids.SOURCE_MILK.get(), props), () -> milkProperties());
+    public static final DeferredBlock<Block> NSUK_FARMLAND_BOX = registerBlock("nsuk_farmland_box", FarmlandBoxBlock::new, woodBox());
+    public static final DeferredBlock<Block> ORANGE_LIGHT_BLOCK = registerLightBlock("orange_light_block");
+    public static final DeferredBlock<Block> OTHER_CONTROL_BOX = registerBlock("other_control_box", Block::new, metalBox(0.8F));
+    public static final DeferredBlock<Block> PURPLE_LIGHT_BLOCK = registerLightBlock("purple_light_block");
+    public static final DeferredBlock<Block> RAINBOW_LIGHT_BLOCK = registerLightBlock("rainbow_light_block");
+    public static final DeferredBlock<Block> RED_LIGHT_BLOCK = registerLightBlock("red_light_block");
+    public static final DeferredBlock<Block> RESIDENTIAL_CONTROL_BOX = registerBlock("residential_control_box", ResidentialControlBoxBlock::new, metalBox(1.0F));
+    public static final DeferredBlock<Block> WHITE_LIGHT_BLOCK = registerLightBlock("white_light_block");
+    public static final DeferredBlock<Block> YELLOW_LIGHT_BLOCK = registerLightBlock("yellow_light_block");
+    public static final DeferredBlock<Block> METAL_RAILING = registerBlock("metal_railing", ModBlocks::metalRailing,
+            p -> p.mapColor(MapColor.METAL).requiresCorrectToolForDrops().strength(5.0F, 6.0F).sound(SoundType.METAL).noOcclusion());
 
     private ModBlocks() {
     }
@@ -82,14 +92,30 @@ public final class ModBlocks {
         ITEMS.register(modEventBus);
     }
 
-    private static DeferredBlock<Block> registerBlock(String name, Supplier<Block> blockSupplier) {
-        DeferredBlock<Block> block = BLOCKS.register(name, blockSupplier);
-        ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+    private static DeferredBlock<Block> registerBlock(String name, Function<BlockBehaviour.Properties, Block> factory,
+                                                      UnaryOperator<BlockBehaviour.Properties> properties) {
+        DeferredBlock<Block> block = BLOCKS.registerBlock(name, factory, properties);
+        ITEMS.registerSimpleBlockItem(block);
         return block;
     }
 
-    private static Block controlBox() {
-        return new Block(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.8F).sound(SoundType.METAL));
+    private static DeferredBlock<Block> registerBlock(String name, Function<BlockBehaviour.Properties, Block> factory,
+                                                      Supplier<BlockBehaviour.Properties> properties) {
+        DeferredBlock<Block> block = BLOCKS.registerBlock(name, factory, properties);
+        ITEMS.registerSimpleBlockItem(block);
+        return block;
+    }
+
+    private static DeferredBlock<Block> registerLightBlock(String name) {
+        return registerBlock(name, Block::new, p -> p.mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15));
+    }
+
+    private static UnaryOperator<BlockBehaviour.Properties> metalBox(float strength) {
+        return p -> p.mapColor(MapColor.METAL).strength(strength).sound(SoundType.METAL);
+    }
+
+    private static UnaryOperator<BlockBehaviour.Properties> woodBox() {
+        return p -> p.mapColor(MapColor.WOOD).strength(0.8F).sound(SoundType.WOOD);
     }
 
     /** industrialHousingProperties: 创建工业外壳系列的共用方块属性。 */
@@ -98,46 +124,17 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.ofLegacyCopy(Blocks.IRON_BLOCK);
     }
 
-    // 工业外壳：完全继承铁块参数
-    private static Block industrialHousing() {
-        return new Block(industrialHousingProperties());
-    }
-
-    /** industrialHousingSlab: 创建与工业外壳属性一致的台阶。 */
-    private static Block industrialHousingSlab() {
-        return new SlabBlock(industrialHousingProperties());
-    }
-
-    /** industrialHousingStairs: 创建与工业外壳属性一致的楼梯。 */
-    private static Block industrialHousingStairs() {
-        return new StairBlock(Blocks.IRON_BLOCK.defaultBlockState(), industrialHousingProperties());
-    }
-
-    /** industrialHousingTrapdoor: 黄色铁质栈道，noOcclusion 允许透明孔洞渲染。 */
-    private static Block industrialHousingTrapdoor() {
-        return new IndustrialHousingTrapdoorBlock(
-            industrialHousingProperties()
-                .noOcclusion()
-                .isViewBlocking((s, b, p) -> false)
-                .isSuffocating((s, b, p) -> false)
-        );
-    }
-
-    private static Block lightBlock() {
-        return new Block(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15));
-    }
-
     @SuppressWarnings("deprecation")
-    private static Block cheeseBlock() {
-        return new Block(BlockBehaviour.Properties.ofLegacyCopy(Blocks.SLIME_BLOCK).sound(SoundType.SLIME_BLOCK));
+    private static BlockBehaviour.Properties cheeseProperties() {
+        return BlockBehaviour.Properties.ofLegacyCopy(Blocks.SLIME_BLOCK).sound(SoundType.SLIME_BLOCK);
     }
 
-    private static LiquidBlock milkBlock() {
-        return new MilkLiquidBlock(ModFluids.SOURCE_MILK.get(), BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noLootTable().randomTicks());
+    private static BlockBehaviour.Properties milkProperties() {
+        return BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noLootTable().randomTicks();
     }
 
     /** metalRailing: 金属栏杆，属性与铁块一致，需铁镐采集。水平朝向，碰撞箱跟随朝向旋转。 */
-    private static Block metalRailing() {
+    private static Block metalRailing(BlockBehaviour.Properties properties) {
         // 碰撞形状：与模型的6个element精确对应（单位1/16）
         // 朝向NORTH时的形状（默认，模型z轴薄面朝南北）
         VoxelShape shapeNorth = Shapes.or(
@@ -176,12 +173,7 @@ public final class ModBlocks {
             Shapes.box(15.0 / 16, 9.0 / 16, 4.0 / 16, 16.0 / 16, 10.0 / 16, 12.0 / 16)
         );
 
-        return new Block(BlockBehaviour.Properties.of()
-                .mapColor(MapColor.METAL)
-                .requiresCorrectToolForDrops()
-                .strength(5.0F, 6.0F)
-                .sound(SoundType.METAL)
-                .noOcclusion()) {
+        return new Block(properties) {
             @Override
             protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
                 return switch (state.getValue(BlockStateProperties.HORIZONTAL_FACING)) {
@@ -199,8 +191,14 @@ public final class ModBlocks {
             }
 
             @Override
-            protected VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
-                return getShape(state, level, pos, CollisionContext.empty());
+            protected VoxelShape getOcclusionShape(BlockState state) {
+                return switch (state.getValue(BlockStateProperties.HORIZONTAL_FACING)) {
+                    case NORTH -> shapeNorth;
+                    case EAST -> shapeWest;
+                    case SOUTH -> shapeSouth;
+                    case WEST -> shapeEast;
+                    default -> shapeNorth;
+                };
             }
 
             @Override

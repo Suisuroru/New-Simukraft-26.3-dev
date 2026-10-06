@@ -52,7 +52,7 @@ class CitizenSqliteRepositoryTest {
 
             assertNotNull(loadedRoot);
             CitizenData loaded = CitizenData.fromTag(
-                    loadedRoot.getList("Citizens", CompoundTag.TAG_COMPOUND).getCompound(0));
+                    loadedRoot.getListOrEmpty("Citizens").getCompoundOrEmpty(0));
             assertTrue(loaded.pregnant());
             assertEquals(5L, loaded.pregnantSince());
             assertEquals(babyBedId, loaded.reservedBabyBedPoiId());

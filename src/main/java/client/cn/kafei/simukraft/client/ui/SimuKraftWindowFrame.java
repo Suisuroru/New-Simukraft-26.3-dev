@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.ui;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.Icons;
@@ -13,8 +11,6 @@ import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.network.chat.Component;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class SimuKraftWindowFrame {
     private static final int TITLE_BAR_HEIGHT = 24;
     private static final int CLOSE_BUTTON_SIZE = 18;

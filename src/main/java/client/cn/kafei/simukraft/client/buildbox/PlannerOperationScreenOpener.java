@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.selection.TwoPointSelectionScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
@@ -23,8 +23,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Map;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class PlannerOperationScreenOpener {
     private static final int BUTTON_WIDTH = 150;
     private static final int BUTTON_HEIGHT = 24;
@@ -45,7 +43,7 @@ public final class PlannerOperationScreenOpener {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new ModularUIScreen(createOperationUi(buildBoxPos), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new ModularUIScreen(createOperationUi(buildBoxPos), Component.empty())));
     }
 
     public static void afterAreaSelected(BlockPos buildBoxPos, PlanOperation operation, BlockPos min, BlockPos max) {
@@ -53,7 +51,7 @@ public final class PlannerOperationScreenOpener {
             openRemoveConfirm(buildBoxPos, min, max);
             return;
         }
-        PacketDistributor.sendToServer(new PlannerMaterialScanRequestPacket(buildBoxPos, min, max, operation));
+        ClientPacketDistributor.sendToServer(new PlannerMaterialScanRequestPacket(buildBoxPos, min, max, operation));
         openLoading(buildBoxPos, operation);
     }
 
@@ -80,7 +78,7 @@ public final class PlannerOperationScreenOpener {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new ModularUIScreen(createRemoveConfirmUi(buildBoxPos, min, max), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new ModularUIScreen(createRemoveConfirmUi(buildBoxPos, min, max), Component.empty())));
     }
 
     private static ModularUI createRemoveConfirmUi(BlockPos buildBoxPos, BlockPos min, BlockPos max) {
@@ -96,8 +94,8 @@ public final class PlannerOperationScreenOpener {
 
         UIElement gridRegion = gridRegion(screenSize);
         gridRegion.addChild(actionButton(Component.translatable("gui.simukraft.plan_area.confirm_start"), () -> {
-            PacketDistributor.sendToServer(new CreatePlanningTaskPacket(buildBoxPos, min, max, PlanOperation.REMOVE, "", "", null, Map.of()));
-            Minecraft.getInstance().setScreen(null);
+            ClientPacketDistributor.sendToServer(new CreatePlanningTaskPacket(buildBoxPos, min, max, PlanOperation.REMOVE, "", "", null, Map.of()));
+            Minecraft.getInstance().gui.setScreen(null);
         }, true));
         gridRegion.addChild(actionButton(Component.translatable("gui.button.back"), () -> open(buildBoxPos), true));
         root.addChild(gridRegion);
@@ -109,7 +107,7 @@ public final class PlannerOperationScreenOpener {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new ModularUIScreen(createLoadingUi(buildBoxPos, operation), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new ModularUIScreen(createLoadingUi(buildBoxPos, operation), Component.empty())));
     }
 
     private static ModularUI createLoadingUi(BlockPos buildBoxPos, PlanOperation operation) {

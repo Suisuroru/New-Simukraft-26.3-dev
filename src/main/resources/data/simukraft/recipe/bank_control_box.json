@@ -6,12 +6,8 @@
     "CCC"
   ],
   "key": {
-    "C": {
-      "item": "minecraft:cobblestone"
-    },
-    "G": {
-      "item": "simukraft:gold_coin"
-    }
+    "C": "minecraft:cobblestone",
+    "G": "simukraft:gold_coin"
   },
   "result": {
     "id": "simukraft:bank_control_box",

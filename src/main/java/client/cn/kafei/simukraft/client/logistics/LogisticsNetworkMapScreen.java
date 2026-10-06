@@ -1,28 +1,24 @@
 package client.cn.kafei.simukraft.client.logistics;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.KeyEvent;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegion;
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import common.cn.kafei.simukraft.logistics.LogisticsControlBoxService;
 import common.cn.kafei.simukraft.logistics.LogisticsDirection;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenResponsePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.network.PacketDistributor;
-import org.joml.Matrix4f;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 final class LogisticsNetworkMapScreen extends Screen {
     private static final double MIN_ZOOM = 0.1D;
     private static final double MAX_ZOOM = 10.0D;
@@ -62,7 +56,7 @@ final class LogisticsNetworkMapScreen extends Screen {
     static void open(LogisticsServerBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new LogisticsNetworkMapScreen(packet)));
+            minecraft.execute(() -> minecraft.gui.setScreen(new LogisticsNetworkMapScreen(packet)));
         }
     }
 
@@ -76,12 +70,12 @@ final class LogisticsNetworkMapScreen extends Screen {
 
     /** renderBackground: 地图已自行绘制全屏底色，禁用原版菜单模糊背景。 */
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
     }
 
     /** render: 绘制全屏地图、路线、节点、侧边栏和按钮。 */
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, this.width, this.height, 0xFF0A0A0A);
         int mapWidth = mapWidth();
         updateHover(mouseX, mouseY, mapWidth);
@@ -91,20 +85,23 @@ final class LogisticsNetworkMapScreen extends Screen {
         if (selectedClientId != null) {
             renderSidePanel(graphics, mapWidth);
         }
-        graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.server.tab.map").getString()
+        graphics.text(this.font, Component.translatable("gui.simukraft.logistics.server.tab.map").getString()
                 + " - " + LogisticsNativeStyle.posText(packet.boxPos()), 5, 5, LogisticsNativeStyle.TEXT);
-        graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.transfer_cost_hint"), 5, 18, LogisticsNativeStyle.TEXT_DIM);
+        graphics.text(this.font, Component.translatable("gui.simukraft.logistics.transfer_cost_hint"), 5, 18, LogisticsNativeStyle.TEXT_DIM);
         LogisticsNativeStyle.drawFitString(graphics, this.font, Component.translatable("gui.simukraft.logistics.map.quick_status",
                 endpointLabel(quickReceiver), endpointLabel(quickSender)), 5, 31, mapWidth - 10, LogisticsNativeStyle.TEXT_WARN);
-        graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.map.hint"), 5, this.height - 12, LogisticsNativeStyle.TEXT_MUTED);
+        graphics.text(this.font, Component.translatable("gui.simukraft.logistics.map.hint"), 5, this.height - 12, LogisticsNativeStyle.TEXT_MUTED);
         renderHoverTooltip(graphics, mouseX, mouseY);
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     /** mouseClicked: 左键选接收端，右键选发送端，空白处拖拽地图。 */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (super.mouseClicked(event, doubleClick)) {
             return true;
         }
         if (button == 0 || button == 1) {
@@ -138,7 +135,10 @@ final class LogisticsNetworkMapScreen extends Screen {
 
     /** mouseDragged: 拖拽平移地图。 */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (dragging && button == 0) {
             offsetX += mouseX - lastMouseX;
             offsetY += mouseY - lastMouseY;
@@ -146,16 +146,19 @@ final class LogisticsNetworkMapScreen extends Screen {
             lastMouseY = mouseY;
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     /** mouseReleased: 停止地图拖拽。 */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             dragging = false;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     /** mouseScrolled: 以鼠标为中心缩放地图。 */
@@ -174,7 +177,10 @@ final class LogisticsNetworkMapScreen extends Screen {
 
     /** keyPressed: ESC 优先关闭侧边栏，再返回主界面。 */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.keycode();
+        int modifiers = event.modifiers();
         if (keyCode == 256 && (quickReceiver != null || quickSender != null)) {
             quickReceiver = null;
             quickSender = null;
@@ -186,7 +192,7 @@ final class LogisticsNetworkMapScreen extends Screen {
             rebuildButtons();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     /** removed: 释放 SimuMap 消费者，避免地图纹理长期占用。 */
@@ -245,15 +251,15 @@ final class LogisticsNetworkMapScreen extends Screen {
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player != null) {
-            int chunkX = minecraft.player.chunkPosition().x;
-            int chunkZ = minecraft.player.chunkPosition().z;
+            int chunkX = minecraft.player.chunkPosition().x();
+            int chunkZ = minecraft.player.chunkPosition().z();
             mapManager.forceScanArea(chunkX, chunkZ, Math.min(12, mapManager.getEffectiveScanRadius()));
             mapManager.forceRenderAll();
         }
     }
 
     /** renderTerrain: 绘制 SimuMap 地形纹理。 */
-    private void renderTerrain(GuiGraphics graphics, int startX, int startY, int width, int height) {
+    private void renderTerrain(GuiGraphicsExtractor graphics, int startX, int startY, int width, int height) {
         graphics.fill(startX, startY, startX + width, startY + height, 0xFF1A2028);
         if (!SimuMapManager.isAvailable()) {
             return;
@@ -264,8 +270,8 @@ final class LogisticsNetworkMapScreen extends Screen {
             if (!region.isImageLoaded() && !region.hasData()) {
                 continue;
             }
-            int textureId = region.getTextureId();
-            if (textureId == -1) {
+            Identifier textureLocation = region.getTextureLocation();
+            if (textureLocation == null) {
                 continue;
             }
             double screenX = centerX + offsetX + region.regionX * 512.0D * zoomLevel;
@@ -274,31 +280,21 @@ final class LogisticsNetworkMapScreen extends Screen {
             if (screenX + regionSize < startX || screenX > startX + width || screenY + regionSize < startY || screenY > startY + height) {
                 continue;
             }
-            drawRegionTexture(graphics, textureId, screenX, screenY, regionSize);
+            drawRegionTexture(graphics, textureLocation, screenX, screenY, regionSize);
         }
     }
 
     /** drawRegionTexture: 把地图区域纹理绘制到屏幕坐标。 */
-    private void drawRegionTexture(GuiGraphics graphics, int textureId, double screenX, double screenY, double regionSize) {
-        RenderSystem.setShaderTexture(0, textureId);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.enableBlend();
-        Matrix4f matrix = graphics.pose().last().pose();
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        float x0 = Math.round((float) screenX);
-        float y0 = Math.round((float) screenY);
-        float x1 = Math.round((float) (screenX + regionSize));
-        float y1 = Math.round((float) (screenY + regionSize));
-        buffer.addVertex(matrix, x0, y1, 0).setUv(0, 1);
-        buffer.addVertex(matrix, x1, y1, 0).setUv(1, 1);
-        buffer.addVertex(matrix, x1, y0, 0).setUv(1, 0);
-        buffer.addVertex(matrix, x0, y0, 0).setUv(0, 0);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        RenderSystem.disableBlend();
+    private void drawRegionTexture(GuiGraphicsExtractor graphics, Identifier textureLocation, double screenX, double screenY, double regionSize) {
+        int x0 = Math.round((float) screenX);
+        int y0 = Math.round((float) screenY);
+        int x1 = Math.round((float) (screenX + regionSize));
+        int y1 = Math.round((float) (screenY + regionSize));
+        graphics.blit(textureLocation, x0, y0, x1, y1, 0.0F, 1.0F, 0.0F, 1.0F);
     }
 
     /** renderChannelLines: 画直线路径和流向动效，双向时同一条线两端各一枚箭头。 */
-    private void renderChannelLines(GuiGraphics graphics, int mapWidth) {
+    private void renderChannelLines(GuiGraphicsExtractor graphics, int mapWidth) {
         int centerX = mapWidth / 2;
         int centerY = this.height / 2;
         int[] warehouse = worldToScreen(packet.boxPos(), centerX, centerY);
@@ -331,7 +327,7 @@ final class LogisticsNetworkMapScreen extends Screen {
     }
 
     /** renderMarkers: 绘制仓库仓房图标和客户端菱形节点。 */
-    private void renderMarkers(GuiGraphics graphics, int mapWidth) {
+    private void renderMarkers(GuiGraphicsExtractor graphics, int mapWidth) {
         int centerX = mapWidth / 2;
         int centerY = this.height / 2;
         int[] warehouse = worldToScreen(packet.boxPos(), centerX, centerY);
@@ -349,26 +345,26 @@ final class LogisticsNetworkMapScreen extends Screen {
     }
 
     /** renderSidePanel: 绘制选中客户端的旧版侧边信息面板。 */
-    private void renderSidePanel(GuiGraphics graphics, int x) {
+    private void renderSidePanel(GuiGraphicsExtractor graphics, int x) {
         int panelWidth = 180;
         LogisticsNativeStyle.drawPanel(graphics, x, 0, panelWidth, this.height);
         LogisticsControlBoxService.ClientEntry selected = client(selectedClientId);
         int y = 8;
         if (selected != null) {
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.map.marker.client", selected.name()), x + 6, y, LogisticsNativeStyle.TEXT);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.map.marker.client", selected.name()), x + 6, y, LogisticsNativeStyle.TEXT);
             y += 13;
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.map.marker.ports", selected.portCount()), x + 6, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.map.marker.ports", selected.portCount()), x + 6, y, LogisticsNativeStyle.TEXT_DIM);
             y += 12;
-            graphics.drawString(this.font, LogisticsNativeStyle.posText(selected.boxPos()), x + 6, y, LogisticsNativeStyle.TEXT_DIM);
+            graphics.text(this.font, LogisticsNativeStyle.posText(selected.boxPos()), x + 6, y, LogisticsNativeStyle.TEXT_DIM);
         }
         y += 18;
         graphics.fill(x + 5, y, x + panelWidth - 5, y + 1, LogisticsNativeStyle.PANEL_LINE);
         y += 10;
-        graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.routes"), x + 6, y, LogisticsNativeStyle.TEXT_WARN);
+        graphics.text(this.font, Component.translatable("gui.simukraft.logistics.routes"), x + 6, y, LogisticsNativeStyle.TEXT_WARN);
         y += 16;
         List<LogisticsControlBoxService.ChannelEntry> channels = selectedChannels();
         if (channels.isEmpty()) {
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.empty"), x + 6, y, LogisticsNativeStyle.TEXT_MUTED);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.empty"), x + 6, y, LogisticsNativeStyle.TEXT_MUTED);
             return;
         }
         for (LogisticsControlBoxService.ChannelEntry channel : channels) {
@@ -384,12 +380,12 @@ final class LogisticsNetworkMapScreen extends Screen {
     }
 
     /** renderHoverTooltip: 显示端点或鼠标附近路线的悬浮框。 */
-    private void renderHoverTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderHoverTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         List<Component> lines = hoverTooltipLines();
         if (lines.isEmpty()) {
             return;
         }
-        graphics.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+        graphics.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
     }
 
     /** hoverTooltipLines: 组装端点信息和附近路线文本。 */
@@ -640,7 +636,7 @@ final class LogisticsNetworkMapScreen extends Screen {
 
     /** sendChannelAction: 发送启停或删除频道请求。 */
     private void sendChannelAction(LogisticsBoxActionPacket.Action action, UUID channelId) {
-        PacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, "", LogisticsDirection.WAREHOUSE_TO_CLIENT));
+        ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(), action, null, channelId, BlockPos.ZERO, "", LogisticsDirection.WAREHOUSE_TO_CLIENT));
         selectedClientId = null;
     }
 

@@ -59,16 +59,16 @@ public record CityChunkBatchReleasePacket(BlockPos pos, List<ChunkEntry> chunks)
         if (!(context.player() instanceof ServerPlayer player)) {
             return;
         }
-        ServerLevel serverLevel = player.serverLevel();
+        ServerLevel serverLevel = player.level();
         if (!CityCoreAccessValidator.canAccess(serverLevel, player, packet.pos())) {
             return;
         }
         CityService.findCityByCorePos(serverLevel, packet.pos()).ifPresent(city -> {
             CityChunkManager chunkManager = CityChunkManager.get(serverLevel);
-            long coreChunkLong = ChunkPos.asLong(packet.pos().getX() >> 4, packet.pos().getZ() >> 4);
+            long coreChunkLong = ChunkPos.pack(packet.pos().getX() >> 4, packet.pos().getZ() >> 4);
             int released = 0;
             for (ChunkEntry chunk : packet.chunks()) {
-                long chunkLong = ChunkPos.asLong(chunk.chunkX(), chunk.chunkZ());
+                long chunkLong = ChunkPos.pack(chunk.chunkX(), chunk.chunkZ());
                 if (chunkLong == coreChunkLong) continue;
                 if (chunkManager.unclaimChunk(city.cityId(), chunkLong)) {
                     released++;

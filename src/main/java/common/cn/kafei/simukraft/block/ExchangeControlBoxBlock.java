@@ -23,8 +23,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 /** ExchangeControlBoxBlock: 交易所控制箱，打开股市界面。 */
 public final class ExchangeControlBoxBlock extends Block {
-    public ExchangeControlBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL));
+    public ExchangeControlBoxBlock(Properties properties) {
+        super(properties);
         registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
 

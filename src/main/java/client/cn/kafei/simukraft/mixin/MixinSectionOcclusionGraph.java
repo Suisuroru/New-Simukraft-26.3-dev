@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SectionOcclusionGraph.class)
 public class MixinSectionOcclusionGraph {
     /** simukraft$forceFrustumUpdate: 让独立 RTS 相机的可见区段跟随相机位置刷新。 */
-    @Inject(method = "consumeFrustumUpdate", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "consumeFrustumUpdate", at = @At("HEAD"), cancellable = true, require = 0)
     private void simukraft$forceFrustumUpdate(CallbackInfoReturnable<Boolean> callbackInfo) {
         if (FreeCameraManager.isRtsActive()) {
             callbackInfo.setReturnValue(true);

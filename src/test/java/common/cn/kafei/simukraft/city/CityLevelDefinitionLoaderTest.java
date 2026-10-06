@@ -1,5 +1,7 @@
 package common.cn.kafei.simukraft.city;
 
+import common.cn.kafei.simukraft.util.NbtUuid;
+
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -168,7 +170,7 @@ class CityLevelDefinitionLoaderTest {
         assertEquals(1, city.cityLevel());
 
         CompoundTag legacy = new CompoundTag();
-        legacy.putUUID("CityId", UUID.randomUUID());
+        NbtUuid.put(legacy, "CityId", UUID.randomUUID());
         legacy.putString("CityName", "Legacy");
         legacy.putInt("CityLevel", 0);
         CityData loaded = CityData.fromTag(legacy);
@@ -184,7 +186,7 @@ class CityLevelDefinitionLoaderTest {
         assertEquals(CityLevelDefinition.MAX_LEVEL, city.cityLevel());
 
         CompoundTag corrupted = new CompoundTag();
-        corrupted.putUUID("CityId", UUID.randomUUID());
+        NbtUuid.put(corrupted, "CityId", UUID.randomUUID());
         corrupted.putString("CityName", "Corrupted");
         corrupted.putInt("CityLevel", Integer.MAX_VALUE);
         CityData loaded = CityData.fromTag(corrupted);

@@ -10,8 +10,10 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemUtil;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import javax.annotation.Nullable;
 
@@ -167,12 +169,12 @@ public final class GenericSlotAccess {
 
     @Nullable
     private static ItemHandlerAccess resolveItemHandler(ServerLevel level, BlockPos pos) {
-        IItemHandler unsided = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        ResourceHandler<ItemResource> unsided = level.getCapability(Capabilities.Item.BLOCK, pos, null);
         if (hasSlots(unsided)) {
             return new ItemHandlerAccess(unsided);
         }
         for (Direction side : Direction.values()) {
-            IItemHandler sided = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
+            ResourceHandler<ItemResource> sided = level.getCapability(Capabilities.Item.BLOCK, pos, side);
             if (hasSlots(sided)) {
                 return new ItemHandlerAccess(sided);
             }
@@ -180,8 +182,8 @@ public final class GenericSlotAccess {
         return null;
     }
 
-    private static boolean hasSlots(@Nullable IItemHandler handler) {
-        return handler != null && handler.getSlots() > 0;
+    private static boolean hasSlots(@Nullable ResourceHandler<ItemResource> handler) {
+        return handler != null && handler.size() > 0;
     }
 
     private interface SlotTarget {
@@ -303,32 +305,25 @@ public final class GenericSlotAccess {
         }
     }
 
-    private record ItemHandlerSlotTarget(IItemHandler handler) implements SlotTarget {
+    private record ItemHandlerSlotTarget(ResourceHandler<ItemResource> handler) implements SlotTarget {
         @Override
         public int slotCount() {
-            return handler.getSlots();
+            return handler.size();
         }
 
         @Override
         public boolean validSlot(int slot) {
-            return slot >= 0 && slot < handler.getSlots();
+            return slot >= 0 && slot < handler.size();
         }
 
         @Override
         public ItemStack stackAt(int slot) {
-            return handler.getStackInSlot(slot).copy();
+            return ItemUtil.getStack(handler, slot);
         }
 
         @Override
         public boolean canPlace(int slot, ItemStack stack) {
-            if (!validSlot(slot) || stack == null || stack.isEmpty() || !handler.isItemValid(slot, stack)) {
-                return false;
-            }
-            if (handler instanceof IItemHandlerModifiable) {
-                return true;
-            }
-            ItemStack current = handler.getStackInSlot(slot);
-            return current.isEmpty() || ItemStack.isSameItemSameComponents(current, stack);
+            return validSlot(slot) && stack != null && !stack.isEmpty() && handler.isValid(slot, ItemResource.of(stack));
         }
 
         @Override
@@ -336,23 +331,35 @@ public final class GenericSlotAccess {
             if (!validSlot(slot)) {
                 return 0;
             }
-            int baseLimit = handler.getSlotLimit(slot);
+            ItemResource resource = stack == null || stack.isEmpty() ? ItemResource.EMPTY : ItemResource.of(stack);
+            int baseLimit = handler.getCapacityAsInt(slot, resource);
             return stack == null || stack.isEmpty() ? baseLimit : Math.min(baseLimit, stack.getMaxStackSize());
         }
 
         @Override
         public int countInsertable(int slot, ItemStack stack) {
-            return stack.getCount() - handler.insertItem(slot, stack.copy(), true).getCount();
+            return stack.getCount() - ItemUtil.insertItemReturnRemaining(handler, slot, stack, true, null).getCount();
         }
 
         @Override
         public ItemStack insert(int slot, ItemStack stack) {
-            return handler.insertItem(slot, stack.copy(), false);
+            return ItemUtil.insertItemReturnRemaining(handler, slot, stack, false, null);
         }
 
         @Override
         public ItemStack extract(int slot, int amount) {
-            return validSlot(slot) && amount > 0 ? handler.extractItem(slot, amount, false) : ItemStack.EMPTY;
+            if (!validSlot(slot) || amount <= 0) {
+                return ItemStack.EMPTY;
+            }
+            ItemResource resource = handler.getResource(slot);
+            if (resource.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+            try (Transaction transaction = Transaction.openRoot()) {
+                int extracted = handler.extract(slot, resource, amount, transaction);
+                transaction.commit();
+                return extracted <= 0 ? ItemStack.EMPTY : resource.toStack(extracted);
+            }
         }
 
         @Override
@@ -360,37 +367,23 @@ public final class GenericSlotAccess {
             if (!validSlot(slot)) {
                 return;
             }
-            if (handler instanceof IItemHandlerModifiable modifiable) {
-                modifiable.setStackInSlot(slot, stack);
-                return;
-            }
-            setStackWithoutDirectAccess(slot, stack);
-        }
-
-        private void setStackWithoutDirectAccess(int slot, ItemStack stack) {
-            ItemStack current = handler.getStackInSlot(slot).copy();
+            ItemStack current = ItemUtil.getStack(handler, slot);
             if (ItemStack.matches(current, stack)) {
                 return;
             }
-            if (stack.isEmpty()) {
-                extract(slot, current.getCount());
-                return;
-            }
-            if (current.isEmpty()) {
-                handler.insertItem(slot, stack.copy(), false);
-                return;
-            }
-            if (ItemStack.isSameItemSameComponents(current, stack)) {
-                int delta = stack.getCount() - current.getCount();
-                if (delta > 0) {
-                    handler.insertItem(slot, stack.copyWithCount(delta), false);
-                } else if (delta < 0) {
-                    extract(slot, -delta);
+            try (Transaction transaction = Transaction.openRoot()) {
+                ItemResource currentResource = handler.getResource(slot);
+                if (!currentResource.isEmpty()) {
+                    handler.extract(slot, currentResource, handler.getAmountAsInt(slot), transaction);
                 }
+                if (stack != null && !stack.isEmpty()) {
+                    handler.insert(slot, ItemResource.of(stack), stack.getCount(), transaction);
+                }
+                transaction.commit();
             }
         }
     }
 
-    private record ItemHandlerAccess(IItemHandler handler) {
+    private record ItemHandlerAccess(ResourceHandler<ItemResource> handler) {
     }
 }

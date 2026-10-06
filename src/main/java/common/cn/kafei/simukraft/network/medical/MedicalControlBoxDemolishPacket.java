@@ -20,6 +20,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 
@@ -61,7 +62,7 @@ public record MedicalControlBoxDemolishPacket(BlockPos pos) implements CustomPac
             return;
         }
         // 鉴权：OP 或城市官员及以上权限
-        if (!player.hasPermissions(2)) {
+        if (!player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             if (building.cityId() == null) {
                 InfoToastService.warning(player, Component.translatable("message.simukraft.no_permission"));
                 return;

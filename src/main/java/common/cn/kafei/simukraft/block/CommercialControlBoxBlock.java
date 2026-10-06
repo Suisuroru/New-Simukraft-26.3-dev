@@ -17,8 +17,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 
 public final class CommercialControlBoxBlock extends Block {
-    public CommercialControlBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL));
+    public CommercialControlBoxBlock(Properties properties) {
+        super(properties);
     }
 
     @Override

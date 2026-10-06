@@ -1,5 +1,9 @@
 package client.cn.kafei.simukraft.client.logistics;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.toast.ClientInfoToast;
 import common.cn.kafei.simukraft.logistics.LogisticsControlBoxService;
 import common.cn.kafei.simukraft.logistics.LogisticsDirection;
@@ -7,20 +11,16 @@ import common.cn.kafei.simukraft.logistics.LogisticsInventoryEntry;
 import common.cn.kafei.simukraft.network.logistics.LogisticsBoxActionPacket;
 import common.cn.kafei.simukraft.network.logistics.LogisticsServerBoxOpenResponsePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.UUID;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class LogisticsChannelCreateScreenOpener {
     private LogisticsChannelCreateScreenOpener() {
     }
@@ -34,7 +34,7 @@ public final class LogisticsChannelCreateScreenOpener {
     public static void open(LogisticsServerBoxOpenResponsePacket packet, UUID preselectedClientId, LogisticsDirection direction) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new LogisticsChannelCreateScreen(packet, preselectedClientId, direction)));
+            minecraft.execute(() -> minecraft.gui.setScreen(new LogisticsChannelCreateScreen(packet, preselectedClientId, direction)));
         }
     }
 
@@ -67,36 +67,38 @@ public final class LogisticsChannelCreateScreenOpener {
 
         /** renderBackground: 绘制旧版半透明背景。 */
         @Override
-        public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             LogisticsNativeStyle.drawBackdrop(graphics, this.width, this.height);
         }
 
         /** render: 绘制创建线路表单和物品过滤网格。 */
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            renderBackground(graphics, mouseX, mouseY, partialTick);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             Layout layout = layout();
             LogisticsNativeStyle.drawPanel(graphics, layout.x(), layout.y(), layout.width(), layout.height());
-            graphics.drawCenteredString(this.font, this.title, layout.x() + layout.width() / 2, layout.y() + 10, LogisticsNativeStyle.TEXT);
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.client"), layout.x() + 10, layout.y() + 34, LogisticsNativeStyle.TEXT_WARN);
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.name"), layout.x() + 176, layout.y() + 34, LogisticsNativeStyle.TEXT_WARN);
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.direction"), layout.x() + 176, layout.y() + 76, LogisticsNativeStyle.TEXT_WARN);
-            graphics.drawString(this.font, Component.translatable("gui.simukraft.logistics.channel.items"), layout.x() + 176, layout.y() + 116, LogisticsNativeStyle.TEXT_WARN);
+            graphics.centeredText(this.font, this.title, layout.x() + layout.width() / 2, layout.y() + 10, LogisticsNativeStyle.TEXT);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.client"), layout.x() + 10, layout.y() + 34, LogisticsNativeStyle.TEXT_WARN);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.name"), layout.x() + 176, layout.y() + 34, LogisticsNativeStyle.TEXT_WARN);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.direction"), layout.x() + 176, layout.y() + 76, LogisticsNativeStyle.TEXT_WARN);
+            graphics.text(this.font, Component.translatable("gui.simukraft.logistics.channel.items"), layout.x() + 176, layout.y() + 116, LogisticsNativeStyle.TEXT_WARN);
             renderSelectedClientHint(graphics, layout.x() + 10, layout.y() + 206);
             renderClientScrollbar(graphics, layout);
             itemGrid.render(graphics, this.font, layout.gridX(), layout.gridY(), mouseX, mouseY);
-            super.render(graphics, mouseX, mouseY, partialTick);
+            super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         }
 
         /** mouseClicked: 优先处理过滤网格点击。 */
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
             Layout layout = layout();
             if (itemGrid.mouseClicked(mouseX, mouseY, button, layout.gridX(), layout.gridY())) {
                 autoFillNameIfUntouched();
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, doubleClick);
         }
 
         /** mouseScrolled: 处理客户端列表和过滤网格滚动。 */
@@ -185,7 +187,7 @@ public final class LogisticsChannelCreateScreenOpener {
         }
 
         /** renderSelectedClientHint: 绘制当前选择的客户端提示。 */
-        private void renderSelectedClientHint(GuiGraphics graphics, int x, int y) {
+        private void renderSelectedClientHint(GuiGraphicsExtractor graphics, int x, int y) {
             LogisticsControlBoxService.ClientEntry client = selectedClient();
             Component text = client == null
                     ? Component.translatable("gui.simukraft.logistics.channel.need_client")
@@ -194,7 +196,7 @@ public final class LogisticsChannelCreateScreenOpener {
         }
 
         /** renderClientScrollbar: 当客户端列表超出可见区时绘制滚动条。 */
-        private void renderClientScrollbar(GuiGraphics graphics, Layout layout) {
+        private void renderClientScrollbar(GuiGraphicsExtractor graphics, Layout layout) {
             int total = packet.clients().size();
             if (total <= CLIENT_LIST_VISIBLE) return;
             int sbX = layout.x() + 163;
@@ -222,7 +224,7 @@ public final class LogisticsChannelCreateScreenOpener {
             if (canAutoReplaceName(name)) {
                 name = suggestedChannelName();
             }
-            PacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(),
+            ClientPacketDistributor.sendToServer(new LogisticsBoxActionPacket(packet.boxPos(),
                     LogisticsBoxActionPacket.Action.ADD_CHANNEL,
                     selectedClientId,
                     null,
@@ -232,7 +234,7 @@ public final class LogisticsChannelCreateScreenOpener {
                     BlockPos.ZERO,
                     BlockPos.ZERO,
                     filters));
-            Minecraft.getInstance().setScreen(null);
+            Minecraft.getInstance().gui.setScreen(null);
         }
 
         /** selectedClient: 返回当前选中的客户端数据。 */

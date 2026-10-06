@@ -19,7 +19,7 @@
     "craft_manifest": {
       "trigger": "minecraft:recipe_crafted",
       "conditions": {
-        "recipe_id": "simukraft:manifest"
+        "recipes": "simukraft:manifest"
       }
     }
   },

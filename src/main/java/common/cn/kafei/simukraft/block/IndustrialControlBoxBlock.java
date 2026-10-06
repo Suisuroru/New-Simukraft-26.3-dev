@@ -17,8 +17,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 
 public final class IndustrialControlBoxBlock extends Block {
-    public IndustrialControlBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.8F).sound(SoundType.METAL));
+    public IndustrialControlBoxBlock(Properties properties) {
+        super(properties);
     }
 
     @Override

@@ -3,8 +3,6 @@ package client.cn.kafei.simukraft.mixin.xaero;
 import client.cn.kafei.simukraft.client.compat.xaero.XaeroWorldMapIntegration;
 import common.cn.kafei.simukraft.SimuKraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 @Pseudo
-@OnlyIn(Dist.CLIENT)
 @Mixin(value = WorldMapSession.class, remap = false)
 public abstract class MixinWorldMapSession {
     @Shadow

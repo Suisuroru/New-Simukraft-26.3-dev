@@ -34,7 +34,7 @@ public final class CityRuntimeService {
     private static final int MAX_PENDING_RECOVERIES_PER_CITY = 8;
     private static final int MAX_LEGACY_RECOVERY_CITY_CHUNKS = 32;
     private static final int RECOVERY_TICKET_DISTANCE = 2;
-    private static final TicketType CITIZEN_RECOVERY_TICKET = ModTicketTypes.CITIZEN_RECOVERY.value();
+    private static final TicketType CITIZEN_RECOVERY_TICKET = ModTicketTypes.CITIZEN_RECOVERY.get();
     private static final ConcurrentMap<String, LevelRuntime> RUNTIMES = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, AtomicInteger> RECOVERY_TICKET_REFS = new ConcurrentHashMap<>();
 

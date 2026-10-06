@@ -1,12 +1,8 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {
-      "item": "minecraft:iron_ingot"
-    },
-    {
-      "item": "minecraft:paper"
-    }
+    "minecraft:iron_ingot",
+    "minecraft:paper"
   ],
   "result": {
     "id": "simukraft:manifest",

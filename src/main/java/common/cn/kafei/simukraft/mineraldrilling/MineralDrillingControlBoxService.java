@@ -17,6 +17,7 @@ import common.cn.kafei.simukraft.virtualvein.VirtualVeinService;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlot;
 import common.cn.kafei.simukraft.virtualvein.VirtualVeinSlotState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,8 +41,8 @@ public final class MineralDrillingControlBoxService {
     /** buildView: 生成供菜单绑定使用的有限不可变快照。 */
     public static MineralDrillingControlBoxView buildView(ServerLevel level, BlockPos boxPos) {
         MineralDrillingBoxData data = MineralDrillingBoxManager.get(level).getOrCreate(boxPos);
-        int minDepth = level.getMinBuildHeight();
-        int maxDepth = Math.max(minDepth, Math.min(boxPos.getY(), level.getMaxBuildHeight() - 1));
+        int minDepth = level.getMinY();
+        int maxDepth = Math.max(minDepth, Math.min(boxPos.getY(), level.getMaxY() + 1 - 1));
         int drillDepth = Math.clamp(data.drillDepth(), minDepth, maxDepth);
         if (drillDepth != data.drillDepth()) {
             data.setDrillDepth(drillDepth);
@@ -94,8 +95,8 @@ public final class MineralDrillingControlBoxService {
         if (!isControlBox(level, boxPos)) {
             return false;
         }
-        int minDepth = level.getMinBuildHeight();
-        int maxDepth = Math.max(minDepth, Math.min(boxPos.getY(), level.getMaxBuildHeight() - 1));
+        int minDepth = level.getMinY();
+        int maxDepth = Math.max(minDepth, Math.min(boxPos.getY(), level.getMaxY() + 1 - 1));
         int depth = Math.clamp(requestedDepth, minDepth, maxDepth);
         MineralDrillingBoxManager manager = MineralDrillingBoxManager.get(level);
         MineralDrillingBoxData data = manager.getOrCreate(boxPos);
@@ -229,7 +230,7 @@ public final class MineralDrillingControlBoxService {
     public static boolean fireWorker(
             ServerLevel level, ServerPlayer player, BlockPos boxPos, UUID expectedWorkerId) {
         if (!isControlBox(level, boxPos) || player == null || expectedWorkerId == null
-                || player.distanceToSqr(boxPos.getCenter()) > 64.0D) {
+                || player.distanceToSqr(Vec3.atCenterOf(boxPos)) > 64.0D) {
             return false;
         }
         PlacedBuildingRecord building = resolveBuilding(level, boxPos);

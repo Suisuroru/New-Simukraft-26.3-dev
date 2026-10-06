@@ -2,18 +2,15 @@ package client.cn.kafei.simukraft.client.geology;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.Util;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.util.Util;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import java.util.List;
 
 /** GeologicalSurveyHintOverlay: 在准星右下方绘制地质锤短提示。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class GeologicalSurveyHintOverlay {
     private static final long DISPLAY_MILLIS = 2_000L;
     private static final int MAX_TEXT_WIDTH = 180;
@@ -46,7 +43,7 @@ public final class GeologicalSurveyHintOverlay {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.screen != null || minecraft.gui.getDebugOverlay().showDebugScreen()) {
+        if (minecraft.player == null || minecraft.gui.screen() != null || minecraft.getDebugOverlay().showDebugScreen()) {
             return;
         }
 
@@ -56,7 +53,7 @@ public final class GeologicalSurveyHintOverlay {
             return;
         }
 
-        GuiGraphics graphics = event.getGuiGraphics();
+        GuiGraphicsExtractor graphics = event.getGuiGraphics();
         int maxLineWidth = lines.stream().mapToInt(font::width).max().orElse(0);
         int boxWidth = maxLineWidth + PADDING * 2;
         int boxHeight = lines.size() * font.lineHeight + PADDING * 2;
@@ -69,7 +66,7 @@ public final class GeologicalSurveyHintOverlay {
 
         graphics.fill(x, y, x + boxWidth, y + boxHeight, BACKGROUND_COLOR);
         for (int line = 0; line < lines.size(); line++) {
-            graphics.drawString(font, lines.get(line), x + PADDING, y + PADDING + line * font.lineHeight, TEXT_COLOR, false);
+            graphics.text(font, lines.get(line), x + PADDING, y + PADDING + line * font.lineHeight, TEXT_COLOR, false);
         }
     }
 

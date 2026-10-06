@@ -6,19 +6,16 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /** ClientInfoToast: 独立管理并绘制 SimuKraft 客户端通知。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class ClientInfoToast {
     private static final int SLOT_HEIGHT = 32;
     private static final int MAX_VISIBLE_SLOTS = 5;
@@ -74,7 +71,7 @@ public final class ClientInfoToast {
     }
 
     /** render: 在独立 HUD 图层中绘制通知队列。 */
-    public static void render(GuiGraphics graphics) {
+    public static void render(GuiGraphicsExtractor graphics) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.font == null) {
             return;
@@ -106,7 +103,7 @@ public final class ClientInfoToast {
     }
 
     /** renderPreview: 在编辑器中绘制与实际通知相同的预览内容。 */
-    public static void renderPreview(GuiGraphics graphics, Font font, int x, int y, int width, int height) {
+    public static void renderPreview(GuiGraphicsExtractor graphics, Font font, int x, int y, int width, int height) {
         ClientToastLayout layout = ClientToastLayout.create(
                 font,
                 Component.translatable("gui.toast_editor.preview_title"),

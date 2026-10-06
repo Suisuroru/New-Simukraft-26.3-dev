@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.bank;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
@@ -26,12 +28,9 @@ import dev.vfyjxf.taffy.style.FlexWrap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** BankControlBoxScreenOpener: 银行存取转账界面，Ore 主题并按 GUI 缩放收缩。 */
-@OnlyIn(Dist.CLIENT)
 public final class BankControlBoxScreenOpener {
     private static final int MAX_PANEL_WIDTH = 400;
     private static final int MAX_PANEL_HEIGHT = 280;
@@ -41,14 +40,14 @@ public final class BankControlBoxScreenOpener {
 
     /** request: 请求打开银行控制箱。 */
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new BankControlBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new BankControlBoxOpenRequestPacket(pos));
     }
 
     /** open: 打开或刷新银行界面。 */
     public static void open(BankControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new ModularUIScreen(createUi(packet), Component.empty())));
+            minecraft.execute(() -> minecraft.gui.setScreen(new ModularUIScreen(createUi(packet), Component.empty())));
         }
     }
 
@@ -124,15 +123,15 @@ public final class BankControlBoxScreenOpener {
             layout.flexShrink(0);
         });
         bar.addChild(chromeButton(Component.translatable("gui.button.done"),
-                () -> Minecraft.getInstance().setScreen(null), true, metrics));
+                () -> Minecraft.getInstance().gui.setScreen(null), true, metrics));
         bar.addChild(label(Component.translatable("gui.simukraft.bank.title"), Horizontal.CENTER,
                 0xFFFFFFFF, metrics.titleBarHeight()).layout(layout -> {
             layout.flex(1);
             layout.height(metrics.titleBarHeight());
         }));
         bar.addChild(chromeButton(Component.translatable("gui.button.demolish"), () -> {
-            PacketDistributor.sendToServer(new BankControlBoxDemolishPacket(packet.boxPos()));
-            Minecraft.getInstance().setScreen(null);
+            ClientPacketDistributor.sendToServer(new BankControlBoxDemolishPacket(packet.boxPos()));
+            Minecraft.getInstance().gui.setScreen(null);
         }, packet.hasBuilding(), metrics));
         return bar;
     }
@@ -242,7 +241,7 @@ public final class BankControlBoxScreenOpener {
     }
 
     private static void sendAction(BankControlBoxOpenResponsePacket packet, BankService.Action action, double amount, String target) {
-        PacketDistributor.sendToServer(new BankControlBoxActionPacket(packet.boxPos(), action, amount, target));
+        ClientPacketDistributor.sendToServer(new BankControlBoxActionPacket(packet.boxPos(), action, amount, target));
     }
 
     private static double parseAmount(TextField field) {
@@ -255,10 +254,10 @@ public final class BankControlBoxScreenOpener {
 
     private static void fire(BankControlBoxOpenResponsePacket packet) {
         if (packet.tellerId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), BankControlBoxService.HIRE_SOURCE_TYPE,
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), BankControlBoxService.HIRE_SOURCE_TYPE,
                     BankControlBoxService.HIRE_ROLE, packet.tellerId()));
         }
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static LayoutMetrics layoutMetrics(int screenWidth, int screenHeight) {

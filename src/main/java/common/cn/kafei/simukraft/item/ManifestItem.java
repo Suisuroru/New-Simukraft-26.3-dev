@@ -59,8 +59,8 @@ public final class ManifestItem extends Item {
     private static final String TAG_PRODUCTS = "Products";
     private static final String TAG_INDEX = "Index";
 
-    public ManifestItem() {
-        super(new Item.Properties().stacksTo(1));
+    public ManifestItem(Properties properties) {
+        super(properties.stacksTo(1));
     }
 
     @Override

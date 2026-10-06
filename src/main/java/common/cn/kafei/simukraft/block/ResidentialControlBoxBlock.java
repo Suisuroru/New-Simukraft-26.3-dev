@@ -18,8 +18,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 
 public final class ResidentialControlBoxBlock extends Block {
-    public ResidentialControlBoxBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL));
+    public ResidentialControlBoxBlock(Properties properties) {
+        super(properties);
     }
 
     @Override

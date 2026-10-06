@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.buildbox;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import client.cn.kafei.simukraft.client.ui.SimuKraftClientUiPreferences;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
@@ -36,6 +36,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -44,8 +45,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class PlannerMaterialSelectionScreenOpener {
     private static final int MAX_CONTENT_WIDTH = 760;
     private static final int MIN_CONTENT_WIDTH = 300;
@@ -110,7 +109,7 @@ public final class PlannerMaterialSelectionScreenOpener {
         if (minecraft == null || currentPacket == null) {
             return;
         }
-        minecraft.setScreen(new ModularUIScreen(createUi(), Component.empty()));
+        minecraft.gui.setScreen(new ModularUIScreen(createUi(), Component.empty()));
     }
 
     private static void refreshPreservingLayout() {
@@ -652,8 +651,8 @@ public final class PlannerMaterialSelectionScreenOpener {
             return;
         }
         saveActiveSplitPreferences();
-        PacketDistributor.sendToServer(new CreatePlanningTaskPacket(packet.buildBoxPos(), packet.min(), packet.max(), PlanOperation.FILL, selectedFillBlock, "", selectedChest, Map.of()));
-        Minecraft.getInstance().setScreen(null);
+        ClientPacketDistributor.sendToServer(new CreatePlanningTaskPacket(packet.buildBoxPos(), packet.min(), packet.max(), PlanOperation.FILL, selectedFillBlock, "", selectedChest, Map.of()));
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static void startReplace() {
@@ -663,8 +662,8 @@ public final class PlannerMaterialSelectionScreenOpener {
         }
         saveActiveSplitPreferences();
         Map.Entry<String, String> first = REPLACEMENT_MAP.entrySet().iterator().next();
-        PacketDistributor.sendToServer(new CreatePlanningTaskPacket(packet.buildBoxPos(), packet.min(), packet.max(), PlanOperation.REPLACE, first.getValue(), first.getKey(), selectedChest, Map.copyOf(REPLACEMENT_MAP)));
-        Minecraft.getInstance().setScreen(null);
+        ClientPacketDistributor.sendToServer(new CreatePlanningTaskPacket(packet.buildBoxPos(), packet.min(), packet.max(), PlanOperation.REPLACE, first.getValue(), first.getKey(), selectedChest, Map.copyOf(REPLACEMENT_MAP)));
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static Component blockName(String blockId) {
@@ -672,7 +671,7 @@ public final class PlannerMaterialSelectionScreenOpener {
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return Component.literal(blockId);
         }
-        Block block = BuiltInRegistries.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.AIR);
         if (block.asItem() == Items.AIR) {
             return block.getName();
         }
@@ -684,7 +683,7 @@ public final class PlannerMaterialSelectionScreenOpener {
         if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
             return new ItemStack(Items.BARRIER);
         }
-        Block block = BuiltInRegistries.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.AIR);
         return block.asItem() == Items.AIR ? new ItemStack(Items.BARRIER) : new ItemStack(block.asItem());
     }
 

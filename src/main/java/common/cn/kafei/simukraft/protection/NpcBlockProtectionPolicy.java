@@ -43,7 +43,7 @@ public final class NpcBlockProtectionPolicy {
             return;
         }
         long gameTime = level.getGameTime();
-        String key = level.dimension().location() + "|" + normalize(workerType) + "|" + pos.asLong();
+        String key = level.dimension().identifier() + "|" + normalize(workerType) + "|" + pos.asLong();
         Long previous = LAST_SKIP_LOG_TICKS.put(key, gameTime);
         if (previous != null && gameTime - previous < SKIP_LOG_INTERVAL_TICKS) {
             return;

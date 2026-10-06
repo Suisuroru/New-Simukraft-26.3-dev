@@ -1,7 +1,5 @@
 package client.cn.kafei.simukraft.client.ui;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
@@ -13,8 +11,6 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class SimuKraftFlexLayout {
     private static final int MIN_SCREEN_WIDTH = 320;
     private static final int MIN_SCREEN_HEIGHT = 240;

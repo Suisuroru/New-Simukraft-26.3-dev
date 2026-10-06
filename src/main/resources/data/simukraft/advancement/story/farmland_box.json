@@ -19,7 +19,7 @@
     "craft_farmland_box": {
       "trigger": "minecraft:recipe_crafted",
       "conditions": {
-        "recipe_id": "simukraft:nsuk_farmland_box"
+        "recipes": "simukraft:nsuk_farmland_box"
       }
     }
   },

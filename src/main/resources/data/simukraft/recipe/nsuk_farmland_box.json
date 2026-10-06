@@ -6,15 +6,9 @@
     "CCC"
   ],
   "key": {
-    "W": {
-      "tag": "minecraft:planks"
-    },
-    "C": {
-      "item": "minecraft:cobblestone"
-    },
-    "T": {
-      "item": "minecraft:stone_hoe"
-    }
+    "W": "#minecraft:planks",
+    "C": "minecraft:cobblestone",
+    "T": "minecraft:stone_hoe"
   },
   "result": {
     "id": "simukraft:nsuk_farmland_box",

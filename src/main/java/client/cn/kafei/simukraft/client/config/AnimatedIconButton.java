@@ -1,19 +1,15 @@
 package client.cn.kafei.simukraft.client.config;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import org.joml.Matrix3x2fStack;
 import net.minecraft.resources.Identifier;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Objects;
 
 /** AnimatedIconButton：带旋转角标动画的图标按钮，用于打开配置选择界面。 */
-@OnlyIn(Dist.CLIENT)
 
 public final class AnimatedIconButton extends Button {
 
@@ -35,7 +31,7 @@ public final class AnimatedIconButton extends Button {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         // 悬停时旋转角标，松开时还原
         if (this.isHovered()) {
             rotationAngle += ROTATION_SPEED * partialTick;
@@ -53,8 +49,8 @@ public final class AnimatedIconButton extends Button {
     }
 
     /** renderBackground：拉伸 widgets.png 作为按钮背景，悬停时加白色边框。 */
-    private void renderBackground(GuiGraphics guiGraphics) {
-        guiGraphics.blit(WIDGETS_TEXTURE, this.getX(), this.getY(), 0, 0,
+    private void renderBackground(GuiGraphicsExtractor guiGraphics) {
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, this.getX(), this.getY(), 0, 0,
                 this.width, this.height, this.width, this.height);
         if (this.isHovered()) {
             int white = 0xFFFFFFFF;
@@ -66,33 +62,25 @@ public final class AnimatedIconButton extends Button {
     }
 
     /** renderMainIcon：居中渲染 logo 主图标（80% 按钮尺寸）。 */
-    private void renderMainIcon(GuiGraphics guiGraphics) {
+    private void renderMainIcon(GuiGraphicsExtractor guiGraphics) {
         int size = Math.min((int) (Math.min(this.width, this.height) * 0.8f), 20);
         int x = this.getX() + (this.width - size) / 2;
         int y = this.getY() + (this.height - size) / 2;
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, MAIN_ICON);
-        guiGraphics.blit(MAIN_ICON, x, y, 0, 0, size, size, size, size);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, MAIN_ICON, x, y, 0, 0, size, size, size, size);
     }
 
     /** renderCornerIcon：右下角渲染旋转齿轮角标（50% 按钮尺寸，悬停时旋转）。 */
-    private void renderCornerIcon(GuiGraphics guiGraphics) {
+    private void renderCornerIcon(GuiGraphicsExtractor guiGraphics) {
         int size = Math.min((int) (Math.min(this.width, this.height) * 0.5f), 14);
         int cx = this.getX() + this.width - size / 2 - Math.max(2, this.width / 12);
         int cy = this.getY() + this.height - size / 2 - Math.max(2, this.height / 12);
 
-        PoseStack pose = guiGraphics.pose();
-        pose.pushPose();
-        pose.translate(cx, cy, 0);
-        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rotationAngle));
-        pose.translate(-size / 2.0, -size / 2.0, 0);
-
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, CORNER_ICON);
-        guiGraphics.blit(CORNER_ICON, 0, 0, 0, 0, size, size, size, size);
-
-        pose.popPose();
+        Matrix3x2fStack pose = guiGraphics.pose();
+        pose.pushMatrix();
+        pose.translate(cx, cy);
+        pose.rotate((float) Math.toRadians(rotationAngle));
+        pose.translate(-size / 2.0F, -size / 2.0F);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CORNER_ICON, 0, 0, 0, 0, size, size, size, size);
+        pose.popMatrix();
     }
 }

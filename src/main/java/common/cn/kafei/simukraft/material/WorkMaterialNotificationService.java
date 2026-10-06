@@ -23,7 +23,7 @@ public final class WorkMaterialNotificationService {
             return;
         }
         long gameTime = level.getGameTime();
-        MaterialNoticeKey key = new MaterialNoticeKey(level.dimension().location(), cityId, taskId, result.materialId());
+        MaterialNoticeKey key = new MaterialNoticeKey(level.dimension().identifier(), cityId, taskId, result.materialId());
         Long nextNoticeTick = NEXT_NOTICE_TICK.get(key);
         if (nextNoticeTick != null && nextNoticeTick > gameTime) {
             return;

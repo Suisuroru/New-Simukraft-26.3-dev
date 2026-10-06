@@ -1,5 +1,7 @@
 package client.cn.kafei.simukraft.client.medical;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -24,13 +26,10 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** 医疗控制箱 LDLib 单页界面。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class MedicalControlBoxScreenOpener {
     private static final int PANEL_WIDTH = 340;
     private static final int PANEL_HEIGHT = 248;
@@ -42,14 +41,14 @@ public final class MedicalControlBoxScreenOpener {
 
     /** request：请求服务端刷新医疗控制箱视图。 */
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new MedicalControlBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new MedicalControlBoxOpenRequestPacket(pos));
     }
 
     /** open：打开医疗控制箱界面。 */
     public static void open(MedicalControlBoxOpenResponsePacket packet) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.execute(() -> minecraft.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet), Component.empty())));
+            minecraft.execute(() -> minecraft.gui.setScreen(new com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen(createUi(packet), Component.empty())));
         }
     }
 
@@ -128,7 +127,7 @@ public final class MedicalControlBoxScreenOpener {
     private static Button doneButton() {
         Button button = new Button();
         button.setText(Component.translatable("gui.button.done"));
-        button.setOnClick(event -> Minecraft.getInstance().setScreen(null));
+        button.setOnClick(event -> Minecraft.getInstance().gui.setScreen(null));
         button.layout(layout -> {
             layout.positionType(TaffyPosition.ABSOLUTE);
             layout.left(5);
@@ -189,14 +188,14 @@ public final class MedicalControlBoxScreenOpener {
 
     private static void fire(MedicalControlBoxOpenResponsePacket packet) {
         if (packet.doctorId() != null) {
-            PacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), MedicalControlBoxService.HIRE_SOURCE_TYPE,
+            ClientPacketDistributor.sendToServer(new NpcHireFirePacket(packet.boxPos(), MedicalControlBoxService.HIRE_SOURCE_TYPE,
                     MedicalControlBoxService.HIRE_ROLE, packet.doctorId()));
         }
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static void demolish(MedicalControlBoxOpenResponsePacket packet) {
-        PacketDistributor.sendToServer(new MedicalControlBoxDemolishPacket(packet.boxPos()));
-        Minecraft.getInstance().setScreen(null);
+        ClientPacketDistributor.sendToServer(new MedicalControlBoxDemolishPacket(packet.boxPos()));
+        Minecraft.getInstance().gui.setScreen(null);
     }
 }

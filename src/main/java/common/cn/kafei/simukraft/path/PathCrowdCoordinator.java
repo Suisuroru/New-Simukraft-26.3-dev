@@ -247,7 +247,7 @@ final class PathCrowdCoordinator {
     private static final java.util.WeakHashMap<MinecraftServer, String> SERVER_KEY_CACHE = new java.util.WeakHashMap<>();
 
     private static String levelKey(ServerLevel level) {
-        return serverKey(level.getServer()) + "|" + level.dimension().location();
+        return serverKey(level.getServer()) + "|" + level.dimension().identifier();
     }
 
     private static String serverKey(MinecraftServer server) {
@@ -276,7 +276,7 @@ final class PathCrowdCoordinator {
             cells.clear();
             for (Entity entity : level.getAllEntities()) {
                 if (entity instanceof CitizenEntity citizen && !citizen.isRemoved()) {
-                    long cellKey = ChunkPos.asLong(cellCoordinate(citizen.getX()), cellCoordinate(citizen.getZ()));
+                    long cellKey = ChunkPos.pack(cellCoordinate(citizen.getX()), cellCoordinate(citizen.getZ()));
                     cells.computeIfAbsent(cellKey, ignored -> new ArrayList<>()).add(citizen);
                 }
             }
@@ -284,7 +284,7 @@ final class PathCrowdCoordinator {
         }
 
         private List<CitizenEntity> cell(int cellX, int cellZ) {
-            return cells.get(ChunkPos.asLong(cellX, cellZ));
+            return cells.get(ChunkPos.pack(cellX, cellZ));
         }
     }
 

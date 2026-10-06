@@ -5,6 +5,7 @@ import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import common.cn.kafei.simukraft.registry.ModMenuTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -33,7 +34,7 @@ public final class MineralDrillingMenuProvider implements MenuProvider {
     public static boolean open(ServerLevel level, ServerPlayer player, BlockPos boxPos) {
         if (level == null || player == null || boxPos == null
                 || player.level() != level
-                || (player.distanceToSqr(boxPos.getCenter()) > 64.0D && !RtsRemoteMenuAccess.hasAccess(player, boxPos))
+                || (player.distanceToSqr(Vec3.atCenterOf(boxPos)) > 64.0D && !RtsRemoteMenuAccess.hasAccess(player, boxPos))
                 || !MineralDrillingControlBoxService.isControlBox(level, boxPos)) {
             return false;
         }

@@ -3,6 +3,9 @@ package common.cn.kafei.simukraft.registry;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
@@ -17,7 +20,7 @@ public final class ModEntities {
             .sized(0.6F, 1.8F)
             .clientTrackingRange(10)
             .updateInterval(3)
-            .build("citizen"));
+            .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "citizen"))));
 
     private ModEntities() {
     }

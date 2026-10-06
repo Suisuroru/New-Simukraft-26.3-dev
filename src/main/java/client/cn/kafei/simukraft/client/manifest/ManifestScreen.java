@@ -1,11 +1,13 @@
 package client.cn.kafei.simukraft.client.manifest;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import common.cn.kafei.simukraft.item.ManifestItem;
 import common.cn.kafei.simukraft.network.manifest.ManifestTogglePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
@@ -22,8 +24,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.ArrayList;
 import java.util.List;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class ManifestScreen extends Screen {
     private static final int MIN_PAGE_WIDTH = 145;
     private static final int MAX_PAGE_WIDTH = 260;
@@ -68,7 +68,7 @@ public final class ManifestScreen extends Screen {
         if (minecraft == null) {
             return;
         }
-        minecraft.execute(() -> minecraft.setScreen(new ManifestScreen(stack, hand)));
+        minecraft.execute(() -> minecraft.gui.setScreen(new ManifestScreen(stack, hand)));
     }
 
     @Override
@@ -81,21 +81,24 @@ public final class ManifestScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         PageLayout layout = pageLayout();
         renderPage(guiGraphics, layout);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         rowBounds.clear();
         renderContent(guiGraphics, layout);
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (super.mouseClicked(event, doubleClick)) {
             return true;
         }
         for (RowBounds bounds : rowBounds) {
@@ -127,7 +130,7 @@ public final class ManifestScreen extends Screen {
         return false;
     }
 
-    private void renderPage(GuiGraphics guiGraphics, PageLayout layout) {
+    private void renderPage(GuiGraphicsExtractor guiGraphics, PageLayout layout) {
         guiGraphics.fill(layout.boardX(), layout.boardY(), layout.boardRight(), layout.boardBottom(), BOARD_COLOR);
         guiGraphics.fill(layout.boardX(), layout.boardY(), layout.boardRight(), layout.boardY() + 1, BOARD_BORDER_COLOR);
         guiGraphics.fill(layout.boardX(), layout.boardBottom() - 1, layout.boardRight(), layout.boardBottom(), BOARD_BORDER_COLOR);
@@ -143,7 +146,7 @@ public final class ManifestScreen extends Screen {
         renderClip(guiGraphics, layout);
     }
 
-    private void renderClip(GuiGraphics guiGraphics, PageLayout layout) {
+    private void renderClip(GuiGraphicsExtractor guiGraphics, PageLayout layout) {
         int clipLeft = layout.clipX();
         int clipTop = layout.clipY();
         int clipRight = clipLeft + layout.clipWidth();
@@ -164,12 +167,12 @@ public final class ManifestScreen extends Screen {
         guiGraphics.fill(clipRight - layout.clipWidth() / 8 - rivetSize, rivetY, clipRight - layout.clipWidth() / 8, rivetY + rivetSize, METAL_DARK_COLOR);
     }
 
-    private void renderContent(GuiGraphics guiGraphics, PageLayout layout) {
+    private void renderContent(GuiGraphicsExtractor guiGraphics, PageLayout layout) {
         int titleY = layout.pageY() + layout.titleTop();
-        guiGraphics.drawCenteredString(font, title, layout.pageX() + layout.pageWidth() / 2, titleY, TEXT_COLOR);
-        guiGraphics.drawString(font, Component.translatable("screen.simukraft.manifest.building", ManifestItem.getBuildingName(manifestStack)),
+        guiGraphics.centeredText(font, title, layout.pageX() + layout.pageWidth() / 2, titleY, TEXT_COLOR);
+        guiGraphics.text(font, Component.translatable("screen.simukraft.manifest.building", ManifestItem.getBuildingName(manifestStack)),
                 layout.contentX(), titleY + 16, MUTED_TEXT_COLOR, false);
-        guiGraphics.drawString(font, Component.literal((currentPage + 1) + "/" + pageCount()),
+        guiGraphics.text(font, Component.literal((currentPage + 1) + "/" + pageCount()),
                 layout.pageRight() - layout.contentPadding() - 22, layout.pageY() + 10, MUTED_TEXT_COLOR, false);
 
         if (!productGroups.isEmpty()) {
@@ -180,7 +183,7 @@ public final class ManifestScreen extends Screen {
 
         renderMaterialFrame(guiGraphics, layout, Component.translatable("screen.simukraft.manifest.material_header"));
         if (materials.isEmpty()) {
-            guiGraphics.drawCenteredString(font, Component.translatable("screen.simukraft.manifest.empty"),
+            guiGraphics.centeredText(font, Component.translatable("screen.simukraft.manifest.empty"),
                     layout.pageX() + layout.pageWidth() / 2, layout.listTop(), CHECKED_TEXT_COLOR);
             return;
         }
@@ -193,21 +196,21 @@ public final class ManifestScreen extends Screen {
         }
     }
 
-    private void renderMaterialRow(GuiGraphics guiGraphics, PageLayout layout, ManifestItem.MaterialEntry entry, int y) {
+    private void renderMaterialRow(GuiGraphicsExtractor guiGraphics, PageLayout layout, ManifestItem.MaterialEntry entry, int y) {
         int checkboxX = layout.contentX();
         int checkboxY = y + (ROW_HEIGHT - CHECKBOX_SIZE) / 2;
         int color = entry.checked() ? CHECKED_TEXT_COLOR : TEXT_COLOR;
         renderCheckbox(guiGraphics, checkboxX, checkboxY, entry.checked(), color);
         int iconX = checkboxX + CHECKBOX_SIZE + CHECKBOX_GAP;
         int iconY = y + (ROW_HEIGHT - ITEM_ICON_SIZE) / 2;
-        guiGraphics.renderItem(materialStack(entry.itemId()), iconX, iconY);
+        guiGraphics.item(materialStack(entry.itemId()), iconX, iconY);
         int textX = iconX + ITEM_ICON_SIZE + 5;
         String countText = fitText(countText(entry), Math.max(1, layout.contentRight() - textX - 8));
         int countWidth = font.width(countText);
         int countX = layout.contentRight() - countWidth;
         int nameWidth = Math.max(1, countX - textX - 8);
-        guiGraphics.drawString(font, fitText(materialName(entry.itemId()).getString(), nameWidth), textX, y + 5, color, false);
-        guiGraphics.drawString(font, countText, countX, y + 5, color, false);
+        guiGraphics.text(font, fitText(materialName(entry.itemId()).getString(), nameWidth), textX, y + 5, color, false);
+        guiGraphics.text(font, countText, countX, y + 5, color, false);
         if (entry.checked()) {
             int lineY = y + 10;
             guiGraphics.fill(textX, lineY, layout.contentRight(), lineY + 1, CHECKED_TEXT_COLOR);
@@ -218,7 +221,7 @@ public final class ManifestScreen extends Screen {
     }
 
     /** renderMaterialFrame: 绘制材料列表区域的小标题和边框。 */
-    private void renderMaterialFrame(GuiGraphics guiGraphics, PageLayout layout, Component title) {
+    private void renderMaterialFrame(GuiGraphicsExtractor guiGraphics, PageLayout layout, Component title) {
         int left = layout.contentX() - 5;
         int right = layout.contentRight() + 5;
         int top = layout.listFrameTop();
@@ -232,11 +235,11 @@ public final class ManifestScreen extends Screen {
         int titleY = top - 4;
         int titleRight = titleX + font.width(title) + MATERIAL_FRAME_TITLE_GAP * 2;
         guiGraphics.fill(titleX - MATERIAL_FRAME_TITLE_GAP, top, titleRight, top + 1, PAPER_COLOR);
-        guiGraphics.drawString(font, title, titleX, titleY, MUTED_TEXT_COLOR, false);
+        guiGraphics.text(font, title, titleX, titleY, MUTED_TEXT_COLOR, false);
     }
 
     /** renderProductGroup: 上下动态分栏渲染”需要物品 / 产出商品”。 */
-    private void renderProductGroup(GuiGraphics guiGraphics, PageLayout layout, ManifestItem.ProductGroup group) {
+    private void renderProductGroup(GuiGraphicsExtractor guiGraphics, PageLayout layout, ManifestItem.ProductGroup group) {
         int left = layout.contentX() + 4;
         int right = layout.contentRight() - 4;
         int width = Math.max(1, right - left);
@@ -262,7 +265,7 @@ public final class ManifestScreen extends Screen {
         renderEntryRows(guiGraphics, group.products(), left + 7, dividerY + 5, width - 14, productRows, false);
     }
 
-    private void renderEntryRows(GuiGraphics guiGraphics,
+    private void renderEntryRows(GuiGraphicsExtractor guiGraphics,
                                  List<ManifestItem.MaterialEntry> entries,
                                  int x,
                                  int y,
@@ -274,11 +277,11 @@ public final class ManifestScreen extends Screen {
             renderEntryRow(guiGraphics, entries.get(i), x, y + i * ROW_HEIGHT, width, checkable);
         }
         if (entries.size() > rows) {
-            guiGraphics.drawCenteredString(font, Component.literal("..."), x + width / 2, y + rows * ROW_HEIGHT + 3, MUTED_TEXT_COLOR);
+            guiGraphics.centeredText(font, Component.literal("..."), x + width / 2, y + rows * ROW_HEIGHT + 3, MUTED_TEXT_COLOR);
         }
     }
 
-    private void renderEntryRow(GuiGraphics guiGraphics, ManifestItem.MaterialEntry entry, int x, int y, int width, boolean checkable) {
+    private void renderEntryRow(GuiGraphicsExtractor guiGraphics, ManifestItem.MaterialEntry entry, int x, int y, int width, boolean checkable) {
         int currentX = x;
         int color = checkable && entry.checked() ? CHECKED_TEXT_COLOR : TEXT_COLOR;
         if (checkable) {
@@ -287,14 +290,14 @@ public final class ManifestScreen extends Screen {
             currentX += CHECKBOX_SIZE + CHECKBOX_GAP;
         }
         int iconY = y + (ROW_HEIGHT - ITEM_ICON_SIZE) / 2;
-        guiGraphics.renderItem(materialStack(entry.itemId()), currentX, iconY);
+        guiGraphics.item(materialStack(entry.itemId()), currentX, iconY);
         currentX += ITEM_ICON_SIZE + 5;
         String countText = checkable ? countText(entry) : "x" + entry.count();
         int countWidth = font.width(countText);
         int countX = x + width - countWidth;
         int nameWidth = Math.max(1, countX - currentX - 8);
-        guiGraphics.drawString(font, fitText(materialName(entry.itemId()).getString(), nameWidth), currentX, y + 5, color, false);
-        guiGraphics.drawString(font, countText, countX, y + 5, color, false);
+        guiGraphics.text(font, fitText(materialName(entry.itemId()).getString(), nameWidth), currentX, y + 5, color, false);
+        guiGraphics.text(font, countText, countX, y + 5, color, false);
         if (checkable && entry.checked()) {
             guiGraphics.fill(currentX, y + 10, x + width, y + 11, CHECKED_TEXT_COLOR);
         }
@@ -303,20 +306,20 @@ public final class ManifestScreen extends Screen {
         }
     }
 
-    private void renderCheckbox(GuiGraphics guiGraphics, int x, int y, boolean checked, int color) {
-        guiGraphics.hLine(x, x + CHECKBOX_SIZE - 1, y, color);
-        guiGraphics.hLine(x, x + CHECKBOX_SIZE - 1, y + CHECKBOX_SIZE - 1, color);
-        guiGraphics.vLine(x, y, y + CHECKBOX_SIZE - 1, color);
-        guiGraphics.vLine(x + CHECKBOX_SIZE - 1, y, y + CHECKBOX_SIZE - 1, color);
+    private void renderCheckbox(GuiGraphicsExtractor guiGraphics, int x, int y, boolean checked, int color) {
+        guiGraphics.horizontalLine(x, x + CHECKBOX_SIZE - 1, y, color);
+        guiGraphics.horizontalLine(x, x + CHECKBOX_SIZE - 1, y + CHECKBOX_SIZE - 1, color);
+        guiGraphics.verticalLine(x, y, y + CHECKBOX_SIZE - 1, color);
+        guiGraphics.verticalLine(x + CHECKBOX_SIZE - 1, y, y + CHECKBOX_SIZE - 1, color);
         if (!checked) {
             return;
         }
-        guiGraphics.hLine(x + 2, x + 3, y + 5, color);
-        guiGraphics.hLine(x + 3, x + 4, y + 6, color);
-        guiGraphics.hLine(x + 4, x + 5, y + 7, color);
-        guiGraphics.hLine(x + 5, x + 6, y + 6, color);
-        guiGraphics.hLine(x + 6, x + 7, y + 5, color);
-        guiGraphics.hLine(x + 7, x + 8, y + 4, color);
+        guiGraphics.horizontalLine(x + 2, x + 3, y + 5, color);
+        guiGraphics.horizontalLine(x + 3, x + 4, y + 6, color);
+        guiGraphics.horizontalLine(x + 4, x + 5, y + 7, color);
+        guiGraphics.horizontalLine(x + 5, x + 6, y + 6, color);
+        guiGraphics.horizontalLine(x + 6, x + 7, y + 5, color);
+        guiGraphics.horizontalLine(x + 7, x + 8, y + 4, color);
     }
 
     private void toggleMaterial(int materialIndex) {
@@ -335,7 +338,7 @@ public final class ManifestScreen extends Screen {
         }
         boolean checked = !entry.checked();
         ManifestItem.setChecked(manifestStack, materialIndex, checked);
-        PacketDistributor.sendToServer(new ManifestTogglePacket(hand, materialIndex, checked));
+        ClientPacketDistributor.sendToServer(new ManifestTogglePacket(hand, materialIndex, checked));
         refreshMaterials();
     }
 
@@ -419,7 +422,7 @@ public final class ManifestScreen extends Screen {
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return Component.literal(itemId);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         return new ItemStack(item).getHoverName();
     }
 
@@ -428,7 +431,7 @@ public final class ManifestScreen extends Screen {
         if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
             return new ItemStack(Items.BARRIER);
         }
-        Item item = BuiltInRegistries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.getOptional(id).orElse(Items.AIR);
         return item == Items.AIR ? new ItemStack(Items.BARRIER) : new ItemStack(item);
     }
 

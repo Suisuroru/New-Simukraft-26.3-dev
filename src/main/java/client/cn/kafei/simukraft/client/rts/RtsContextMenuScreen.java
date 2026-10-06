@@ -1,21 +1,22 @@
 package client.cn.kafei.simukraft.client.rts;
 
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import net.minecraft.client.input.MouseButtonEvent;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import common.cn.kafei.simukraft.network.rts.RtsDemolishPacket;
 import common.cn.kafei.simukraft.network.rts.RtsOpenTargetPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** RTS 右键下拉菜单：只负责客户端菜单呈现和发送已验证的动作请求。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class RtsContextMenuScreen extends Screen {
     private static final int MENU_WIDTH = 76;
     private static final int HEADER_HEIGHT = 20;
@@ -47,7 +48,7 @@ public final class RtsContextMenuScreen extends Screen {
     /** open: 在当前系统光标附近打开菜单。 */
     public static void open(BlockPos targetPos) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (targetPos == null || minecraft.screen != null) {
+        if (targetPos == null || minecraft.gui.screen() != null) {
             return;
         }
         int width = minecraft.getWindow().getScreenWidth();
@@ -56,7 +57,7 @@ public final class RtsContextMenuScreen extends Screen {
         int guiHeight = minecraft.getWindow().getGuiScaledHeight();
         int cursorX = width <= 0 ? guiWidth / 2 : (int) (minecraft.mouseHandler.xpos() * guiWidth / width);
         int cursorY = height <= 0 ? guiHeight / 2 : (int) (minecraft.mouseHandler.ypos() * guiHeight / height);
-        minecraft.setScreen(new RtsContextMenuScreen(targetPos, cursorX, cursorY));
+        minecraft.gui.setScreen(new RtsContextMenuScreen(targetPos, cursorX, cursorY));
     }
 
     @Override
@@ -66,12 +67,12 @@ public final class RtsContextMenuScreen extends Screen {
     }
 
     private void openDetails() {
-        PacketDistributor.sendToServer(new RtsOpenTargetPacket(targetPos));
+        ClientPacketDistributor.sendToServer(new RtsOpenTargetPacket(targetPos));
         closeMenu();
     }
 
     private void demolish() {
-        PacketDistributor.sendToServer(new RtsDemolishPacket(targetPos));
+        ClientPacketDistributor.sendToServer(new RtsDemolishPacket(targetPos));
         closeMenu();
     }
 
@@ -86,7 +87,7 @@ public final class RtsContextMenuScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(menuX, menuY, menuX + MENU_WIDTH, menuY + 1, COLOR_BORDER);
         graphics.fill(menuX, menuY + 1, menuX + MENU_WIDTH, menuY + MENU_HEIGHT, COLOR_BACKGROUND);
         drawScaledText(graphics, Component.literal(fitTitle(targetName.getString())), menuX + 6, menuY + 6, COLOR_TITLE);
@@ -106,7 +107,10 @@ public final class RtsContextMenuScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         int action = actionAt(mouseX, mouseY);
         if (button == 0 && action >= 0) {
             switch (action) {
@@ -130,7 +134,7 @@ public final class RtsContextMenuScreen extends Screen {
         return false;
     }
 
-    private void renderActionRow(GuiGraphics graphics, int mouseX, int mouseY, int rowY, int action, String translationKey) {
+    private void renderActionRow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, int rowY, int action, String translationKey) {
         boolean hovered = actionAt(mouseX, mouseY) == action;
         if (hovered) {
             graphics.fill(menuX, rowY, menuX + MENU_WIDTH, rowY + ROW_HEIGHT, COLOR_HOVER);
@@ -139,12 +143,12 @@ public final class RtsContextMenuScreen extends Screen {
                 hovered ? COLOR_TITLE : COLOR_ACTION);
     }
 
-    private void drawScaledText(GuiGraphics graphics, Component text, int x, int y, int color) {
-        graphics.pose().pushPose();
-        graphics.pose().translate(x, y, 0.0F);
-        graphics.pose().scale(TEXT_SCALE, TEXT_SCALE, 1.0F);
-        graphics.drawString(font, text, 0, 0, color, false);
-        graphics.pose().popPose();
+    private void drawScaledText(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(TEXT_SCALE, TEXT_SCALE);
+        graphics.text(font, text, 0, 0, color, false);
+        graphics.pose().popMatrix();
     }
 
     private int actionAt(double mouseX, double mouseY) {

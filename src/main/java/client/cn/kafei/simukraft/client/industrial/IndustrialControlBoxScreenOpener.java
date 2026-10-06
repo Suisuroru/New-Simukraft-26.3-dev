@@ -1,7 +1,7 @@
 package client.cn.kafei.simukraft.client.industrial;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
 import client.cn.kafei.simukraft.client.buildbox.BuildingBoundsRenderer;
 import client.cn.kafei.simukraft.client.building.BuildingIntegrityUi;
 import client.cn.kafei.simukraft.client.hire.NpcHireScreen;
@@ -42,8 +42,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class IndustrialControlBoxScreenOpener {
     private static final int MAX_PANEL_WIDTH = 480;
     private static final int MAX_PANEL_HEIGHT = 300;
@@ -61,7 +59,7 @@ public final class IndustrialControlBoxScreenOpener {
     }
 
     public static void request(BlockPos pos) {
-        PacketDistributor.sendToServer(new IndustrialControlBoxOpenRequestPacket(pos));
+        ClientPacketDistributor.sendToServer(new IndustrialControlBoxOpenRequestPacket(pos));
     }
 
     public static void open(IndustrialControlBoxOpenResponsePacket packet) {
@@ -71,7 +69,7 @@ public final class IndustrialControlBoxScreenOpener {
         }
         openedBoxPos = packet.boxPos().immutable();
         syncDisplayedBounds(packet);
-        minecraft.execute(() -> minecraft.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty())));
+        minecraft.execute(() -> minecraft.gui.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty())));
     }
 
     public static void refreshIfOpen(IndustrialControlBoxOpenResponsePacket packet) {
@@ -81,8 +79,8 @@ public final class IndustrialControlBoxScreenOpener {
         }
         syncDisplayedBounds(packet);
         minecraft.execute(() -> {
-            if (openedBoxPos != null && openedBoxPos.equals(packet.boxPos()) && minecraft.screen instanceof IndustrialControlBoxScreen) {
-                minecraft.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty()));
+            if (openedBoxPos != null && openedBoxPos.equals(packet.boxPos()) && minecraft.gui.screen() instanceof IndustrialControlBoxScreen) {
+                minecraft.gui.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty()));
             }
         });
     }
@@ -401,7 +399,7 @@ public final class IndustrialControlBoxScreenOpener {
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
-            minecraft.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty()));
+            minecraft.gui.setScreen(new IndustrialControlBoxScreen(createUi(packet), Component.empty()));
         }
     }
 
@@ -437,7 +435,7 @@ public final class IndustrialControlBoxScreenOpener {
     }
 
     private static void action(IndustrialControlBoxOpenResponsePacket packet, IndustrialControlBoxActionPacket.Action action, String recipeId) {
-        PacketDistributor.sendToServer(new IndustrialControlBoxActionPacket(packet.boxPos(), action, recipeId));
+        ClientPacketDistributor.sendToServer(new IndustrialControlBoxActionPacket(packet.boxPos(), action, recipeId));
     }
 
     private static void hire(IndustrialControlBoxOpenResponsePacket packet) {
@@ -447,8 +445,8 @@ public final class IndustrialControlBoxScreenOpener {
     private static void demolish(IndustrialControlBoxOpenResponsePacket packet) {
         BuildingBoundsRenderer.setBuildingBoundsVisible(packet.boxPos(), null, false);
         openedBoxPos = null;
-        Minecraft.getInstance().setScreen(null);
-        PacketDistributor.sendToServer(new IndustrialControlBoxDemolishPacket(packet.boxPos()));
+        Minecraft.getInstance().gui.setScreen(null);
+        ClientPacketDistributor.sendToServer(new IndustrialControlBoxDemolishPacket(packet.boxPos()));
     }
 
     private static ItemStack stack(IndustrialControlBoxOpenResponsePacket.ItemEntry item) {
@@ -465,7 +463,7 @@ public final class IndustrialControlBoxScreenOpener {
 
     private static void close() {
         openedBoxPos = null;
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().gui.setScreen(null);
     }
 
     private static LayoutMetrics layoutMetrics(int screenWidth, int screenHeight) {
@@ -548,7 +546,7 @@ public final class IndustrialControlBoxScreenOpener {
         public void removed() {
             super.removed();
             Minecraft minecraft = Minecraft.getInstance();
-            if (!(minecraft.screen instanceof IndustrialControlBoxScreen)) {
+            if (!(minecraft.gui.screen() instanceof IndustrialControlBoxScreen)) {
                 openedBoxPos = null;
             }
         }

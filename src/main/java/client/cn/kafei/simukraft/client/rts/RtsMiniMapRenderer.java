@@ -1,22 +1,21 @@
 package client.cn.kafei.simukraft.client.rts;
 
+import net.minecraft.client.renderer.RenderPipelines;
+
 import client.cn.kafei.simukraft.client.city.ClientCityChunkCache;
 import client.cn.kafei.simukraft.client.freecamera.FreeCameraManager;
 import client.cn.kafei.simukraft.client.input.SimuKraftKeyMappings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.InputEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /** RTS 小地图：复用本地地图缓存，绘制相机视口并处理相机跳转。 */
 
-@OnlyIn(Dist.CLIENT)
 public final class RtsMiniMapRenderer {
     private static final int SMALL_MAP_SIZE = 112;
     private static final int SMALL_WORLD_SPAN = 256;
@@ -73,7 +72,7 @@ public final class RtsMiniMapRenderer {
     }
 
     /** render: 在 RTS HUD 中绘制地图和当前相机可见范围。 */
-    public static void render(GuiGraphics graphics) {
+    public static void render(GuiGraphicsExtractor graphics) {
         Minecraft minecraft = Minecraft.getInstance();
         if (!isVisible() || !RtsSelectionManager.canUseRtsCameraControls()) {
             return;
@@ -90,22 +89,22 @@ public final class RtsMiniMapRenderer {
         graphics.fill(layout.left() - FRAME_SIZE, layout.top() - FRAME_SIZE,
                 layout.right() + FRAME_SIZE, layout.bottom() + FRAME_SIZE, COLOR_FRAME);
         int textureSize = RtsMiniMapTexture.size();
-        graphics.blit(texture, layout.left(), layout.top(), layout.size(), layout.size(),
-                0.0F, 0.0F, textureSize, textureSize, textureSize, textureSize);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, layout.left(), layout.top(), 0.0F, 0.0F,
+                layout.size(), layout.size(), textureSize, textureSize);
         drawBorder(graphics, layout);
         drawViewport(graphics, layout);
     }
 
     /** handleMouseButton: 捕获地图区域的左键，防止同时触发 RTS 方块操作。 */
     public static boolean handleMouseButton(InputEvent.MouseButton.Pre event) {
-        if (!isVisible() || event.getButton() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (!isVisible() || event.getButton() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
-        if (event.getAction() == GLFW.GLFW_RELEASE && mapClickCaptured) {
+        if (event.getAction() == InputConstants.RELEASE && mapClickCaptured) {
             finishMapInteraction(Minecraft.getInstance());
             return true;
         }
-        if (event.getAction() != GLFW.GLFW_PRESS
+        if (event.getAction() != InputConstants.PRESS
                 || !RtsSelectionManager.canUseRtsCameraControls()) {
             return false;
         }
@@ -131,7 +130,7 @@ public final class RtsMiniMapRenderer {
     }
 
     private static boolean isVisible() {
-        return !Minecraft.getInstance().options.hideGui
+        return !Minecraft.getInstance().gui.hud.isHidden()
                 && RtsSelectionManager.isActive() && FreeCameraManager.isRtsActive();
     }
 
@@ -163,8 +162,7 @@ public final class RtsMiniMapRenderer {
             resetMapInteraction();
             return;
         }
-        if (GLFW.glfwGetMouseButton(minecraft.getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT)
-                != GLFW.GLFW_PRESS) {
+        if (!minecraft.mouseHandler.isLeftPressed()) {
             finishMapInteraction(minecraft);
             return;
         }
@@ -212,13 +210,13 @@ public final class RtsMiniMapRenderer {
         mapDragLastY = 0;
     }
 
-    private static void drawViewport(GuiGraphics graphics, MapLayout layout) {
+    private static void drawViewport(GuiGraphicsExtractor graphics, MapLayout layout) {
         Minecraft minecraft = Minecraft.getInstance();
-        Camera camera = minecraft.gameRenderer.getMainCamera();
+        Camera camera = minecraft.gameRenderer.mainCamera();
         if (!camera.isInitialized()) {
             return;
         }
-        Camera.NearPlane nearPlane = camera.getNearPlane();
+        Camera.NearPlane nearPlane = camera.getNearPlane(camera.getFov());
         Vec3 center = nearPlane.getPointOnPlane(0.0F, 0.0F);
         Vec3 forward = center.normalize();
         if (Math.abs(forward.y) < 0.0001D) {
@@ -232,7 +230,7 @@ public final class RtsMiniMapRenderer {
         double[] xOffsets = {-0.5D, 0.5D, 0.5D, -0.5D};
         double[] yOffsets = {0.5D, 0.5D, -0.5D, -0.5D};
         for (int index = 0; index < corners.length; index++) {
-            Vec3 from = camera.getPosition()
+            Vec3 from = camera.position()
                     .add(right.scale(xOffsets[index] * FreeCameraManager.rtsZoom() * aspect))
                     .add(up.scale(yOffsets[index] * FreeCameraManager.rtsZoom()));
             double distance = (focus.y - from.y) / forward.y;
@@ -246,14 +244,14 @@ public final class RtsMiniMapRenderer {
         }
     }
 
-    private static void drawBorder(GuiGraphics graphics, MapLayout layout) {
+    private static void drawBorder(GuiGraphicsExtractor graphics, MapLayout layout) {
         graphics.fill(layout.left(), layout.top(), layout.right(), layout.top() + 1, COLOR_BORDER);
         graphics.fill(layout.left(), layout.bottom() - 1, layout.right(), layout.bottom(), COLOR_BORDER);
         graphics.fill(layout.left(), layout.top(), layout.left() + 1, layout.bottom(), COLOR_BORDER);
         graphics.fill(layout.right() - 1, layout.top(), layout.right(), layout.bottom(), COLOR_BORDER);
     }
 
-    private static void drawLine(GuiGraphics graphics, MapLayout layout, int x0, int y0, int x1, int y1) {
+    private static void drawLine(GuiGraphicsExtractor graphics, MapLayout layout, int x0, int y0, int x1, int y1) {
         int steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
         if (steps == 0) {
             drawViewportPixel(graphics, layout, x0, y0);
@@ -267,7 +265,7 @@ public final class RtsMiniMapRenderer {
         }
     }
 
-    private static void drawViewportPixel(GuiGraphics graphics, MapLayout layout, int x, int y) {
+    private static void drawViewportPixel(GuiGraphicsExtractor graphics, MapLayout layout, int x, int y) {
         if (x >= layout.left() && x < layout.right() && y >= layout.top() && y < layout.bottom()) {
             graphics.fill(x, y, x + 1, y + 1, COLOR_VIEWPORT);
         }

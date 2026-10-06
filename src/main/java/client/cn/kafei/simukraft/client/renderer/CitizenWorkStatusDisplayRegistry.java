@@ -3,7 +3,7 @@ package client.cn.kafei.simukraft.client.renderer;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.material.NpcWorkMaterialService;
-import net.minecraft.client.resources.language.I18n;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -12,8 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.util.GsonHelper;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,8 +22,6 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CitizenWorkStatusDisplayRegistry {
     public static final int PRIORITY_LIFE_STATE = 1100;
     public static final int PRIORITY_SELF_FEEDING = 1000;
@@ -168,7 +164,7 @@ public final class CitizenWorkStatusDisplayRegistry {
         if (legacyStatus.isPresent()) {
             return legacyStatus.get();
         }
-        return I18n.exists(value) ? Component.translatable(value) : Component.literal(value);
+        return net.minecraft.locale.Language.getInstance().has(value) ? Component.translatable(value) : Component.literal(value);
     }
 
     // legacyLocalizedStatus: 旧存档可能保存了中文 literal，这里只做显示兼容，不改写存档数据。

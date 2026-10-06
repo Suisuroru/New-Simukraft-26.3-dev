@@ -16,15 +16,15 @@ class CityChunkManagerTest {
         ChunkPos core = new ChunkPos(0, 0);
 
         manager.assignInitialArea(cityId, core);
-        assertEquals(0, manager.countEnclaves(cityId, core.toLong()));
-        assertTrue(manager.isConnectedToCore(cityId, ChunkPos.asLong(2, 0), core.toLong()));
+        assertEquals(0, manager.countEnclaves(cityId, core.pack()));
+        assertTrue(manager.isConnectedToCore(cityId, ChunkPos.pack(2, 0), core.pack()));
 
-        manager.claimChunk(cityId, ChunkPos.asLong(10, 10));
-        manager.claimChunk(cityId, ChunkPos.asLong(11, 10));
-        assertFalse(manager.isConnectedToCore(cityId, ChunkPos.asLong(12, 10), core.toLong()));
-        assertEquals(1, manager.countEnclaves(cityId, core.toLong()));
+        manager.claimChunk(cityId, ChunkPos.pack(10, 10));
+        manager.claimChunk(cityId, ChunkPos.pack(11, 10));
+        assertFalse(manager.isConnectedToCore(cityId, ChunkPos.pack(12, 10), core.pack()));
+        assertEquals(1, manager.countEnclaves(cityId, core.pack()));
 
-        manager.claimChunk(cityId, ChunkPos.asLong(20, 20));
-        assertEquals(2, manager.countEnclaves(cityId, core.toLong()));
+        manager.claimChunk(cityId, ChunkPos.pack(20, 20));
+        assertEquals(2, manager.countEnclaves(cityId, core.pack()));
     }
 }

@@ -85,7 +85,7 @@ public final class CitizenWanderService {
         if (level == null || origin == null) {
             return null;
         }
-        RandomSource random = level.random;
+        RandomSource random = level.getRandom();
         int safeRadius = Math.max(MIN_WANDER_DISTANCE, radius);
         for (int attempt = 0; attempt < TARGET_ATTEMPTS; attempt++) {
             int dx = random.nextInt(safeRadius * 2 + 1) - safeRadius;
@@ -188,6 +188,6 @@ public final class CitizenWanderService {
     private static String cooldownKey(ServerLevel level, UUID citizenId) {
         String serverKey = SERVER_KEY_CACHE.computeIfAbsent(level.getServer(), s ->
                 s.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).toAbsolutePath().normalize().toString().toLowerCase(Locale.ROOT));
-        return serverKey + "|" + level.dimension().location() + "|" + citizenId;
+        return serverKey + "|" + level.dimension().identifier() + "|" + citizenId;
     }
 }

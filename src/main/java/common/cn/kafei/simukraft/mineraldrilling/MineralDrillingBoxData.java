@@ -205,7 +205,7 @@ public final class MineralDrillingBoxData {
         if (tag == null) {
             throw new IllegalArgumentException("tag must not be null");
         }
-        BlockPos position = BlockPos.of(tag.getLong("BoxPos"));
+        BlockPos position = BlockPos.of(tag.getLongOr("BoxPos", 0L));
         MineralDrillingBoxData data = new MineralDrillingBoxData(position);
         data.loadingFromTag(tag, registries);
         return data;
@@ -214,25 +214,25 @@ public final class MineralDrillingBoxData {
     /** loadingFromTag: 在抑制库存回调期间恢复一份完整快照。 */
     private void loadingFromTag(CompoundTag tag, HolderLookup.Provider registries) {
         synchronized (this) {
-            drillDepth = tag.contains("DrillDepth") ? tag.getInt("DrillDepth") : boxPos.getY();
+            drillDepth = tag.contains("DrillDepth") ? tag.getIntOr("DrillDepth", 0) : boxPos.getY();
             int loadedLowest = tag.contains("LowestReachedDepth")
-                    ? tag.getInt("LowestReachedDepth") : Integer.MAX_VALUE;
+                    ? tag.getIntOr("LowestReachedDepth", 0) : Integer.MAX_VALUE;
             if (loadedLowest != Integer.MAX_VALUE) {
                 lowestReachedDepth = Math.min(boxPos.getY(), loadedLowest);
             } else {
                 // 旧存档没有历史字段，只能用当前深度恢复已经延伸过的最低点。
                 lowestReachedDepth = Math.min(boxPos.getY(), drillDepth);
             }
-            running = tag.getBoolean("Running");
-            statusKey = limit(tag.getString("StatusKey"), MAX_STATUS_KEY_LENGTH);
-            statusText = limit(tag.getString("StatusText"), MAX_STATUS_TEXT_LENGTH);
-            selectedVeinId = limit(tag.getString("SelectedVeinId"), MAX_VEIN_ID_LENGTH);
-            updatedAt = Math.max(0L, tag.getLong("UpdatedAt"));
-            revision = Math.max(0L, tag.getLong("Revision"));
+            running = tag.getBooleanOr("Running", false);
+            statusKey = limit(tag.getStringOr("StatusKey", ""), MAX_STATUS_KEY_LENGTH);
+            statusText = limit(tag.getStringOr("StatusText", ""), MAX_STATUS_TEXT_LENGTH);
+            selectedVeinId = limit(tag.getStringOr("SelectedVeinId", ""), MAX_VEIN_ID_LENGTH);
+            updatedAt = Math.max(0L, tag.getLongOr("UpdatedAt", 0L));
+            revision = Math.max(0L, tag.getLongOr("Revision", 0L));
             loading = true;
         }
         try {
-            inventory.loadFromTag(tag.getCompound("Inventory"), registries);
+            inventory.loadFromTag(tag.getCompoundOrEmpty("Inventory"), registries);
         } finally {
             synchronized (this) {
                 loading = false;

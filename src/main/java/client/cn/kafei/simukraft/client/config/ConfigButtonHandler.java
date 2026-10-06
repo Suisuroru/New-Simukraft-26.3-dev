@@ -8,8 +8,6 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +16,6 @@ import java.util.List;
 import java.util.Objects;
 
 /** ConfigButtonHandler：在主菜单 Mod 按钮左侧和暂停菜单统计信息按钮右侧注入配置入口按钮。 */
-@OnlyIn(Dist.CLIENT)
 
 public final class ConfigButtonHandler {
 
@@ -50,7 +47,7 @@ public final class ConfigButtonHandler {
         }
 
         AnimatedIconButton btn = new AnimatedIconButton(buttonX, buttonY, BUTTON_SIZE, BUTTON_SIZE,
-                b -> Minecraft.getInstance().setScreen(SimuKraftConfigSelectionScreen.create(event.getScreen())));
+                b -> Minecraft.getInstance().gui.setScreen(SimuKraftConfigSelectionScreen.create(event.getScreen())));
         btn.setTooltip(Tooltip.create(nn(Component.translatable("gui.simukraft.config_button.title"))));
         event.addListener(nn(btn));
     }
@@ -66,7 +63,7 @@ public final class ConfigButtonHandler {
         int buttonX = statsButton.getX() + statsButton.getWidth() + BUTTON_SPACING;
 
         AnimatedIconButton btn = new AnimatedIconButton(buttonX, buttonY, BUTTON_SIZE, BUTTON_SIZE,
-                b -> Minecraft.getInstance().setScreen(SimuKraftConfigSelectionScreen.create(event.getScreen())));
+                b -> Minecraft.getInstance().gui.setScreen(SimuKraftConfigSelectionScreen.create(event.getScreen())));
         btn.setTooltip(Tooltip.create(nn(Component.translatable("gui.simukraft.config_button.title"))));
         event.addListener(nn(btn));
     }

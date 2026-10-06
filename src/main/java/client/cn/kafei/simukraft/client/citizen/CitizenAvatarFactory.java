@@ -1,19 +1,16 @@
 package client.cn.kafei.simukraft.client.citizen;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import com.lowdragmc.lowdraglib2.client.shader.LDLibRenderTypes;
 import common.cn.kafei.simukraft.SimuKraft;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
-
-@OnlyIn(Dist.CLIENT)
 public final class CitizenAvatarFactory {
     private static final int FRAME_BACKGROUND = 0xFF7A8085;
     private static final int FRAME_INNER = 0xFF646A6F;
@@ -51,7 +48,10 @@ public final class CitizenAvatarFactory {
         }
         try {
             Identifier textureLocation = resolveSkinTexture(skinPath);
-            return (graphics, mouseX, mouseY, x, y, width, height, partialTicks) -> drawAvatar(graphics, textureLocation, x, y, width, height);
+            return IGuiTexture.group(
+                    SpriteTexture.of(textureLocation).setSprite(8, 8, 8, 8),
+                    SpriteTexture.of(textureLocation).setSprite(40, 8, 8, 8)
+            ).scale(0.92f);
         } catch (Exception exception) {
             SimuKraft.LOGGER.error("Simukraft: Failed to create custom-draw avatar texture for skinPath={}", skinPath, exception);
             return new ColorRectTexture(0xFF8A9298).scale(0.78f);
@@ -76,7 +76,7 @@ public final class CitizenAvatarFactory {
     }
 
     /** blitHead：在画布上绘制头像，已故市民使用灰阶着色。 */
-    public static void blitHead(GuiGraphics graphics, String skinPath, float x, float y, float size, boolean grayscale) {
+    public static void blitHead(GuiGraphicsExtractor graphics, String skinPath, float x, float y, float size, boolean grayscale) {
         int frame = grayscale ? 0xFF2A2A2A : FRAME_BACKGROUND;
         int inner = grayscale ? 0xFF3F3F3F : FRAME_INNER;
         graphics.fill((int) x, (int) y, (int) (x + size), (int) (y + size), frame);
@@ -93,11 +93,11 @@ public final class CitizenAvatarFactory {
         }
     }
 
-    private static void drawAvatar(GuiGraphics graphics, Identifier textureLocation, float x, float y, float width, float height) {
+    private static void drawAvatar(GuiGraphicsExtractor graphics, Identifier textureLocation, float x, float y, float width, float height) {
         drawAvatar(graphics, textureLocation, x, y, width, height, false);
     }
 
-    private static void drawAvatar(GuiGraphics graphics, Identifier textureLocation, float x, float y,
+    private static void drawAvatar(GuiGraphicsExtractor graphics, Identifier textureLocation, float x, float y,
                                    float width, float height, boolean grayscale) {
         try {
             float insetX = width * 0.04f;
@@ -116,18 +116,21 @@ public final class CitizenAvatarFactory {
         }
     }
 
-    private static void drawFaceLayer(GuiGraphics graphics, Identifier textureLocation, float x, float y, float width, float height,
+    private static void drawFaceLayer(GuiGraphicsExtractor graphics, Identifier textureLocation, float x, float y, float width, float height,
                                       int u, int v, int regionWidth, int regionHeight, int color) {
-        var matrix = graphics.pose().last().pose();
-        var buffer = graphics.bufferSource().getBuffer(LDLibRenderTypes.guiTexture(textureLocation));
-        float texSize = 64.0f;
-        float u0 = u / texSize;
-        float v0 = v / texSize;
-        float u1 = (u + regionWidth) / texSize;
-        float v1 = (v + regionHeight) / texSize;
-        buffer.addVertex(matrix, x, y + height, 0).setUv(u0, v1).setColor(color);
-        buffer.addVertex(matrix, x + width, y + height, 0).setUv(u1, v1).setColor(color);
-        buffer.addVertex(matrix, x + width, y, 0).setUv(u1, v0).setColor(color);
-        buffer.addVertex(matrix, x, y, 0).setUv(u0, v0).setColor(color);
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                textureLocation,
+                Math.round(x),
+                Math.round(y),
+                (float) u,
+                (float) v,
+                Math.max(1, Math.round(width)),
+                Math.max(1, Math.round(height)),
+                regionWidth,
+                regionHeight,
+                64,
+                64,
+                color);
     }
 }
