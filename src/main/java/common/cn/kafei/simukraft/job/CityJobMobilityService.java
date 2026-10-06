@@ -2,6 +2,13 @@ package common.cn.kafei.simukraft.job;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.citizen.CitizenData;
+import common.cn.kafei.simukraft.citizen.CitizenPanicService;
+import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
+import common.cn.kafei.simukraft.citizen.CitizenService;
+import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
+import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
+import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
 import common.cn.kafei.simukraft.city.CityRuntimeService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
@@ -56,6 +63,9 @@ public final class CityJobMobilityService {
         if (MedicalService.isOnMedicalLeave(citizenData, level.getDefaultClockTime() / 24_000L)) {
             return;
         }
+        if (CitizenPanicService.isFleeing(level, citizenId)) {
+            return;
+        }
         CitizenEntity citizenEntity = findCitizenEntity(level, citizenId);
         if (citizenEntity == null) {
             CitizenService.findCitizen(level, citizenId)
@@ -94,6 +104,9 @@ public final class CityJobMobilityService {
      * pathfindToTarget：寻路到目标位置，寻路失败时传送兜底。
      */
     private static void pathfindToTarget(ServerLevel level, UUID citizenId, Vec3 target) {
+        if (CitizenPanicService.isFleeing(level, citizenId)) {
+            return;
+        }
         if (!CitizenNavigationService.requestMove(level, citizenId, target, MovementIntent.WORK)) {
             CitizenTeleportService.teleportCitizen(level, citizenId, target);
         }

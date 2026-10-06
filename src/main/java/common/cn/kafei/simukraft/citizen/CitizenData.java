@@ -27,6 +27,7 @@ public final class CitizenData {
     private CitizenWorkStatus workStatus;
     private String skinPath;
     private UUID cityId;
+    private UUID districtId;
     private UUID homeId;
     private UUID workplaceId;
     private BlockPos workplacePos;
@@ -94,6 +95,7 @@ public final class CitizenData {
         data.npcId = tag.contains("NpcId") ? tag.getIntOr("NpcId", 0) : -1;
         data.skinPath = tag.getStringOr("SkinPath", "");
         data.cityId = NbtUuid.readOrNull(tag, "CityId");
+        data.districtId = tag.hasUUID("DistrictId") ? tag.getUUID("DistrictId") : null;
         data.homeId = NbtUuid.readOrNull(tag, "HomeId");
         data.workplaceId = NbtUuid.readOrNull(tag, "WorkplaceId");
         data.workplacePos = tag.contains("WorkplacePos") ? BlockPos.of(tag.getLongOr("WorkplacePos", 0L)) : null;
@@ -140,6 +142,9 @@ public final class CitizenData {
         tag.putString("SkinPath", skinPath);
         if (cityId != null) {
             NbtUuid.put(tag, "CityId", cityId);
+        }
+        if (districtId != null) {
+            tag.putUUID("DistrictId", districtId);
         }
         if (homeId != null) {
             NbtUuid.put(tag, "HomeId", homeId);
@@ -272,7 +277,7 @@ public final class CitizenData {
     }
 
     public void setBornDay(long bornDay) {
-        this.bornDay = Math.max(0L, bornDay);
+        this.bornDay = bornDay;
     }
 
     public void setName(String name) {
@@ -382,6 +387,14 @@ public final class CitizenData {
 
     public void setCityId(UUID cityId) {
         this.cityId = cityId;
+    }
+
+    public UUID districtId() {
+        return districtId;
+    }
+
+    public void setDistrictId(UUID districtId) {
+        this.districtId = districtId;
     }
 
     public UUID homeId() {
@@ -542,7 +555,7 @@ public final class CitizenData {
     }
 
     public void setPregnantSince(long pregnantSince) {
-        this.pregnantSince = Math.max(0L, pregnantSince);
+        this.pregnantSince = pregnantSince;
     }
 
     public UUID reservedBabyBedPoiId() {
@@ -558,7 +571,7 @@ public final class CitizenData {
     }
 
     public void setLastAgeGrowthDay(long lastAgeGrowthDay) {
-        this.lastAgeGrowthDay = Math.max(-1L, lastAgeGrowthDay);
+        this.lastAgeGrowthDay = lastAgeGrowthDay;
     }
 
     public MedicalPatientData medical() {

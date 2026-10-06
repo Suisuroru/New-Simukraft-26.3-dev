@@ -1,6 +1,8 @@
 package common.cn.kafei.simukraft.registry;
 
 import common.cn.kafei.simukraft.SimuKraft;
+import common.cn.kafei.simukraft.item.CoinItems;
+import common.cn.kafei.simukraft.item.ManifestItem;
 import common.cn.kafei.simukraft.item.GeologicalHammerItem;
 import common.cn.kafei.simukraft.item.ManifestItem;
 import common.cn.kafei.simukraft.item.PortableCityCoreItem;
@@ -17,9 +19,9 @@ public final class ModItems {
 
     public static final DeferredHolder<Item, Item> MANIFEST = ITEMS.registerItem("manifest", ManifestItem::new);
     public static final DeferredHolder<Item, Item> PORTABLE_CITY_CORE = ITEMS.registerItem("portable_city_core", PortableCityCoreItem::new);
-    public static final DeferredHolder<Item, Item> COPPER_COIN = ITEMS.registerSimpleItem("copper_coin");
-    public static final DeferredHolder<Item, Item> SILVER_COIN = ITEMS.registerSimpleItem("silver_coin");
-    public static final DeferredHolder<Item, Item> GOLD_COIN = ITEMS.registerSimpleItem("gold_coin");
+    public static final DeferredHolder<Item, Item> COPPER_COIN = ITEMS.registerSimpleItem("copper_coin").toStack(CoinItems.MAX_STACK);
+    public static final DeferredHolder<Item, Item> SILVER_COIN = ITEMS.registerSimpleItem("silver_coin").toStack(CoinItems.MAX_STACK);
+    public static final DeferredHolder<Item, Item> GOLD_COIN = ITEMS.registerSimpleItem("gold_coin").toStack(CoinItems.MAX_STACK);
     public static final DeferredHolder<Item, Item> HAMBURGER = ITEMS.registerItem("hamburger", BuffFoodItem::new,
             p -> p.food(ModFoods.HAMBURGER.food(), ModFoods.HAMBURGER.consumable()));
     public static final DeferredHolder<Item, Item> FRENCH_FRIES = ITEMS.registerItem("french_fries", BuffFoodItem::new,

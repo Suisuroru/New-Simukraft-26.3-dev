@@ -14,9 +14,9 @@ import java.sql.SQLException;
 public final class CitizenSqliteRepository {
     // 38 列的占位符与整条 SQL 都是常量，只在类加载时拼一次（旧实现每次 save 都重建这条 700+ 字符的 SQL）。
     private static final String UPSERT_SQL =
-            "INSERT INTO citizens(uuid, name, gender, age, lifespan, job_type, job_id, status, work_status, work_need_detail, status_label, is_working, npc_id, skin_path, city_id, home_id, workplace_id, workplace_pos_long, health, happiness, sick, child, child_growth_due_day, born_day, dimension_id, family_id, origin_family_id, pregnant, pregnant_since, last_age_growth_day, disease_id, disease_since_day, disease_treatment_ticks, medical_bed_poi_id, postpartum_until_day, last_hospital_meal_day, reserved_baby_bed_poi_id, last_hospital_progress_day_time) VALUES("
-                    + String.join(", ", java.util.Collections.nCopies(38, "?"))
-                    + ") ON CONFLICT(uuid) DO UPDATE SET name = excluded.name, gender = excluded.gender, age = excluded.age, lifespan = excluded.lifespan, job_type = excluded.job_type, job_id = excluded.job_id, status = excluded.status, work_status = excluded.work_status, work_need_detail = excluded.work_need_detail, status_label = excluded.status_label, is_working = excluded.is_working, npc_id = excluded.npc_id, skin_path = excluded.skin_path, city_id = excluded.city_id, home_id = excluded.home_id, workplace_id = excluded.workplace_id, workplace_pos_long = excluded.workplace_pos_long, health = excluded.health, happiness = excluded.happiness, sick = excluded.sick, child = excluded.child, child_growth_due_day = excluded.child_growth_due_day, born_day = excluded.born_day, dimension_id = excluded.dimension_id, family_id = excluded.family_id, origin_family_id = excluded.origin_family_id, pregnant = excluded.pregnant, pregnant_since = excluded.pregnant_since, last_age_growth_day = excluded.last_age_growth_day, disease_id = excluded.disease_id, disease_since_day = excluded.disease_since_day, disease_treatment_ticks = excluded.disease_treatment_ticks, medical_bed_poi_id = excluded.medical_bed_poi_id, postpartum_until_day = excluded.postpartum_until_day, last_hospital_meal_day = excluded.last_hospital_meal_day, reserved_baby_bed_poi_id = excluded.reserved_baby_bed_poi_id, last_hospital_progress_day_time = excluded.last_hospital_progress_day_time";
+            "INSERT INTO citizens(uuid, name, gender, age, lifespan, job_type, job_id, status, work_status, work_need_detail, status_label, is_working, npc_id, skin_path, city_id, district_id, home_id, workplace_id, workplace_pos_long, health, happiness, sick, child, child_growth_due_day, born_day, dimension_id, family_id, origin_family_id, pregnant, pregnant_since, last_age_growth_day, disease_id, disease_since_day, disease_treatment_ticks, medical_bed_poi_id, postpartum_until_day, last_hospital_meal_day, reserved_baby_bed_poi_id, last_hospital_progress_day_time) VALUES("
+                    + String.join(", ", java.util.Collections.nCopies(39, "?"))
+                    + ") ON CONFLICT(uuid) DO UPDATE SET name = excluded.name, gender = excluded.gender, age = excluded.age, lifespan = excluded.lifespan, job_type = excluded.job_type, job_id = excluded.job_id, status = excluded.status, work_status = excluded.work_status, work_need_detail = excluded.work_need_detail, status_label = excluded.status_label, is_working = excluded.is_working, npc_id = excluded.npc_id, skin_path = excluded.skin_path, city_id = excluded.city_id, district_id = excluded.district_id, home_id = excluded.home_id, workplace_id = excluded.workplace_id, workplace_pos_long = excluded.workplace_pos_long, health = excluded.health, happiness = excluded.happiness, sick = excluded.sick, child = excluded.child, child_growth_due_day = excluded.child_growth_due_day, born_day = excluded.born_day, dimension_id = excluded.dimension_id, family_id = excluded.family_id, origin_family_id = excluded.origin_family_id, pregnant = excluded.pregnant, pregnant_since = excluded.pregnant_since, last_age_growth_day = excluded.last_age_growth_day, disease_id = excluded.disease_id, disease_since_day = excluded.disease_since_day, disease_treatment_ticks = excluded.disease_treatment_ticks, medical_bed_poi_id = excluded.medical_bed_poi_id, postpartum_until_day = excluded.postpartum_until_day, last_hospital_meal_day = excluded.last_hospital_meal_day, reserved_baby_bed_poi_id = excluded.reserved_baby_bed_poi_id, last_hospital_progress_day_time = excluded.last_hospital_progress_day_time";
 
     private final SimuSqliteDatabase database;
 
@@ -92,6 +92,7 @@ public final class CitizenSqliteRepository {
                     citizen.putInt("NpcId", resultSet.getInt("npc_id"));
                     citizen.putString("SkinPath", resultSet.getString("skin_path"));
                     SqliteNbtHelper.putNullableUuid(citizen, "CityId", resultSet.getString("city_id"));
+                    SqliteNbtHelper.putNullableUuid(citizen, "DistrictId", resultSet.getString("district_id"));
                     SqliteNbtHelper.putNullableUuid(citizen, "HomeId", resultSet.getString("home_id"));
                     SqliteNbtHelper.putNullableUuid(citizen, "WorkplaceId", resultSet.getString("workplace_id"));
                     long workplacePosLong = resultSet.getLong("workplace_pos_long");
@@ -153,34 +154,35 @@ public final class CitizenSqliteRepository {
             citizenStatement.setString(14, citizen.getStringOr("SkinPath", ""));
             SqliteNbtHelper.setNullableString(citizenStatement, 15, NbtUuid.toStringOrNull(citizen, "CityId"));
             SqliteNbtHelper.setNullableString(citizenStatement, 16, NbtUuid.toStringOrNull(citizen, "HomeId"));
+            SqliteNbtHelper.setNullableString(citizenStatement, 17, citizen.hasUUID("HomeId") ? citizen.getUUID("HomeId").toString() : null);
             SqliteNbtHelper.setNullableString(citizenStatement, 17, NbtUuid.toStringOrNull(citizen, "WorkplaceId"));
             if (citizen.contains("WorkplacePos")) {
-                citizenStatement.setLong(18, citizen.getLongOr("WorkplacePos", 0L));
+                citizenStatement.setLong(19, citizen.getLongOr("WorkplacePos", 0L));
             } else {
-                citizenStatement.setObject(18, null);
+                citizenStatement.setObject(19, null);
             }
-            citizenStatement.setDouble(19, citizen.getDoubleOr("Health", 0.0D));
-            citizenStatement.setDouble(20, citizen.getDoubleOr("Happiness", 0.0D));
-            citizenStatement.setInt(21, citizen.getBooleanOr("Sick", false) ? 1 : 0);
-            citizenStatement.setInt(22, citizen.getBooleanOr("Child", false) ? 1 : 0);
-            citizenStatement.setLong(23, citizen.getLongOr("ChildGrowthDueDay", 0L));
-            citizenStatement.setLong(24, citizen.getLongOr("BornDay", 0L));
+            citizenStatement.setDouble(20, citizen.getDoubleOr("Health", 0.0D));
+            citizenStatement.setDouble(21, citizen.getDoubleOr("Happiness", 0.0D));
+            citizenStatement.setInt(22, citizen.getBooleanOr("Sick", false) ? 1 : 0);
+            citizenStatement.setInt(23, citizen.getBooleanOr("Child", false) ? 1 : 0);
+            citizenStatement.setLong(24, citizen.getLongOr("ChildGrowthDueDay", 0L));
+            citizenStatement.setLong(25, citizen.getLongOr("BornDay", 0L));
             String dimId = citizen.contains("DimensionId") ? citizen.getStringOr("DimensionId", "") : "minecraft:overworld";
-            citizenStatement.setString(25, dimId.isBlank() ? "minecraft:overworld" : dimId);
-            SqliteNbtHelper.setNullableString(citizenStatement, 26, NbtUuid.toStringOrNull(citizen, "FamilyId"));
-            SqliteNbtHelper.setNullableString(citizenStatement, 27, NbtUuid.toStringOrNull(citizen, "OriginFamilyId"));
-            citizenStatement.setInt(28, citizen.getBooleanOr("Pregnant", false) ? 1 : 0);
-            citizenStatement.setLong(29, citizen.getLongOr("PregnantSince", 0L));
-            citizenStatement.setLong(30, citizen.getLongOr("LastAgeGrowthDay", 0L));
-            citizenStatement.setString(31, citizen.getStringOr("DiseaseId", ""));
-            citizenStatement.setLong(32, citizen.getLongOr("DiseaseSinceDay", 0L));
-            citizenStatement.setLong(33, citizen.getLongOr("DiseaseTreatmentTicks", 0L));
-            SqliteNbtHelper.setNullableString(citizenStatement, 34, NbtUuid.toStringOrNull(citizen, "MedicalBedPoiId"));
-            citizenStatement.setLong(35, citizen.getLongOr("PostpartumUntilDay", 0L));
-            citizenStatement.setLong(36, citizen.contains("LastHospitalMealDay") ? citizen.getLongOr("LastHospitalMealDay", 0L) : -1L);
-            SqliteNbtHelper.setNullableString(citizenStatement, 37,
+            citizenStatement.setString(26, dimId.isBlank() ? "minecraft:overworld" : dimId);
+            SqliteNbtHelper.setNullableString(citizenStatement, 27, NbtUuid.toStringOrNull(citizen, "FamilyId"));
+            SqliteNbtHelper.setNullableString(citizenStatement, 28, NbtUuid.toStringOrNull(citizen, "OriginFamilyId"));
+            citizenStatement.setInt(29, citizen.getBooleanOr("Pregnant", false) ? 1 : 0);
+            citizenStatement.setLong(30, citizen.getLongOr("PregnantSince", 0L));
+            citizenStatement.setLong(31, citizen.getLongOr("LastAgeGrowthDay", 0L));
+            citizenStatement.setString(32, citizen.getStringOr("DiseaseId", ""));
+            citizenStatement.setLong(33, citizen.getLongOr("DiseaseSinceDay", 0L));
+            citizenStatement.setLong(34, citizen.getLongOr("DiseaseTreatmentTicks", 0L));
+            SqliteNbtHelper.setNullableString(citizenStatement, 35, NbtUuid.toStringOrNull(citizen, "MedicalBedPoiId"));
+            citizenStatement.setLong(36, citizen.getLongOr("PostpartumUntilDay", 0L));
+            citizenStatement.setLong(37, citizen.contains("LastHospitalMealDay") ? citizen.getLongOr("LastHospitalMealDay", 0L) : -1L);
+            SqliteNbtHelper.setNullableString(citizenStatement, 38,
                     NbtUuid.toStringOrNull(citizen, "ReservedBabyBedPoiId"));
-            citizenStatement.setLong(38,
+            citizenStatement.setLong(39,
                     citizen.contains("LastHospitalProgressDayTime") ? citizen.getLongOr("LastHospitalProgressDayTime", 0L) : 0L);
             citizenStatement.executeUpdate();
             deleteSkills.setString(1, uuid);

@@ -2,6 +2,14 @@ package common.cn.kafei.simukraft.medical;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.citizen.CitizenData;
+import common.cn.kafei.simukraft.citizen.CitizenFoodConsumptionService;
+import common.cn.kafei.simukraft.citizen.CitizenJobVisualService;
+import common.cn.kafei.simukraft.citizen.CitizenManager;
+import common.cn.kafei.simukraft.citizen.CitizenPanicService;
+import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
+import common.cn.kafei.simukraft.citizen.CitizenService;
+import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
 import common.cn.kafei.simukraft.commercial.CommercialFoodMarketService;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
@@ -286,6 +294,9 @@ public final class MedicalMealService {
     }
 
     private static void requestMove(ServerLevel level, UUID doctorId, Vec3 target) {
+        if (CitizenPanicService.isFleeing(level, doctorId)) {
+            return;
+        }
         if (!CitizenNavigationService.requestMove(level, doctorId, target, MovementIntent.SELF_FEEDING)) {
             CitizenTeleportService.teleportCitizen(level, doctorId, target);
         }

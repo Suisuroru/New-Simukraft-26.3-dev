@@ -122,6 +122,28 @@ public final class MedicalPatientData {
         this.lastHospitalMealDay = Math.max(-1L, lastHospitalMealDay);
     }
 
+    /** shiftDays：时间回退时平移产后、住院吃饭和发病日，治疗 tick 保持不变。 */
+    public boolean shiftDays(long deltaDays) {
+        if (deltaDays <= 0L) {
+            return false;
+        }
+        boolean changed = false;
+        if (postpartumUntilDay != 0L) {
+            postpartumUntilDay -= deltaDays;
+            changed = true;
+        }
+        if (lastHospitalMealDay != -1L) {
+            long shifted = lastHospitalMealDay - deltaDays;
+            lastHospitalMealDay = shifted == -1L ? -2L : shifted;
+            changed = true;
+        }
+        if (disease != DiseaseType.NONE) {
+            diseaseSinceDay -= deltaDays;
+            changed = true;
+        }
+        return changed;
+    }
+
     public long lastHospitalProgressDayTime() {
         return lastHospitalProgressDayTime;
     }

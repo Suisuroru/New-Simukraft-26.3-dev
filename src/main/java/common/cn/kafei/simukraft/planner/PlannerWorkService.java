@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.citizen.CitizenPanicService;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;
@@ -221,6 +222,9 @@ public final class PlannerWorkService {
         }
         if (citizenEntity.position().distanceToSqr(anchor) > REACH * REACH) {
             citizenEntity.setHasActiveVisualTask(false);
+            if (CitizenPanicService.isFleeing(level, citizen.uuid())) {
+                return;
+            }
             if (!CitizenNavigationService.requestMove(level, citizen.uuid(), anchor, MovementIntent.WORK)) {
                 CitizenTeleportService.teleportCitizen(level, citizen.uuid(), anchor);
             }

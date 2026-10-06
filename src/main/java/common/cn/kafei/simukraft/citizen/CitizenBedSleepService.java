@@ -33,6 +33,7 @@ public final class CitizenBedSleepService {
     public static boolean tryStartSleeping(ServerLevel level, CitizenEntity entity, BlockPos bedHeadPos, Vec3 wakeupPos) {
         if (level == null || entity == null || bedHeadPos == null || !level.isLoaded(bedHeadPos) || entity.isSleeping())
             return false;
+        if (CitizenPanicService.isFleeing(entity)) return false;
         BlockState state = level.getBlockState(bedHeadPos);
         if (!isSupportedBed(state)) return false;
         if (state.hasProperty(BlockStateProperties.OCCUPIED) && state.getValue(BlockStateProperties.OCCUPIED))

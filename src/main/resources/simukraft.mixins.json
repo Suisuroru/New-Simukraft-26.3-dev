@@ -5,6 +5,9 @@
   "refmap": "simukraft.refmap.json",
   "mixins": [
     "MixinChestBlockEntity",
+    "MixinContainerStackLimit",
+    "MixinExtraCodecsStackRange",
+    "MixinCoinSlotLimit",
     "MixinChunkMap",
     "MixinChunkMapAccessor",
     "MixinChestMenu",

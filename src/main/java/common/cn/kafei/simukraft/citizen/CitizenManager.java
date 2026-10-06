@@ -3,7 +3,10 @@ package common.cn.kafei.simukraft.citizen;
 import com.mojang.serialization.Codec;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.config.ServerConfig;
+import common.cn.kafei.simukraft.building.BuildingAbandonmentService;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
+import common.cn.kafei.simukraft.time.CitizenCalendar;
+import common.cn.kafei.simukraft.time.MinecraftDay;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.storage.SimuSqliteStorage;
 import net.minecraft.nbt.CompoundTag;
@@ -405,7 +408,15 @@ public final class CitizenManager extends SavedData {
     }
 
     private void tickFamilySystemsIfNewDay(ServerLevel level) {
-        long currentDay = level.getDefaultClockTime() / 24000L;
+        long currentDay = MinecraftDay.index(level.getDefaultClockTime());
+        // /time set 会把绝对日号打小。游标不跟着退的话，怀孕、结婚和每日生病会一直停到旧日号。
+        if (lastFamilyTickDay >= 0L && currentDay < lastFamilyTickDay) {
+            long deltaDays = lastFamilyTickDay - currentDay;
+            rebaseCalendarsAfterTimeRollback(level, deltaDays, currentDay);
+            lastFamilyTickDay = currentDay;
+            setDirty();
+            return;
+        }
         if (currentDay <= lastFamilyTickDay) return;
         lastFamilyTickDay = currentDay;
         RandomSource random = level.getRandom();
@@ -425,6 +436,21 @@ public final class CitizenManager extends SavedData {
                 }
             }
         }
+    }
+
+    /** rebaseCalendarsAfterTimeRollback：日号回退时平移居民、废弃度和企业税日期，当天不重复掷概率。 */
+    private void rebaseCalendarsAfterTimeRollback(ServerLevel level, long deltaDays, long currentDay) {
+        int shifted = 0;
+        for (CitizenData citizen : citizens.values()) {
+            if (CitizenCalendar.shiftDays(citizen, deltaDays)) {
+                saveCitizenIncremental(citizen);
+                shifted++;
+            }
+        }
+        BuildingAbandonmentService.noteTimeRollback(level, currentDay);
+        common.cn.kafei.simukraft.citizen.PopulationGrowthService.noteTimeRollback(level, currentDay);
+        SimuSqliteStorage.shiftCommercialIncomeDays(level, deltaDays);
+        SimuKraft.LOGGER.info("Simukraft: day time moved back {} days, shifted {} citizen calendars.", deltaDays, shifted);
     }
 
     private CitizenData createDefaultFromEntity(CitizenEntity entity) {

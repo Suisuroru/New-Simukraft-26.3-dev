@@ -10,6 +10,8 @@ import common.cn.kafei.simukraft.building.BuildingCatalog;
 import common.cn.kafei.simukraft.building.BuildingPackageCatalog;
 import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.city.*;
+import common.cn.kafei.simukraft.city.CityLevelDefinition;
+import common.cn.kafei.simukraft.city.CityUpgradeService;
 import common.cn.kafei.simukraft.city.poi.CityPoiData;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiService;
@@ -139,7 +141,15 @@ public final class SimuKraftCommand {
                                                         context.getSource(),
                                                         DoubleArgumentType.getDouble(context, "amount"),
                                                         EntityArgument.getPlayer(context, "player")))))))
-        );
+        .then(Commands.literal("lv")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("level", IntegerArgumentType.integer(
+                                        CityLevelDefinition.MIN_LEVEL,
+                                        CityLevelDefinition.MAX_LEVEL))
+                                .executes(context -> upgradeSelfCity(
+                                        context.getSource(),
+                                        IntegerArgumentType.getInteger(context, "level")))))
+);
         root.then(Commands.literal("path")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("test")
@@ -797,6 +807,31 @@ public final class SimuKraftCommand {
         final int requestedCount = requested;
         source.sendSuccess(() -> Component.translatable("message.simukraft.command.path_wander.started", requestedCount, radius), true);
         return requested > 0 ? Command.SINGLE_SUCCESS : 0;
+    }
+
+    // 按目标等级启动命令执行者所属城市的升级流程。
+    private static int upgradeSelfCity(CommandSourceStack source, int targetLevel) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.translatable("message.simukraft.command.city_funds.player_required"));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        Optional<CityData> city = CityService.findPlayerCity(level, player.getUUID());
+        if (city.isEmpty()) {
+            source.sendFailure(Component.translatable("message.simukraft.command.city_required"));
+            return 0;
+        }
+
+        CityData cityData = city.get();
+        if (!CityUpgradeService.debugSetLevel(level, cityData, targetLevel)) {
+            source.sendFailure(Component.translatable("message.simukraft.command.city_upgrade.debug_failed"));
+            return 0;
+        }
+        HudSyncService.syncToCityGroup(level, cityData.cityId(), true);
+        source.sendSuccess(() -> Component.translatable(
+                "message.simukraft.command.city_upgrade.debug_success", targetLevel), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     // 给命令执行者所属城市加款；控制台必须显式指定玩家。

@@ -88,6 +88,8 @@ public final class CommercialWorkService {
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
+        // 定义晚于建档才加载成功时，把建筑和配置写回盒子，避免空壳箱一直不上榜。
+        CommercialControlBoxService.synchronizeBoxMetadata(level, data, building, definition);
         CommercialStockService.restock(level, data.boxPos(), definition);
         if (!data.running()) {
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
@@ -101,6 +103,7 @@ public final class CommercialWorkService {
         }
         if (MedicalService.isOnMedicalLeave(worker, level.getDefaultClockTime() / 24_000L)) {
             CitizenJobVisualService.clearMainHandOverride(worker.uuid());
+            setStatus(manager, data, "gui.simukraft.commercial.status.medical_leave", "");
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
@@ -118,6 +121,7 @@ public final class CommercialWorkService {
         }
         if (CitizenSelfFeedingService.isOnHungerStrike(level, worker.uuid())) {
             CitizenJobVisualService.clearMainHandOverride(worker.uuid());
+            setStatus(manager, data, "gui.simukraft.commercial.status.hunger_strike", "");
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
             return;
         }
@@ -145,6 +149,8 @@ public final class CommercialWorkService {
             // 成功交易后才等满间隔；失败（含原料不足）短间隔重试，确保漏斗/物流补料后能及时感知
             runtime.nextTick = gameTime + NPC_TRADE_INTERVAL_TICKS;
         } else {
+            // 缺料不会进入成功分支，否则医疗假和绝食状态会一直留在控制箱上
+            setStatus(CommercialBoxManager.get(level), data, "gui.simukraft.commercial.status.open", "");
             runtime.nextTick = gameTime + IDLE_RETRY_TICKS;
         }
     }

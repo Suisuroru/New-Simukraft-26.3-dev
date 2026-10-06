@@ -151,6 +151,9 @@ public final class CitizenHomeRestService {
             CityRuntimeService.requestCitizenRecovery(level, citizen);
             return false;
         }
+        if (CitizenPanicService.isFleeing(level, citizen.uuid())) {
+            return false;
+        }
         if (CitizenNavigationService.requestMove(level, citizen.uuid(), homeTarget, MovementIntent.RETURN_HOME)) {
             return true;
         }
