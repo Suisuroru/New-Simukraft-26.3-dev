@@ -125,7 +125,7 @@ public final class SimuKraft {
         ModTicketTypes.register(modEventBus);
         modEventBus.addListener(BuildingStructureDataPack::onAddPackFinders);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
-        modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.LOCAL, ServerConfig.SPEC);
         modEventBus.register(ModNetwork.class);
         modEventBus.addListener(this::onConfigLoading);
         modEventBus.addListener(this::onConfigReloading);

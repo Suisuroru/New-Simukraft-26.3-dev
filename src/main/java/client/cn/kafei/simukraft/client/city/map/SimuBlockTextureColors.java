@@ -147,7 +147,7 @@ public final class SimuBlockTextureColors {
         int opaque = 0;
         for (int y = 0; y < height; y += stepY) {
             for (int x = 0; x < width; x += stepX) {
-                int argb = sprite.getPixelRGBA(0, x, y);
+                int argb = sprite.getPixelARGB(0, x, y);
                 int alpha = ARGB.alpha(argb);
                 if (alpha < MIN_OPAQUE_ALPHA) {
                     continue;

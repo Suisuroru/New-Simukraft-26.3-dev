@@ -243,9 +243,9 @@ dependencies {
     implementation "org.xerial:sqlite-jdbc:3.46.1.0"
     implementation "com.zaxxer:HikariCP:5.1.0"
     jarJar "com.zaxxer:HikariCP:5.1.0"
-    implementation "maven.modrinth:AANobbMI:NM9w06Kr" // sodium
+    implementation "maven.modrinth:AANobbMI:VHtnT9Q4" // sodium
     implementation "maven.modrinth:YL57xq9U:bAdKrpw8" // iris
-    compileOnly "maven.modrinth:NcUtCpym:dLK8qn7v" // xaero's world map
+    compileOnly "maven.modrinth:NcUtCpym:p5t2Xn8F" // xaero's world map
     localRuntime "org.xerial:sqlite-jdbc:3.46.1.0"
     localRuntime "com.zaxxer:HikariCP:5.1.0"
     implementation "maven.modrinth:l6YH9Als:HwHxykP9" // spark
