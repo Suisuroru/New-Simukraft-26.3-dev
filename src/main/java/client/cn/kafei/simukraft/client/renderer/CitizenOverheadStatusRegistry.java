@@ -17,9 +17,9 @@ public final class CitizenOverheadStatusRegistry {
     private static final CopyOnWriteArrayList<Entry> ENTRIES = new CopyOnWriteArrayList<>();
 
     static {
-        register("name", PRIORITY_NAME, entity -> Optional.of(new StatusLine(entity.getDisplayName(), 0xFFFFFF, 0.025F)));
-        register("work_status", PRIORITY_WORK_STATUS, entity -> Optional.of(new StatusLine(CitizenWorkStatusDisplayRegistry.resolve(entity), 0xFFFF00, 0.02F)));
-        register("hunger", PRIORITY_HUNGER, entity -> Optional.of(new StatusLine(Component.translatable(entity.getHungerLevelKey()), 0xFFFF00, 0.02F)));
+        register("name", PRIORITY_NAME, entity -> Optional.of(new StatusLine(entity.getDisplayName(), 0xFFFFFF, 0.03F)));
+        register("work_status", PRIORITY_WORK_STATUS, entity -> Optional.of(new StatusLine(CitizenWorkStatusDisplayRegistry.resolve(entity), 0xFFFF00, 0.022F)));
+        register("hunger", PRIORITY_HUNGER, entity -> Optional.of(new StatusLine(Component.translatable(entity.getHungerLevelKey()), 0xFFFF00, 0.022F)));
     }
 
     private CitizenOverheadStatusRegistry() {

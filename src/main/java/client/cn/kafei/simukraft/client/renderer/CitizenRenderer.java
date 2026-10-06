@@ -3,6 +3,8 @@ package client.cn.kafei.simukraft.client.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -14,8 +16,10 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
@@ -24,6 +28,8 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
     private static final ThreadLocal<Boolean> HIDE_OVERHEAD_TEXT = ThreadLocal.withInitial(() -> false);
     private static final float ADULT_SCALE = 0.9375F;
     private static final float CHILD_MIN_SCALE = 0.45F;
+    private static final float OVERHEAD_HEAD_CLEARANCE = 0.20F;
+    private static final float OVERHEAD_LINE_GAP = 0.05F;
     private final CitizenModel slimModel;
     private final CitizenModel defaultModel;
 
@@ -92,12 +98,61 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
         if (state.hideOverhead || state.overheadLines.isEmpty() || state.distanceToCameraSq > 45.0D * 45.0D) {
             return;
         }
-        Vec3 attachment = state.nameTagAttachment != null ? state.nameTagAttachment : Vec3.ZERO;
-        int offset = 0;
-        for (CitizenOverheadStatusRegistry.StatusLine line : state.overheadLines) {
-            submitNodeCollector.submitNameTag(poseStack, attachment, offset, line.text(), !state.isDiscrete, state.lightCoords, camera);
-            offset += 1;
+        Minecraft minecraft = Minecraft.getInstance();
+        Font font = minecraft.font;
+        float backgroundAlpha = minecraft.gameRenderer.gameRenderState().optionsRenderState.getBackgroundOpacity(0.25F);
+        int backgroundColor = ARGB.color(backgroundAlpha, -16777216);
+        boolean seeThrough = !state.isDiscrete;
+        List<CitizenOverheadStatusRegistry.StatusLine> lines = state.overheadLines;
+        float[] heights = new float[lines.size()];
+        float totalHeight = 0.0F;
+        for (int i = 0; i < lines.size(); i++) {
+            float scale = lines.get(i).scale() > 0.0F ? lines.get(i).scale() : 0.025F;
+            heights[i] = font.lineHeight * 1.15F * scale;
+            totalHeight += heights[i];
+            if (i > 0) {
+                totalHeight += OVERHEAD_LINE_GAP;
+            }
         }
+        float y = state.boundingBoxHeight + OVERHEAD_HEAD_CLEARANCE + totalHeight;
+        for (int i = 0; i < lines.size(); i++) {
+            submitOverheadLine(poseStack, submitNodeCollector, camera, font, lines.get(i), y, backgroundColor, seeThrough, state.lightCoords);
+            y -= heights[i] + OVERHEAD_LINE_GAP;
+        }
+    }
+
+    private static void submitOverheadLine(
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            CameraRenderState camera,
+            Font font,
+            CitizenOverheadStatusRegistry.StatusLine line,
+            float y,
+            int backgroundColor,
+            boolean seeThrough,
+            int lightCoords) {
+        Component text = line.text();
+        if (text == null || text.getString().isBlank()) {
+            return;
+        }
+        float scale = line.scale() > 0.0F ? line.scale() : 0.025F;
+        FormattedCharSequence visual = text.getVisualOrderText();
+        float x = -font.width(visual) / 2.0F;
+        int color = ARGB.color(1.0F, line.color() | 0xFF000000);
+        poseStack.pushPose();
+        poseStack.translate(0.0F, y, 0.0F);
+        poseStack.rotate(camera.orientation);
+        poseStack.scale(scale, -scale, scale);
+        submitNodeCollector.submitText(
+                poseStack, x, 0.0F, visual, false,
+                seeThrough ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
+                lightCoords, color, backgroundColor, 0);
+        if (seeThrough) {
+            submitNodeCollector.submitText(
+                    poseStack, x, 0.0F, visual, false,
+                    Font.DisplayMode.NORMAL, lightCoords, color, 0, 0);
+        }
+        poseStack.popPose();
     }
 
     @Override
@@ -135,17 +190,20 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
 
     private static boolean useDefaultModel(CitizenEntity entity) {
         String skinPath = entity.getSkinPath();
-        if (skinPath == null) {
+        if (skinPath == null || skinPath.isBlank()) {
+            return true;
+        }
+        String path = skinPath.replace('\\', '/').toLowerCase();
+        if (path.contains("/female/") || path.contains("female_entity")) {
             return false;
         }
-        String fileName = skinPath;
-        int slash = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
-        if (slash >= 0) {
-            fileName = fileName.substring(slash + 1);
+        if (path.contains("/male/") || path.contains("male_entity")) {
+            return true;
         }
+        String fileName = path.substring(path.lastIndexOf('/') + 1);
         if (fileName.endsWith(".png")) {
             fileName = fileName.substring(0, fileName.length() - 4);
         }
-        return fileName.endsWith("_f");
+        return !fileName.endsWith("_f");
     }
 }

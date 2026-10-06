@@ -28,11 +28,7 @@ public class CitizenModel extends HumanoidModel<CitizenRenderState> {
         if (state.workSwing) {
             CitizenAnimationActions.applyBuilderWorkSwing(this, state.ageInTicks);
         }
-        copyPart(this.leftArm, this.leftSleeve);
-        copyPart(this.rightArm, this.rightSleeve);
-        copyPart(this.leftLeg, this.leftPants);
-        copyPart(this.rightLeg, this.rightPants);
-        copyPart(this.body, this.jacket);
+        // 26.3 玩家第二层是肢体子部件（PartPose.ZERO），跟随父骨骼即可。
     }
 
     public static void copyPart(ModelPart from, ModelPart to) {

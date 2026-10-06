@@ -36,8 +36,6 @@ public final class CitizenAnimationActions {
         arm.xRot -= swing * 1.2F + headOffset;
         arm.yRot += model.body.yRot * 2.0F;
         arm.zRot += Mth.sin(attackTime * (float) Math.PI) * -0.4F;
-        CitizenModel.copyPart(model.rightArm, model.rightSleeve);
-        CitizenModel.copyPart(model.leftArm, model.leftSleeve);
     }
 
     // applyBuilderWorkSwing：按旧版 tickCount + partialTick 入口调用施工动作。
