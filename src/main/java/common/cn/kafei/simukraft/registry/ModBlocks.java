@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -31,7 +32,8 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> BUILD_BOX = registerBlock("build_box", BuildBoxBlock::new, woodBox());
     public static final DeferredBlock<Block> CHEESE_BLOCK = registerBlock("cheese_block", Block::new, () -> cheeseProperties());
     public static final DeferredBlock<Block> CITY_CORE = registerBlock("city_core", CityCoreBlock::new,
-            p -> p.mapColor(MapColor.METAL).strength(1.0F).explosionResistance(3600000.0F).sound(SoundType.METAL));
+            p -> p.mapColor(MapColor.METAL).strength(1.0F).explosionResistance(3600000.0F).sound(SoundType.METAL)
+                    .pushReaction(PushReaction.IMMOVEABLE));
     public static final DeferredBlock<Block> COMMERCIAL_CONTROL_BOX = registerBlock("commercial_control_box", CommercialControlBoxBlock::new, metalBox(1.0F));
     public static final DeferredBlock<Block> GREEN_LIGHT_BLOCK = registerLightBlock("green_light_block");
     public static final DeferredBlock<Block> INDUSTRIAL_CONTROL_BOX = registerBlock("industrial_control_box", IndustrialControlBoxBlock::new, metalBox(0.8F));
@@ -48,9 +50,9 @@ public final class ModBlocks {
                     .isSuffocating((s, b, pos) -> false));
     public static final DeferredBlock<Block> MINERAL_DRILLING_CONTROL_BOX = registerBlock("mineral_drilling_control_box", MineralDrillingControlBoxBlock::new, metalBox(0.8F));
     public static final DeferredBlock<Block> LOGISTICS_CLIENT_BOX = registerBlock("logistics_client_box", LogisticsClientBoxBlock::new,
-            p -> p.mapColor(MapColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.METAL));
+            p -> p.mapColor(MapColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.METAL).pushReaction(PushReaction.IMMOVEABLE));
     public static final DeferredBlock<Block> LOGISTICS_SERVER_BOX = registerBlock("logistics_server_box", LogisticsServerBoxBlock::new,
-            p -> p.mapColor(MapColor.COLOR_BLUE).strength(1.0F).sound(SoundType.METAL));
+            p -> p.mapColor(MapColor.COLOR_BLUE).strength(1.0F).sound(SoundType.METAL).pushReaction(PushReaction.IMMOVEABLE));
     public static final DeferredBlock<Block> MEDICAL_CONTROL_BOX = registerBlock("medical_control_box", MedicalControlBoxBlock::new, metalBox(1.0F));
     public static final DeferredBlock<Block> BANK_CONTROL_BOX = registerBlock("bank_control_box", BankControlBoxBlock::new, metalBox(1.0F));
     public static final DeferredBlock<Block> EXCHANGE_CONTROL_BOX = registerBlock("exchange_control_box", ExchangeControlBoxBlock::new, metalBox(1.0F));
@@ -94,12 +96,18 @@ public final class ModBlocks {
         return registerBlock(name, Block::new, p -> p.mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15));
     }
 
+    /**
+     * metalBox: 各类控制箱的共用属性，功能方块不可被活塞推动。
+     */
     private static UnaryOperator<BlockBehaviour.Properties> metalBox(float strength) {
-        return p -> p.mapColor(MapColor.METAL).strength(strength).sound(SoundType.METAL);
+        return p -> p.mapColor(MapColor.METAL).strength(strength).sound(SoundType.METAL).pushReaction(PushReaction.IMMOVEABLE);
     }
 
+    /**
+     * woodBox: 建造箱与农田箱的共用属性，功能方块不可被活塞推动。
+     */
     private static UnaryOperator<BlockBehaviour.Properties> woodBox() {
-        return p -> p.mapColor(MapColor.WOOD).strength(0.8F).sound(SoundType.WOOD);
+        return p -> p.mapColor(MapColor.WOOD).strength(0.8F).sound(SoundType.WOOD).pushReaction(PushReaction.IMMOVEABLE);
     }
 
     /**
