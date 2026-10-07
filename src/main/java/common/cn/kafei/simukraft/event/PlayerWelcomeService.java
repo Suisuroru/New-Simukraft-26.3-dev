@@ -126,7 +126,12 @@ public final class PlayerWelcomeService {
     }
 
     private static void scheduleFirstDreamSequence(ServerPlayer player) {
-        if (PENDING_FIRST_DREAM.containsKey(player.getUUID())) {
+        if (hasPlayedFirstDream(player) || PENDING_FIRST_DREAM.containsKey(player.getUUID())) {
+            return;
+        }
+        AdvancementHolder advancement = player.level().getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
+        if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
+            markFirstDreamPlayed(player);
             return;
         }
         PENDING_FIRST_DREAM.put(player.getUUID(),
