@@ -143,16 +143,24 @@ final class ClientToastLayout {
                 iconX + iconSize + backingPadding,
                 centeredIconY + iconSize + backingPadding,
                 accentColor);
+        // MC 26.3 的 blit 中 width/height 同时代表源区域与目标尺寸，
+        // 直接把 iconSize 当作 width/height 会只采样 128x128 logo 的左上角色块，
+        // 导致图标视觉上消失；这里用一层子缩放把整张纹理缩放到 iconSize。
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(iconX, centeredIconY);
+        float logoScale = iconSize / (float) LOGO_TEXTURE_SIZE;
+        graphics.pose().scale(logoScale, logoScale);
         graphics.blit(RenderPipelines.GUI_TEXTURED,
                 LOGO_TEXTURE,
-                iconX,
-                centeredIconY,
+                0,
+                0,
                 0.0F,
                 0.0F,
-                iconSize,
-                iconSize,
+                LOGO_TEXTURE_SIZE,
+                LOGO_TEXTURE_SIZE,
                 LOGO_TEXTURE_SIZE,
                 LOGO_TEXTURE_SIZE);
+        graphics.pose().popMatrix();
         graphics.text(font, title, textX, titleY, 0xFFFFFFFF, false);
         if (count > 1) {
             String countText = "x" + count;
