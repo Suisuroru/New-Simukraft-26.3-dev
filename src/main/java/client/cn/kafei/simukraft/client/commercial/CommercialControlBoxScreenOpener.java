@@ -84,7 +84,7 @@ public final class CommercialControlBoxScreenOpener {
             layout.gapAll(6);
         }).addClass("simukraft_panel");
 
-        panel.addChild(label(Component.translatable("gui.simukraft.commercial.title"), Horizontal.CENTER, 0xFFFFFF, 16));
+        panel.addChild(label(Component.translatable("gui.simukraft.commercial.title"), Horizontal.CENTER, 0xFFFFFFFF, 16));
         panel.addChild(label(buildingLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 13));
         panel.addChild(label(definitionLine(packet), Horizontal.LEFT, packet.definitionValid() ? 0xFFF5F5A0 : 0xFFFF7070, 13));
         panel.addChild(label(workerLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 13));

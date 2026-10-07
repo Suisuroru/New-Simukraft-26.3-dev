@@ -14,7 +14,8 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class ClientHUDOverlay {
-    private static final int HUD_COLOR = 0xFFFFFF;
+    // 26.3 起 text() 会跳过 alpha 为 0 的颜色，必须传完整 ARGB
+    private static final int HUD_COLOR = 0xFFFFFFFF;
     private static final String SEPARATOR = " | ";
     private static final String[] WEEKDAYS = {
             "weekday.sunday", "weekday.monday", "weekday.tuesday", "weekday.wednesday",
@@ -30,9 +31,6 @@ public final class ClientHUDOverlay {
     private static int cachedCityPopulation = Integer.MIN_VALUE;
     private static CityPermissionLevel cachedPermissionLevel = CityPermissionLevel.CITIZEN;
     private static boolean cachedCreativeMode = false;
-
-    private ClientHUDOverlay() {
-    }
 
     public static void render(RenderGuiEvent.Post event) {
         Minecraft mc = Objects.requireNonNull(Minecraft.getInstance());

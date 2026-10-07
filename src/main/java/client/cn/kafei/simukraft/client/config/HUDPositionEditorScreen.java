@@ -197,8 +197,8 @@ public final class HUDPositionEditorScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, width, height, 0xCC000000);
         renderRegions(g);
-        g.centeredText(font, title, width / 2, 12, 0xFFFFFF);
-        g.centeredText(font, Component.translatable("gui.hud_editor.instruction"), width / 2, 28, 0xAAAAAA);
+        g.centeredText(font, title, width / 2, 12, 0xFFFFFFFF);
+        g.centeredText(font, Component.translatable("gui.hud_editor.instruction"), width / 2, 28, 0xFFAAAAAA);
 
         String widthLabel = previewMaxWidth <= 0
                 ? Component.translatable("gui.hud_editor.width_unlimited").getString()
@@ -207,7 +207,7 @@ public final class HUDPositionEditorScreen extends Screen {
                 Component.translatable("gui.hud_editor.status_with_width",
                         Component.translatable("gui.hud_editor.anchor." + currentAnchor.name().toLowerCase(java.util.Locale.ROOT)),
                         hudAbsoluteX, hudAbsoluteY, widthLabel),
-                width / 2, 46, 0xFFFFAA);
+                width / 2, 46, 0xFFFFFFAA);
 
         boolean onLeft = isOnLeftEdge(mouseX, mouseY);
         boolean onRight = isOnRightEdge(mouseX, mouseY);
@@ -245,7 +245,7 @@ public final class HUDPositionEditorScreen extends Screen {
                 case TOP_CENTER, BOTTOM_CENTER -> hudAbsoluteX + (previewBoxWidth - lw) / 2;
                 default -> hudAbsoluteX;
             };
-            g.text(font, line, tx, hudAbsoluteY + i * lineStep, 0xFFFFFF, true);
+            g.text(font, line, tx, hudAbsoluteY + i * lineStep, 0xFFFFFFFF, true);
         }
 
         super.extractRenderState(g, mouseX, mouseY, partialTick);

@@ -67,7 +67,7 @@ public final class CommercialTradeUiRoot extends UIElement {
     private static final int INVENTORY_X = 108;
     private static final int INVENTORY_Y = 84;
     private static final int SLOT_SIZE = 18;
-    private static final int TEXT_COLOR = 4210752;
+    private static final int TEXT_COLOR = 0xFF404040;
     private static final int MUTED_COLOR = 0xFF555555;
     private static final int ERROR_COLOR = 0xFF8A2020;
     private static final int LEFT_PANEL_BACKGROUND = 0xFF404040;
@@ -344,7 +344,7 @@ public final class CommercialTradeUiRoot extends UIElement {
             return;
         }
         Font font = guiContext.mc.font;
-        guiContext.graphics.text(font, label, x + 19 - 2 - font.width(label), y + 9, 0xFFFFFF, true);
+        guiContext.graphics.text(font, label, x + 19 - 2 - font.width(label), y + 9, 0xFFFFFFFF, true);
     }
 
     private void tradeSelected(boolean quickMove, int count) {

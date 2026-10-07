@@ -95,7 +95,7 @@ public final class ResidentialControlBoxScreenOpener {
             layout.gapAll(6);
         }).addClass("simukraft_panel");
 
-        panel.addChild(label(Component.translatable("gui.residential_control_box.panel_title"), Horizontal.CENTER, 0xFFFFFF, 16));
+        panel.addChild(label(Component.translatable("gui.residential_control_box.panel_title"), Horizontal.CENTER, 0xFFFFFFFF, 16));
         panel.addChild(label(buildingLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 13));
         panel.addChild(label(Component.translatable(packet.buildingTypeKey()), Horizontal.LEFT, 0xFFF5F5A0, 13));
         panel.addChild(label(residentLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 13));

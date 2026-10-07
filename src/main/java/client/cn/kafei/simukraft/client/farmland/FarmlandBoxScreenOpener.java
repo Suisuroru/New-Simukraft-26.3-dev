@@ -72,7 +72,7 @@ public final class FarmlandBoxScreenOpener {
             layout.gapAll(5);
         }).addClass("simukraft_panel");
 
-        panel.addChild(label(Component.translatable("gui.simukraft.farmland_box.title"), Horizontal.CENTER, 0xFFFFFF, 16));
+        panel.addChild(label(Component.translatable("gui.simukraft.farmland_box.title"), Horizontal.CENTER, 0xFFFFFFFF, 16));
         panel.addChild(label(cropLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 12));
         panel.addChild(label(areaLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 12));
         panel.addChild(label(chestLine(packet), Horizontal.LEFT, 0xFFF5F5A0, 12));

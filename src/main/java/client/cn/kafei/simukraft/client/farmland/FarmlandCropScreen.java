@@ -61,7 +61,7 @@ public final class FarmlandCropScreen {
             layout.gapAll(5);
         }).addClass("simukraft_panel");
 
-        panel.addChild(label(Component.translatable("gui.simukraft.farmland_box.select_crop_title"), Horizontal.CENTER, 0xFFFFFF, 16));
+        panel.addChild(label(Component.translatable("gui.simukraft.farmland_box.select_crop_title"), Horizontal.CENTER, 0xFFFFFFFF, 16));
         for (FarmCrop crop : FarmCrop.values()) {
             boolean selected = crop.id().equals(packet.cropId());
             Component text = selected

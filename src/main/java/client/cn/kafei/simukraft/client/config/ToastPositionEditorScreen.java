@@ -230,13 +230,13 @@ public final class ToastPositionEditorScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xCC000000);
         renderRegions(graphics);
-        graphics.centeredText(font, title, width / 2, 12, 0xFFFFFF);
+        graphics.centeredText(font, title, width / 2, 12, 0xFFFFFFFF);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.toast_editor.instruction"),
                 width / 2,
                 28,
-                0xAAAAAA);
+                0xFFAAAAAA);
         graphics.centeredText(
                 font,
                 Component.translatable(
@@ -249,7 +249,7 @@ public final class ToastPositionEditorScreen extends Screen {
                         toastHeight),
                 width / 2,
                 46,
-                0xFFFFAA);
+                0xFFFFFFAA);
 
         int outlineColor = outlineColor(mouseX, mouseY);
         graphics.fill(
