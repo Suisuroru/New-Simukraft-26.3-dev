@@ -95,6 +95,11 @@ public final class BuildingPreviewScreen extends Screen implements FreeCameraScr
     }
 
     @Override
+    public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        // 不绘制菜单模糊和暗底，保持世界可见以便对准预览建筑
+    }
+
+    @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         if (rtsPreviewMode) {
             return;
