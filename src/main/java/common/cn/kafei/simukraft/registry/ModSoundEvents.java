@@ -19,7 +19,7 @@ public final class ModSoundEvents {
     public static final DeferredHolder<SoundEvent, SoundEvent> FARMLAND_BOX_PLACE = registerSound("block.farmland_box.place");
     public static final DeferredHolder<SoundEvent, SoundEvent> FARMLAND_BOX_BREAK = registerSound("block.farmland_box.break");
     public static final DeferredHolder<SoundEvent, SoundEvent> PLAYER_WAKE_UP = registerSound("player.wake_up");
-    // FIRST_DREAM：旧版首次进入世界时播放的梦境音乐。
+    // FIRST_DREAM：进入世界时播放的梦境音乐。
     public static final DeferredHolder<SoundEvent, SoundEvent> FIRST_DREAM = registerSound("music.first_dream");
     public static final DeferredHolder<SoundEvent, SoundEvent> MONEY_COLLECT = registerSound("money.collect");
     public static final DeferredHolder<SoundEvent, SoundEvent> CONSTRUCTION_COMPLETE = registerSound("construction.complete");

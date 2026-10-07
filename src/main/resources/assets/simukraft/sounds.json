@@ -44,7 +44,10 @@
   "music.first_dream": {
     "subtitle": "simukraft.subtitle.music.first_dream",
     "sounds": [
-      "simukraft:music/first_dream"
+      {
+        "name": "simukraft:music/first_dream",
+        "stream": true
+      }
     ]
   },
   "money.collect": {

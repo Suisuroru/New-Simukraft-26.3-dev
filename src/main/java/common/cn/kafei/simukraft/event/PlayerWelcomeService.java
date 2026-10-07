@@ -6,13 +6,16 @@ import common.cn.kafei.simukraft.registry.ModSoundEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.Map;
@@ -32,7 +35,7 @@ public final class PlayerWelcomeService {
     private PlayerWelcomeService() {
     }
 
-    // handleLogin：玩家进入世界时发送旧版欢迎消息，并调度首次梦境成就。
+    // handleLogin：玩家进入世界时发送欢迎消息，并调度梦境音效（每次进入都播）。
     public static void handleLogin(ServerPlayer player) {
         if (player == null) {
             return;
@@ -41,7 +44,7 @@ public final class PlayerWelcomeService {
         scheduleFirstDreamSequence(player);
     }
 
-    // tick：延迟播放首次梦境音效并授予成就，避开玩家刚登录时客户端还没稳定的阶段。
+    // tick：延迟播放梦境音效并授予首次成就，避开玩家刚登录时客户端还没稳定的阶段。
     public static void tick(MinecraftServer server) {
         if (server == null || PENDING_FIRST_DREAM.isEmpty()) {
             return;
@@ -61,7 +64,11 @@ public final class PlayerWelcomeService {
             }
 
             if (state.stage() == FirstDreamStage.WAITING_TO_PLAY_SOUND) {
-                player.playSound(ModSoundEvents.FIRST_DREAM.get(), 1.0F, 1.0F);
+                playFirstDreamSound(player);
+                if (hasCompletedFirstDream(player)) {
+                    PENDING_FIRST_DREAM.remove(entry.getKey());
+                    continue;
+                }
                 PENDING_FIRST_DREAM.put(entry.getKey(),
                         new FirstDreamPendingState(FirstDreamStage.WAITING_TO_GRANT_ADVANCEMENT,
                                 FIRST_DREAM_GRANT_DELAY_TICKS));
@@ -119,16 +126,24 @@ public final class PlayerWelcomeService {
     }
 
     private static void scheduleFirstDreamSequence(ServerPlayer player) {
-        if (hasPlayedFirstDream(player) || PENDING_FIRST_DREAM.containsKey(player.getUUID())) {
-            return;
-        }
-        AdvancementHolder advancement = player.level().getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
-        if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
-            markFirstDreamPlayed(player);
+        if (PENDING_FIRST_DREAM.containsKey(player.getUUID())) {
             return;
         }
         PENDING_FIRST_DREAM.put(player.getUUID(),
                 new FirstDreamPendingState(FirstDreamStage.WAITING_TO_PLAY_SOUND, FIRST_DREAM_START_DELAY_TICKS));
+    }
+
+    // playFirstDreamSound：直接把音效包发给该玩家。Player.playSound 会把自己排除，登录者听不到。
+    private static void playFirstDreamSound(ServerPlayer player) {
+        player.connection.send(new ClientboundSoundPacket(
+                BuiltInRegistries.SOUND_EVENT.wrapAsHolder(ModSoundEvents.FIRST_DREAM.get()),
+                SoundSource.MASTER,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                1.0F,
+                1.0F,
+                player.getRandom().nextLong()));
     }
 
     private static void grantFirstDreamAdvancement(ServerPlayer player) {
@@ -145,6 +160,14 @@ public final class PlayerWelcomeService {
         if (player.getAdvancements().award(advancement, FIRST_DREAM_CRITERION)) {
             markFirstDreamPlayed(player);
         }
+    }
+
+    private static boolean hasCompletedFirstDream(ServerPlayer player) {
+        if (hasPlayedFirstDream(player)) {
+            return true;
+        }
+        AdvancementHolder advancement = player.level().getServer().getAdvancements().get(FIRST_DREAM_ADVANCEMENT_ID);
+        return advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone();
     }
 
     private static boolean hasPlayedFirstDream(ServerPlayer player) {
