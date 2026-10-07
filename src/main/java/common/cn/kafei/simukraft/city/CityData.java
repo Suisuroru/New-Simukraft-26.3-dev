@@ -42,26 +42,28 @@ public final class CityData {
 
     public static CityData fromTag(CompoundTag tag) {
         CityData data = new CityData(NbtUuid.readOrNull(tag, "CityId"));
-        data.cityName = tag.getString("CityName").get();
-        data.dimensionId = normalizeDimensionId(tag.getString("DimensionId").get());
-        data.cityCorePos = new BlockPos(tag.getInt("CoreX").get(), tag.getInt("CoreY").get(), tag.getInt("CoreZ").get());
-        data.funds = tag.getDouble("Funds").get();
-        data.cityLevel = clampCityLevel(tag.getInt("CityLevel").get());
+        data.cityName = tag.getStringOr("CityName", "未命名城市");
+        data.dimensionId = normalizeDimensionId(tag.getStringOr("DimensionId", "minecraft:overworld"));
+        data.cityCorePos = new BlockPos(tag.getIntOr("CoreX", 0), tag.getIntOr("CoreY", 0), tag.getIntOr("CoreZ", 0));
+        data.funds = tag.getDoubleOr("Funds", 20.0D);
+        data.cityLevel = clampCityLevel(tag.getIntOr("CityLevel", CityLevelDefinition.MIN_LEVEL));
+        // 升级任务字段仅在激活时写入，SQLite 更是完全不持久化它们；缺失必须按“无任务”读取，
+        // 否则 26.3 的 Optional.get() 会抛 NoSuchElementException，连带整座城市（含核心坐标）加载失败。
         data.upgradeState = CityUpgradeState.fromSaved(
-                tag.getInt("UpgradeTargetLevel").get(),
-                tag.getLong("UpgradeStartedAt").get(),
-                tag.getInt("UpgradeDurationTicks").get());
+                tag.getIntOr("UpgradeTargetLevel", 0),
+                tag.getLongOr("UpgradeStartedAt", 0L),
+                tag.getIntOr("UpgradeDurationTicks", 0));
         if (data.upgradeState.active() && data.upgradeState.targetLevel() != data.cityLevel + 1) {
             data.upgradeState = CityUpgradeState.NONE;
         }
-        ListTag memberTags = tag.getList("Members").get();
+        ListTag memberTags = tag.getListOrEmpty("Members");
         for (int i = 0; i < memberTags.size(); i++) {
-            CityMemberData member = CityMemberData.fromTag(memberTags.getCompound(i).get());
+            CityMemberData member = CityMemberData.fromTag(memberTags.getCompoundOrEmpty(i));
             data.members.put(member.playerId(), member);
         }
-        ListTag financeTags = tag.getList("FinanceTransactions").get();
+        ListTag financeTags = tag.getListOrEmpty("FinanceTransactions");
         for (int i = 0; i < financeTags.size(); i++) {
-            data.financeTransactions.add(FinanceTransactionData.fromTag(financeTags.getCompound(i).get()));
+            data.financeTransactions.add(FinanceTransactionData.fromTag(financeTags.getCompoundOrEmpty(i)));
         }
         return data;
     }
