@@ -30,17 +30,13 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
     private static final float CHILD_MIN_SCALE = 0.45F;
     private static final float OVERHEAD_HEAD_CLEARANCE = 0.20F;
     private static final float OVERHEAD_LINE_GAP = 0.05F;
-    private final CitizenModel slimModel;
-    private final CitizenModel defaultModel;
 
     public CitizenRenderer(EntityRendererProvider.Context context) {
         super(context, new CitizenModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5F);
-        this.slimModel = this.model;
-        this.defaultModel = new CitizenModel(context.bakeLayer(ModelLayers.PLAYER), false);
         this.addLayer(new PregnancyBellyLayer(this));
         this.addLayer(new HumanoidArmorLayer<>(
                 this,
-                ArmorModelSet.bake(ModelLayers.PLAYER_ARMOR, context.getModelSet(),
+                ArmorModelSet.bake(ModelLayers.PLAYER_SLIM_ARMOR, context.getModelSet(),
                         part -> new HumanoidModel<>(part, RenderTypes::armorCutoutNoCull)),
                 context.getEquipmentRenderer()));
         this.addLayer(new PregnancyBellyArmorLayer(this));
@@ -66,18 +62,11 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
         state.childNpc = entity.isChildNpc();
         state.npcAge = entity.getAge();
         state.pregnancyStage = entity.getPregnancyStage() == null ? "" : entity.getPregnancyStage();
-        state.useWideModel = useDefaultModel(entity);
         state.hideOverhead = HIDE_OVERHEAD_TEXT.get();
         state.overheadLines = state.hideOverhead || entity.isInvisible()
                 ? List.of()
                 : CitizenOverheadStatusRegistry.resolve(entity);
         state.nameTag = null;
-    }
-
-    @Override
-    public void submit(CitizenRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
-        this.model = state.useWideModel ? defaultModel : slimModel;
-        super.submit(state, poseStack, submitNodeCollector, camera);
     }
 
     @Override
@@ -186,24 +175,5 @@ public class CitizenRenderer extends MobRenderer<CitizenEntity, CitizenRenderSta
         }
         Identifier parsed = Identifier.tryParse(skinPath);
         return parsed != null ? parsed : DEFAULT_TEXTURE;
-    }
-
-    private static boolean useDefaultModel(CitizenEntity entity) {
-        String skinPath = entity.getSkinPath();
-        if (skinPath == null || skinPath.isBlank()) {
-            return true;
-        }
-        String path = skinPath.replace('\\', '/').toLowerCase();
-        if (path.contains("/female/") || path.contains("female_entity")) {
-            return false;
-        }
-        if (path.contains("/male/") || path.contains("male_entity")) {
-            return true;
-        }
-        String fileName = path.substring(path.lastIndexOf('/') + 1);
-        if (fileName.endsWith(".png")) {
-            fileName = fileName.substring(0, fileName.length() - 4);
-        }
-        return !fileName.endsWith("_f");
     }
 }

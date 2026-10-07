@@ -11,7 +11,6 @@ public class CitizenRenderState extends HumanoidRenderState {
     public boolean childNpc;
     public int npcAge = 18;
     public String pregnancyStage = "";
-    public boolean useWideModel;
     public boolean hideOverhead;
     public List<CitizenOverheadStatusRegistry.StatusLine> overheadLines = List.of();
 }
