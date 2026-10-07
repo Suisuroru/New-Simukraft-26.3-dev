@@ -9,7 +9,7 @@
     "description": {
       "translate": "advancement.simukraft.first_dream.description"
     },
-    "background": "minecraft:textures/block/bricks.png",
+    "background": "minecraft:block/bricks",
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": false,
