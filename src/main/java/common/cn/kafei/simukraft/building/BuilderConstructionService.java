@@ -4,27 +4,18 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenVoiceService;
-import common.cn.kafei.simukraft.entity.CitizenEntity;
-import common.cn.kafei.simukraft.citizen.CitizenLevelService;
-import common.cn.kafei.simukraft.citizen.CitizenService;
-import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
-import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiType;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.economy.EconomyService;
-import common.cn.kafei.simukraft.network.hud.HudSyncService;
+import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.event.BuildingConstructionEvent;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.job.CityJobAssignmentService;
 import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.material.*;
 import common.cn.kafei.simukraft.medical.MedicalService;
+import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import common.cn.kafei.simukraft.network.rts.RtsBuildingBoundsRequestPacket;
 import common.cn.kafei.simukraft.protection.NpcBlockProtectionPolicy;
 import common.cn.kafei.simukraft.registry.ModBlocks;
@@ -745,7 +736,9 @@ public final class BuilderConstructionService {
                 .orElse("");
     }
 
-    /** 5 级以下在推进这一块之前扣这一块的钱。5 级及以上不在这里扣。 */
+    /**
+     * 5 级以下在推进这一块之前扣这一块的钱。5 级及以上不在这里扣。
+     */
     private static boolean payPlacedBlock(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, boolean chargePerBlock, int processedBlocks) {
         if (!chargePerBlock) {
             return true;

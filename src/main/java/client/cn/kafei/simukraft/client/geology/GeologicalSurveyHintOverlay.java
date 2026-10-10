@@ -42,7 +42,9 @@ public final class GeologicalSurveyHintOverlay {
         show(newMessage, false, 0);
     }
 
-    /** showTypewriter: 用同一文本框逐字打出台词。 */
+    /**
+     * showTypewriter: 用同一文本框逐字打出台词。
+     */
     public static void showTypewriter(Component newMessage, int lingerMillis) {
         show(newMessage, true, lingerMillis);
     }

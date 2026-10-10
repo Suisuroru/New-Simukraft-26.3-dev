@@ -1,16 +1,9 @@
 package common.cn.kafei.simukraft.network.city;
 
 import common.cn.kafei.simukraft.SimuKraft;
-import common.cn.kafei.simukraft.city.CityData;
-import common.cn.kafei.simukraft.city.CityMemberData;
-import common.cn.kafei.simukraft.city.CityService;
-import common.cn.kafei.simukraft.city.DistrictData;
-import common.cn.kafei.simukraft.city.DistrictManager;
-import common.cn.kafei.simukraft.city.DistrictOwnershipSync;
-import common.cn.kafei.simukraft.city.DistrictRole;
-import common.cn.kafei.simukraft.city.CityChunkManager;
+import common.cn.kafei.simukraft.building.PlacedBuildingService;
+import common.cn.kafei.simukraft.city.*;
 import common.cn.kafei.simukraft.network.city.core.CityCoreAccessValidator;
-import common.cn.kafei.simukraft.network.toast.InfoToastService;
 import common.cn.kafei.simukraft.network.city.core.CityCoreOpenRequestPacket;
 import common.cn.kafei.simukraft.network.city.map.CityCoreMapRequestPacket;
 import common.cn.kafei.simukraft.network.toast.InfoToastService;
@@ -136,12 +129,11 @@ public record DistrictActionPacket(Action action, BlockPos corePos, UUID distric
                     announced = true;
                 }
             }
-            case ASSIGN ->
-                   {
+            case ASSIGN -> {
                 ok = common.cn.kafei.simukraft.city.DistrictService.assign(level, city.cityId(), player.getUUID(), packet.districtId(), chunks);
                 chunksChanged = ok;
-            }case MOVE_TO_CITY ->
-                   {
+            }
+            case MOVE_TO_CITY -> {
                 ok = cityMayor && manager.moveToCity(city.cityId(), chunks);
                 chunksChanged = ok;
             }
@@ -167,9 +159,8 @@ public record DistrictActionPacket(Action action, BlockPos corePos, UUID distric
                     }
                 }
             }
-            case RENAME ->
-                    {
-                           ok = cityMayor && manager.rename(packet.districtId(), city.cityId(), packet.name());
+            case RENAME -> {
+                ok = cityMayor && manager.rename(packet.districtId(), city.cityId(), packet.name());
                 Component renameMessage = Component.translatable(ok ? "message.simukraft.district.renamed" : "message.simukraft.district.rename_failed", DistrictManager.normalizeDistrictName(packet.name()));
                 if (ok) {
                     InfoToastService.success(player, renameMessage);

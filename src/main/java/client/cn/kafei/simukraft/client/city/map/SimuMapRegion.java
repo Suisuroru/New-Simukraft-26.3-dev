@@ -88,15 +88,17 @@ public class SimuMapRegion {
             if (renderedImage == null || localX < 0 || localX >= 512 || localZ < 0 || localZ >= 512) {
                 return 0;
             }
-            int abgr = renderedImage.getPixelRGBA(localX, localZ);
-            if ((abgr >>> 24) == 0) {
+            int argb = renderedImage.getPixel(localX, localZ);
+            if ((argb >>> 24) == 0) {
                 return 0;
             }
-            return SimuBlockColors.fromNativeColor(abgr);
+            return argb;
         }
     }
 
-    /** 标记纹理需要上传到 GPU。 */
+    /**
+     * 标记纹理需要上传到 GPU。
+     */
     public void markTextureNeedsUpload() {
         textureNeedsUpload = true;
         imageLoaded = false;

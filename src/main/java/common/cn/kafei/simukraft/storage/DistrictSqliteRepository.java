@@ -6,11 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -41,17 +37,31 @@ public final class DistrictSqliteRepository {
             }
             ListTag districts = tag.getList("Districts").get();
             for (int i = 0; i < districts.size(); i++) {
-                CompoundTag value = districts.getCompound(i);
-                String parentCityId = value.getUUID("ParentCityId").toString();
+                CompoundTag value = districts.getCompound(i).get();
+                String parentCityId = NbtUuid.readOrNull(value, "ParentCityId").toString();
                 if (!liveCities.contains(parentCityId)) continue;
-                String districtId = value.getUUID("DistrictId").toString();
-                district.setString(1, districtId); district.setString(2, parentCityId);
-                district.setString(3, value.getString("Name")); district.setInt(4, value.getInt("Color")); district.setString(5, dimensionId); district.addBatch();
-                ListTag chunks = value.getList("Chunks", LongTag.TAG_LONG);
-                for (int j = 0; j < chunks.size(); j++) { chunk.setString(1, districtId); chunk.setLong(2, ((LongTag) chunks.get(j)).getAsLong()); chunk.setString(3, dimensionId); chunk.addBatch(); }
-                ListTag cores = value.getList("Cores", LongTag.TAG_LONG);
-                for (int j = 0; j < cores.size(); j++) { core.setString(1, districtId); core.setLong(2, ((LongTag) cores.get(j)).getAsLong()); core.setString(3, dimensionId); core.addBatch(); }
-                ListTag members = value.getList("Members", CompoundTag.TAG_COMPOUND);
+                String districtId = NbtUuid.readOrNull(value, "DistrictId").toString();
+                district.setString(1, districtId);
+                district.setString(2, parentCityId);
+                district.setString(3, value.getString("Name").get());
+                district.setInt(4, value.getInt("Color").get());
+                district.setString(5, dimensionId);
+                district.addBatch();
+                ListTag chunks = value.getList("Chunks").get();
+                for (int j = 0; j < chunks.size(); j++) {
+                    chunk.setString(1, districtId);
+                    chunk.setLong(2, ((LongTag) chunks.get(j)).longValue());
+                    chunk.setString(3, dimensionId);
+                    chunk.addBatch();
+                }
+                ListTag cores = value.getList("Cores").get();
+                for (int j = 0; j < cores.size(); j++) {
+                    core.setString(1, districtId);
+                    core.setLong(2, ((LongTag) cores.get(j)).longValue());
+                    core.setString(3, dimensionId);
+                    core.addBatch();
+                }
+                ListTag members = value.getList("Members").get();
                 for (int j = 0; j < members.size(); j++) {
                     CompoundTag m = members.getCompound(j).get();
                     member.setString(1, districtId);

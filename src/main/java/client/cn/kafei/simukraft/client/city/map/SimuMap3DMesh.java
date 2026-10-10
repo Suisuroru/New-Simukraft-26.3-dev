@@ -1,10 +1,10 @@
 package client.cn.kafei.simukraft.client.city.map;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import org.joml.Matrix4f;
+import org.joml.Matrix3x2fc;
 
 import java.util.Arrays;
 
@@ -12,7 +12,6 @@ import java.util.Arrays;
  * 城市核心立体沙盘：每格一块平顶柱体，高差处补立面，草地合并成大面。
  * 缩放只改投影。不画整张底座，避免远半边被同色大面盖住。
  */
-@OnlyIn(Dist.CLIENT)
 public final class SimuMap3DMesh {
     public static final int MAX_CELLS = 80;
     public static final long CACHE_TICKS = 40L;
@@ -26,8 +25,11 @@ public final class SimuMap3DMesh {
 
     public interface Source {
         int height(int worldX, int worldZ);
+
         int terrainColor(int worldX, int worldZ);
+
         int overlay(int worldX, int worldZ);
+
         boolean core(int worldX, int worldZ);
     }
 
@@ -169,7 +171,7 @@ public final class SimuMap3DMesh {
         buildFaces();
     }
 
-    public void emit(BufferBuilder buffer, Matrix4f matrix, float yaw, float scale,
+    public void emit(VertexConsumer consumer, Matrix3x2fc pose, float yaw, float scale,
                      double centerScreenX, double centerScreenY, int liveCenterX, int liveCenterZ) {
         if (faceCount <= 0) {
             return;
@@ -185,7 +187,7 @@ public final class SimuMap3DMesh {
             project(fx[o + 1] + shiftX, fz[o + 1] + shiftZ, fh[o + 1], cos, sin, scale, centerScreenX, centerScreenY, p10);
             project(fx[o + 2] + shiftX, fz[o + 2] + shiftZ, fh[o + 2], cos, sin, scale, centerScreenX, centerScreenY, p11);
             project(fx[o + 3] + shiftX, fz[o + 3] + shiftZ, fh[o + 3], cos, sin, scale, centerScreenX, centerScreenY, p01);
-            quad(buffer, matrix, p00, fc[o], p10, fc[o + 1], p11, fc[o + 2], p01, fc[o + 3]);
+            quad(consumer, pose, p00, fc[o], p10, fc[o + 1], p11, fc[o + 2], p01, fc[o + 3]);
         }
     }
 
@@ -485,12 +487,12 @@ public final class SimuMap3DMesh {
         return 0.66F;
     }
 
-    private static void quad(BufferBuilder buffer, Matrix4f matrix,
+    private static void quad(VertexConsumer consumer, Matrix3x2fc pose,
                              float[] a, int ca, float[] b, int cb, float[] c, int cc, float[] d, int cd) {
-        buffer.addVertex(matrix, a[0], a[1], a[2]).setColor(SimuBlockColors.opaqueTerrainColor(ca));
-        buffer.addVertex(matrix, b[0], b[1], b[2]).setColor(SimuBlockColors.opaqueTerrainColor(cb));
-        buffer.addVertex(matrix, c[0], c[1], c[2]).setColor(SimuBlockColors.opaqueTerrainColor(cc));
-        buffer.addVertex(matrix, d[0], d[1], d[2]).setColor(SimuBlockColors.opaqueTerrainColor(cd));
+        consumer.addVertexWith2DPose(pose, a[0], a[1]).setColor(SimuBlockColors.opaqueTerrainColor(ca));
+        consumer.addVertexWith2DPose(pose, b[0], b[1]).setColor(SimuBlockColors.opaqueTerrainColor(cb));
+        consumer.addVertexWith2DPose(pose, c[0], c[1]).setColor(SimuBlockColors.opaqueTerrainColor(cc));
+        consumer.addVertexWith2DPose(pose, d[0], d[1]).setColor(SimuBlockColors.opaqueTerrainColor(cd));
     }
 
     static final class CellPick {

@@ -162,7 +162,9 @@ public final class BuildingIntegrityService {
         return new RepairPlan(List.copyOf(paidTargets), List.copyOf(carriedTargets), manualRepairBlocks);
     }
 
-    /** 按背包存量决定哪些黑名单方块这次能补，先不消耗。 */
+    /**
+     * 按背包存量决定哪些黑名单方块这次能补，先不消耗。
+     */
     private static List<RepairTarget> carriedBlocksToPlace(ServerPlayer player, List<RepairTarget> carriedTargets) {
         if (player == null || carriedTargets.isEmpty()) {
             return List.of();
@@ -276,7 +278,8 @@ public final class BuildingIntegrityService {
         MATERIALS_REQUIRED
     }
 
-    private record RepairPlan(List<RepairTarget> paidTargets, List<RepairTarget> carriedTargets, int manualRepairBlocks) {
+    private record RepairPlan(List<RepairTarget> paidTargets, List<RepairTarget> carriedTargets,
+                              int manualRepairBlocks) {
     }
 
     private record RepairTarget(BlockPos pos, BlockState state) {

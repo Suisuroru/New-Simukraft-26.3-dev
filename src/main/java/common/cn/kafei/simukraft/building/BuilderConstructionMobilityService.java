@@ -1,10 +1,6 @@
 package common.cn.kafei.simukraft.building;
 
-import common.cn.kafei.simukraft.citizen.CitizenData;
-import common.cn.kafei.simukraft.citizen.CitizenManager;
-import common.cn.kafei.simukraft.citizen.CitizenPanicService;
-import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
-import common.cn.kafei.simukraft.citizen.CitizenVoiceService;
+import common.cn.kafei.simukraft.citizen.*;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
 import net.minecraft.core.BlockPos;

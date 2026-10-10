@@ -1,17 +1,12 @@
 package client.cn.kafei.simukraft.client.city;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
-import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
-import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
-import client.cn.kafei.simukraft.client.city.map.SimuBlockColors;
-import client.cn.kafei.simukraft.client.city.map.SimuMap3DMesh;
-import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.citizen.CitizenAvatarFactory;
 import client.cn.kafei.simukraft.client.citizen.CitizenFamilyGraphCanvas;
+import client.cn.kafei.simukraft.client.city.map.CityMap3DRenderState;
+import client.cn.kafei.simukraft.client.city.map.SimuMap3DMesh;
 import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.city.map.SimuMapRegion;
+import client.cn.kafei.simukraft.client.city.map.SimuMapRegionData;
 import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
 import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
 import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
@@ -28,7 +23,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
-import client.cn.kafei.simukraft.client.city.map.SimuMapRegionData;
 import common.cn.kafei.simukraft.city.CityPermissionLevel;
 import common.cn.kafei.simukraft.city.FinanceTransactionData;
 import common.cn.kafei.simukraft.network.citizen.manage.*;
@@ -48,24 +42,15 @@ import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -121,7 +106,9 @@ public final class CityCoreScreenOpener {
         }
     }
 
-    /** 分区列表和编辑页刷新后留在原标签，地图操作仍回到地图。 */
+    /**
+     * 分区列表和编辑页刷新后留在原标签，地图操作仍回到地图。
+     */
     private static String restorableTab(String tab, CityCoreOpenResponsePacket packet) {
         if (packet == null || !packet.hasCity() || tab == null || "info".equals(tab)) {
             return null;
@@ -135,7 +122,9 @@ public final class CityCoreScreenOpener {
         return null;
     }
 
-    /** takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。 */
+    /**
+     * takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。
+     */
     private static UpgradeRefreshExpectation takeUpgradeRefresh(CityCoreOpenResponsePacket packet) {
         UpgradeRefreshExpectation expectation = pendingUpgradeRefresh;
         if (expectation != null && expectation.matches(packet)) {
@@ -405,7 +394,7 @@ public final class CityCoreScreenOpener {
             TextField deleteConfirm = textField("", 200);
             deleteConfirm.getTextFieldStyle().placeholder(Component.translatable("screen.simukraft.city_core.edit.district.delete_placeholder"));
             row.addChild(deleteConfirm);
-            row.addChild(contentButton("screen.simukraft.city_core.districts.delete", () -> PacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+            row.addChild(contentButton("screen.simukraft.city_core.districts.delete", () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
                     common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.DELETE, packet.pos(), district.districtId(), deleteConfirm.getValue(), List.of()))));
             row.addChild(line(Component.translatable("screen.simukraft.city_core.districts.assign")));
             for (CityCoreOpenResponsePacket.CityMemberRef player : districtCandidates(packet, district)) {
@@ -423,7 +412,7 @@ public final class CityCoreScreenOpener {
                 actions.addChild(memberActionButton("screen.simukraft.city_core.districts.set_mayor", 72, () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
                         common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.SET_MAYOR, packet.pos(), district.districtId(), player.playerId(), "", List.of()))));
                 if (official) {
-                    actions.addChild(memberActionButton("screen.simukraft.city_core.districts.remove_official", 72, () -> PacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+                    actions.addChild(memberActionButton("screen.simukraft.city_core.districts.remove_official", 72, () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
                             common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.REMOVE_OFFICIAL, packet.pos(), district.districtId(), player.playerId(), "", List.of()))));
                 } else {
                     actions.addChild(memberActionButton("screen.simukraft.city_core.districts.set_official", 72, () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
@@ -437,7 +426,9 @@ public final class CityCoreScreenOpener {
         return scrollable(panel);
     }
 
-    /** 地图快照可能不带城市成员。分区页优先用完整快照，再补上分区里已有的人，保证区长和官员按钮有人可点。 */
+    /**
+     * 地图快照可能不带城市成员。分区页优先用完整快照，再补上分区里已有的人，保证区长和官员按钮有人可点。
+     */
     private static CityCoreOpenResponsePacket districtManagementPacket(CityCoreOpenResponsePacket packet) {
         if (packet == null || !packet.cityMembers().isEmpty()) {
             return packet;
@@ -1112,7 +1103,8 @@ public final class CityCoreScreenOpener {
 
         /**
          * summaryPacket：地图响应不带统计字段时，复用最近一次城市核心统计。
-        分区列表必须留下，否则管理页会显示暂无分区。 */
+         * 分区列表必须留下，否则管理页会显示暂无分区。
+         */
         private static CityCoreOpenResponsePacket summaryPacket(CityCoreMapResponsePacket packet) {
             CityCoreOpenResponsePacket cached = cachedSummary(packet.cityId(), packet.pos());
             int population = cached != null ? cached.cityPopulation() : 0;
@@ -1128,7 +1120,9 @@ public final class CityCoreScreenOpener {
             return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.memberCount(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.permissionLevel(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress, mergeDistricts(cached, packet), cityMembers);
         }
 
-        /** 地图包里的分区是刚从服务端拿到的，不能被缺少分区字段的统计快照覆盖成空列表。 */
+        /**
+         * 地图包里的分区是刚从服务端拿到的，不能被缺少分区字段的统计快照覆盖成空列表。
+         */
         private static List<CityCoreOpenResponsePacket.DistrictSummary> mergeDistricts(CityCoreOpenResponsePacket cached, CityCoreMapResponsePacket map) {
             Map<UUID, CityCoreOpenResponsePacket.DistrictSummary> merged = new LinkedHashMap<>();
             if (cached != null) {
@@ -1860,7 +1854,7 @@ public final class CityCoreScreenOpener {
             modeButtonY = mapStartY + 4;
             guiContext.graphics.fill(modeButtonX, modeButtonY, modeButtonX + modeButtonW, modeButtonY + modeButtonH, threeDView ? 0xEE1E6B3A : 0xEE202020);
             guiContext.graphics.fill(modeButtonX, modeButtonY, modeButtonX + modeButtonW, modeButtonY + 1, 0xFFFFFFFF);
-            guiContext.graphics.drawString(minecraft.font, label, modeButtonX + 6, modeButtonY + 3, 0xFFFFFFFF, false);
+            guiContext.graphics.text(minecraft.font, label, modeButtonX + 6, modeButtonY + 3, 0xFFFFFFFF, false);
         }
 
         private boolean isInsideModeButton(double mouseX, double mouseY) {
@@ -1868,7 +1862,9 @@ public final class CityCoreScreenOpener {
         }
 
         /** 用已扫描的高度和颜色画成可旋转的立体地形。格子四角按同一投影相连。 */
-        /** 鐢ㄥ钩椤舵煴浣撶敾绔嬩綋娌欑洏銆傜缉鏀惧彧鏀规姇褰憋紝寤虹瓚闈犵珛闈㈠垎鑹层€?*/
+        /**
+         * 鐢ㄥ钩椤舵煴浣撶敾绔嬩綋娌欑洏銆傜缉鏀惧彧鏀规姇褰憋紝寤虹瓚闈犵珛闈㈠垎鑹层€?
+         */
         private void render3DMap(GUIContext guiContext, int startX, int startY, int width, int height, double centerX, double centerY) {
             guiContext.graphics.fill(startX, startY, startX + width, startY + height, 0xFF101418);
             int step = threeMesh.resolveStep(threeZoom);
@@ -1886,22 +1882,22 @@ public final class CityCoreScreenOpener {
                         gameTime);
             }
             if (!threeMesh.isEmpty()) {
-                guiContext.graphics.flush();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                RenderSystem.disableCull();
-                RenderSystem.disableDepthTest();
-                RenderSystem.setShader(GameRenderer::getPositionColorShader);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                Matrix4f matrix = guiContext.graphics.pose().last().pose();
-                BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-                threeMesh.emit(buffer, matrix, threeYaw, scale, centerX, centerY, liveCenterX, liveCenterZ);
-                BufferUploader.drawWithShader(buffer.buildOrThrow());
-                RenderSystem.enableDepthTest();
-                RenderSystem.enableCull();
-                RenderSystem.disableBlend();
+                guiContext.graphics.submitGuiElementRenderState(new CityMap3DRenderState(
+                        threeMesh,
+                        new Matrix3x2f(guiContext.graphics.pose()),
+                        threeYaw,
+                        scale,
+                        centerX,
+                        centerY,
+                        liveCenterX,
+                        liveCenterZ,
+                        startX,
+                        startY,
+                        width,
+                        height,
+                        guiContext.graphics.peekScissorStack()));
             }
-            guiContext.graphics.drawString(minecraft.font, Component.translatable("screen.simukraft.city_core.map.mode_3d_hint"), startX + 6, startY + height - 12, 0xFFDDDDDD, false);
+            guiContext.graphics.text(minecraft.font, Component.translatable("screen.simukraft.city_core.map.mode_3d_hint"), startX + 6, startY + height - 12, 0xFFDDDDDD, false);
         }
 
         private SimuMap3DMesh.Source threeDSource(int step) {
@@ -1943,7 +1939,7 @@ public final class CityCoreScreenOpener {
         }
 
         private int ownershipKey(int worldX, int worldZ) {
-            long chunkLong = ChunkPos.asLong(worldX >> 4, worldZ >> 4);
+            long chunkLong = ChunkPos.pack(worldX >> 4, worldZ >> 4);
             if (!cache.isChunkOwned(chunkLong)) {
                 return 0;
             }
@@ -1955,6 +1951,7 @@ public final class CityCoreScreenOpener {
             int coreZ = packet.pos().getZ();
             return coreX >= worldX && coreX < worldX + step && coreZ >= worldZ && coreZ < worldZ + step;
         }
+
         private int sampleMapHeight(int worldX, int worldZ) {
             SimuMapRegionData data = mapColumnData(worldX, worldZ);
             if (data == null) {

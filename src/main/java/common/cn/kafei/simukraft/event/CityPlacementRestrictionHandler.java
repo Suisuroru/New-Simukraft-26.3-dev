@@ -159,7 +159,7 @@ public final class CityPlacementRestrictionHandler {
             return true;
         }
         UUID cityId = resolveBuildingCityId(level, pos, block);
-        long chunkLong = net.minecraft.world.level.ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+        long chunkLong = ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4);
         if (cityId == null || !common.cn.kafei.simukraft.city.DistrictService.canBuild(level, cityId, player.getUUID(), chunkLong)) {
             if (player instanceof ServerPlayer serverPlayer) {
                 InfoToastService.warning(serverPlayer, Component.translatable("message.simukraft.no_permission"));

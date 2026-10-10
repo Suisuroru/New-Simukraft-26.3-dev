@@ -30,7 +30,9 @@ public enum ExchangeMarketRegime {
         return "gui.simukraft.exchange.regime." + name().toLowerCase(Locale.ROOT);
     }
 
-    /** fromScore: 大盘分高于 0.16 为景气，低于 -0.16 为低迷。 */
+    /**
+     * fromScore: 大盘分高于 0.16 为景气，低于 -0.16 为低迷。
+     */
     public static ExchangeMarketRegime fromScore(double marketScore) {
         if (marketScore >= 0.16D) {
             return BULL;

@@ -5,7 +5,7 @@ import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.registry.ModItems;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
@@ -36,7 +36,7 @@ public final class ConstructionFundsNotificationService {
             return;
         }
         long gameTime = level.getGameTime();
-        FundsNoticeKey key = new FundsNoticeKey(level.dimension().location(), cityId, taskId);
+        FundsNoticeKey key = new FundsNoticeKey(level.dimension().identifier(), cityId, taskId);
         Long nextNoticeTick = NEXT_NOTICE_TICK.get(key);
         if (isCoolingDown(nextNoticeTick, gameTime)) {
             return;
@@ -56,10 +56,12 @@ public final class ConstructionFundsNotificationService {
         if (level == null || cityId == null || taskId == null) {
             return;
         }
-        NEXT_NOTICE_TICK.remove(new FundsNoticeKey(level.dimension().location(), cityId, taskId));
+        NEXT_NOTICE_TICK.remove(new FundsNoticeKey(level.dimension().identifier(), cityId, taskId));
     }
 
-    /** 扣完这一笔后余额为 0，且建筑还没盖完，才提示资金不足。 */
+    /**
+     * 扣完这一笔后余额为 0，且建筑还没盖完，才提示资金不足。
+     */
     public static boolean shouldWarnAfterSuccessfulCharge(boolean constructionStillRunning, double remainingFunds) {
         return constructionStillRunning && remainingFunds <= 0.0D;
     }
@@ -83,6 +85,6 @@ public final class ConstructionFundsNotificationService {
         return value == null || value.isBlank() ? fallback : value;
     }
 
-    private record FundsNoticeKey(ResourceLocation dimensionId, UUID cityId, UUID taskId) {
+    private record FundsNoticeKey(Identifier dimensionId, UUID cityId, UUID taskId) {
     }
 }

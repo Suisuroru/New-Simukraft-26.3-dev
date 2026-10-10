@@ -409,7 +409,9 @@ public final class ExchangeMarketService {
         quote.volume = volume;
     }
 
-    /** noteTrade: 这一小时的买卖先记账，收盘时一起打进价格和成交量。 */
+    /**
+     * noteTrade: 这一小时的买卖先记账，收盘时一起打进价格和成交量。
+     */
     private static void noteTrade(Quote quote, int signedShares) {
         if (quote == null || signedShares == 0) {
             return;
@@ -418,7 +420,9 @@ public final class ExchangeMarketService {
         quote.pendingTradeShares += Math.abs(signedShares);
     }
 
-    /** applyEconomy: 用当前城市经营重算当天市况。价格仍按小时慢慢靠过去。 */
+    /**
+     * applyEconomy: 用当前城市经营重算当天市况。价格仍按小时慢慢靠过去。
+     */
     private static void applyEconomy(ServerLevel level, MarketState state) {
         state.snapshot = ExchangeEconomyProbe.capture(level);
         state.regime = ExchangeFundamentals.regime(state.snapshot);

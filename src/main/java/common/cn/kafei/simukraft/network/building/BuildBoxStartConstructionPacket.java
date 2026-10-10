@@ -11,8 +11,6 @@ import common.cn.kafei.simukraft.city.CityService;
 import common.cn.kafei.simukraft.city.DistrictService;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.config.ServerConfig;
-import common.cn.kafei.simukraft.economy.EconomyService;
-import common.cn.kafei.simukraft.economy.FinanceLedgerService;
 import common.cn.kafei.simukraft.event.BuildingConstructionEvent;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.job.CityJobType;
@@ -26,8 +24,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -153,7 +151,9 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
         CityGroupMessageService.successToCity(level, cityId, Component.translatable("message.simukraft.build_box.construction_started", structure.displayName()));
     }
 
-    /** 城市官员覆盖全市；分区官员必须让建筑的每个区块都落在自己已启用的分区里。 */
+    /**
+     * 城市官员覆盖全市；分区官员必须让建筑的每个区块都落在自己已启用的分区里。
+     */
     private static boolean canConstruct(ServerLevel level, UUID cityId, UUID playerId, List<BuildingBlockData> placedBlocks) {
         if (placedBlocks == null || placedBlocks.isEmpty()) {
             return false;
@@ -163,7 +163,7 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
             if (pos == null) {
                 return false;
             }
-            long chunkLong = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+            long chunkLong = ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4);
             if (!DistrictService.canBuild(level, cityId, playerId, chunkLong)) {
                 return false;
             }

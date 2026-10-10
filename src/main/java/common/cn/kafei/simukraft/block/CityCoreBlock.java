@@ -66,12 +66,6 @@ public final class CityCoreBlock extends Block {
         return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
     }
 
-    /** 属性上的 BLOCK 之外再覆盖一次。活塞若仍把核心搬走，onRemove 会在原位补一块，搬走的那块就能挖成物品。 */
-    @Override
-    public PushReaction getPistonPushReaction(BlockState state) {
-        return PushReaction.BLOCK;
-    }
-
     @Override
     protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);

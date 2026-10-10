@@ -18,7 +18,9 @@ public final class GeologicalSurveyHintService {
         send(player, message, false, 0);
     }
 
-    /** sendTypewriter: 用地质锤文本框逐字打出较长台词。 */
+    /**
+     * sendTypewriter: 用地质锤文本框逐字打出较长台词。
+     */
     public static void sendTypewriter(ServerPlayer player, Component message, int lingerMillis) {
         send(player, message, true, lingerMillis);
     }

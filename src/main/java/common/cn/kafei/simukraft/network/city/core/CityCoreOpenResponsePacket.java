@@ -34,7 +34,8 @@ public record CityCoreOpenResponsePacket(BlockPos pos, boolean hasCity, UUID cit
                                          List<FinanceEntry> financeEntries, List<PoiStat> poiStats,
                                          List<JobStat> jobStats, List<UpgradeTarget> upgradeTargets,
                                          UpgradeProgress upgradeProgress, List<DistrictSummary> districts,
-                                         boolean districtContext, String districtName, List<CityMemberRef> cityMembers) implements CustomPacketPayload {
+                                         boolean districtContext, String districtName,
+                                         List<CityMemberRef> cityMembers) implements CustomPacketPayload {
     private static final int MAX_FINANCE_ENTRIES = 128;
     private static final int MAX_POI_STATS = 64;
     private static final int MAX_JOB_STATS = 128;

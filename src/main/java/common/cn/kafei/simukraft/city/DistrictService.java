@@ -39,10 +39,12 @@ public final class DistrictService {
         if (CityService.hasPermission(level, cityId, playerId, CityPermissionLevel.OFFICIAL)) return true;
         Optional<DistrictData> district = findByChunk(level, chunkLong);
         if (district.isEmpty() || cityId == null || !cityId.equals(district.get().parentCityId())) return false;
-            return DistrictManager.get(level).isEnabled(district.get(), level) && district.get().hasPermission(playerId, DistrictRole.OFFICIAL);
-       }
+        return DistrictManager.get(level).isEnabled(district.get(), level) && district.get().hasPermission(playerId, DistrictRole.OFFICIAL);
+    }
 
-    /** releaseCity: 先卸下分区记录，再拆掉分区核心。主城核心方块不动。 */
+    /**
+     * releaseCity: 先卸下分区记录，再拆掉分区核心。主城核心方块不动。
+     */
     public static void releaseCity(ServerLevel level, UUID cityId) {
         if (level == null || cityId == null) return;
         List<BlockPos> cores = DistrictManager.get(level).removeCity(cityId);

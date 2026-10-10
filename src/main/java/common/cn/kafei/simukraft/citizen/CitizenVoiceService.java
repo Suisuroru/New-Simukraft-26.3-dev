@@ -19,7 +19,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/** NPC 语音：按性别/年龄选事件，同类有冷却，避免建造和闲聊刷屏。 */
+/**
+ * NPC 语音：按性别/年龄选事件，同类有冷却，避免建造和闲聊刷屏。
+ */
 public final class CitizenVoiceService {
     public enum Cue {
         HURT,
@@ -62,7 +64,7 @@ public final class CitizenVoiceService {
         if (isCoolingDown(entity.getUUID(), cue, gameTime)) {
             return;
         }
-        if (isAmbientCue(cue) && !tryAmbientLock(level.dimension().location().toString(), gameTime)) {
+        if (isAmbientCue(cue) && !tryAmbientLock(level.dimension().identifier().toString(), gameTime)) {
             return;
         }
         markCooldown(entity.getUUID(), cue, gameTime);
@@ -87,7 +89,9 @@ public final class CitizenVoiceService {
         level.playSound(null, entity.blockPosition(), sound, SoundSource.NEUTRAL, 1.0F, 1.0F);
     }
 
-    /** nearbyTalkCue: 走近先问好，问好还在冷却时才闲聊。 */
+    /**
+     * nearbyTalkCue: 走近先问好，问好还在冷却时才闲聊。
+     */
     public static Cue nearbyTalkCue(UUID uuid, long gameTime) {
         if (uuid == null || isCoolingDown(uuid, Cue.GREET, gameTime)) {
             return Cue.CHAT;

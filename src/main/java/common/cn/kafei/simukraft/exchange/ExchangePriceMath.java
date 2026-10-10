@@ -4,7 +4,9 @@ import common.cn.kafei.simukraft.economy.EconomyService;
 
 import java.util.List;
 
-/** ExchangePriceMath: 每小时向合理价回归，并计入这一小时的净买卖。 */
+/**
+ * ExchangePriceMath: 每小时向合理价回归，并计入这一小时的净买卖。
+ */
 public final class ExchangePriceMath {
     private static final double HOURLY_STEP = 0.045D;
     private static final double TRADE_ROOM = 0.08D;

@@ -2,7 +2,6 @@ package common.cn.kafei.simukraft.network.city.core;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.city.*;
-import common.cn.kafei.simukraft.city.DistrictOwnershipSync;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;

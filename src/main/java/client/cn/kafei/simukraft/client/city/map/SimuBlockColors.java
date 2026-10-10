@@ -240,10 +240,14 @@ public class SimuBlockColors {
         }
     }
 
-    /** 未采样到地表时的 3D/2D 回退色。 */
+    /**
+     * 未采样到地表时的 3D/2D 回退色。
+     */
     public static final int FALLBACK_TERRAIN_COLOR = 0xFF6E8B5A;
 
-    /** 城市核心所在格叠一层半透明蓝，保留地表色。 */
+    /**
+     * 城市核心所在格叠一层半透明蓝，保留地表色。
+     */
     public static final int CORE_HIGHLIGHT_OVERLAY = 0x994080FF;
 
     /**
@@ -400,19 +404,20 @@ public class SimuBlockColors {
      * 将 ARGB 转换为 NativeImage 使用的 ABGR 格式。
      */
     public static int toNativeColor(int argb) {
-        int a = (argb >> 24) & 0xFF;
-        int r = (argb >> 16) & 0xFF;
-        int g = (argb >> 8) & 0xFF;
-        int b = argb & 0xFF;
-        return (a << 24) | (b << 16) | (g << 8) | r;
+        return switchFormat(argb);
     }
 
-    /** fromNativeColor: NativeImage ABGR 转回 ARGB。 */
+    /**
+     * fromNativeColor: NativeImage ABGR 转回 ARGB。
+     */
     public static int fromNativeColor(int abgr) {
-        int a = (abgr >> 24) & 0xFF;
-        int b = (abgr >> 16) & 0xFF;
-        int g = (abgr >> 8) & 0xFF;
-        int r = abgr & 0xFF;
-        return (a << 24) | (r << 16) | (g << 8) | b;
+        return switchFormat(abgr);
+    }
+
+    private static int switchFormat(int inp) {
+        int i = (inp >> 16) & 0x000000FF;
+        int j = (inp & 0x00000000FF) << 16;
+        int k = inp & 0xFF00FF00;
+        return k | j | i;
     }
 }

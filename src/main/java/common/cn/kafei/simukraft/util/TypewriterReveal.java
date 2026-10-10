@@ -1,6 +1,8 @@
 package common.cn.kafei.simukraft.util;
 
-/** TypewriterReveal: 按时间把整句裁成逐字显示。 */
+/**
+ * TypewriterReveal: 按时间把整句裁成逐字显示。
+ */
 public final class TypewriterReveal {
     private TypewriterReveal() {
     }

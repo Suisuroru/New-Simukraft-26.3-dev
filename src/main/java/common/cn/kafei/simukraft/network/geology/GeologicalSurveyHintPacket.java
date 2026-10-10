@@ -14,7 +14,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * GeologicalSurveyHintPacket: 向客户端传递地质锤的短文本提示。
  */
 
-public record GeologicalSurveyHintPacket(Component message, boolean typewriter, int lingerMillis) implements CustomPacketPayload {
+public record GeologicalSurveyHintPacket(Component message, boolean typewriter,
+                                         int lingerMillis) implements CustomPacketPayload {
     public static final Type<GeologicalSurveyHintPacket> TYPE = new Type<>(
             Identifier.fromNamespaceAndPath(SimuKraft.MOD_ID, "geological_survey_hint"));
     public static final StreamCodec<RegistryFriendlyByteBuf, GeologicalSurveyHintPacket> STREAM_CODEC =

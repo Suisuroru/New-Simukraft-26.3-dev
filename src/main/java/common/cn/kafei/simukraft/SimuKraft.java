@@ -47,6 +47,7 @@ import common.cn.kafei.simukraft.virtualvein.VirtualVeinService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -67,14 +68,6 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.config.ModConfigEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import org.slf4j.Logger;
 
 
@@ -199,7 +192,9 @@ public final class SimuKraft {
         }
     }
 
-    /** 活塞结构里只要带上城市核心就取消本次推动，避免原位恢复和被推走的方块同时存在。 */
+    /**
+     * 活塞结构里只要带上城市核心就取消本次推动，避免原位恢复和被推走的方块同时存在。
+     */
     private void onPistonPre(PistonEvent.Pre event) {
         PistonStructureResolver resolver = event.getStructureHelper();
         if (resolver == null || !resolver.resolve()) {

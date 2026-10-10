@@ -14,7 +14,9 @@ import net.minecraft.world.level.ChunkPos;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Keeps building and citizen district ids aligned with the chunk that currently contains them. */
+/**
+ * Keeps building and citizen district ids aligned with the chunk that currently contains them.
+ */
 public final class DistrictOwnershipSync {
     private DistrictOwnershipSync() {
     }
@@ -23,7 +25,7 @@ public final class DistrictOwnershipSync {
         if (level == null || pos == null) {
             return null;
         }
-        return DistrictManager.get(level).byChunk(new ChunkPos(pos))
+        return DistrictManager.get(level).byChunk(ChunkPos.containing(pos))
                 .filter(district -> cityId == null || cityId.equals(district.parentCityId()))
                 .map(DistrictData::districtId)
                 .orElse(null);
