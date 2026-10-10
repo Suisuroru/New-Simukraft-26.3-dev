@@ -1,6 +1,21 @@
 package common.cn.kafei.simukraft.entity;
 
 import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.citizen.CitizenBedSleepService;
+import common.cn.kafei.simukraft.citizen.CitizenData;
+import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
+import common.cn.kafei.simukraft.citizen.CitizenInventory;
+import common.cn.kafei.simukraft.citizen.CitizenInfoMenuProvider;
+import common.cn.kafei.simukraft.citizen.CitizenJobVisualService;
+import common.cn.kafei.simukraft.citizen.CitizenManager;
+import common.cn.kafei.simukraft.citizen.CitizenManualControlService;
+import common.cn.kafei.simukraft.citizen.CitizenDroppedFoodService;
+import common.cn.kafei.simukraft.citizen.CitizenFoodConsumptionService;
+import common.cn.kafei.simukraft.citizen.CitizenPanicService;
+import common.cn.kafei.simukraft.citizen.CitizenService;
+import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
+import common.cn.kafei.simukraft.citizen.CitizenVoiceService;
+import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
 import common.cn.kafei.simukraft.commercial.CommercialControlBoxService;
 import common.cn.kafei.simukraft.medical.MedicalService;
 import common.cn.kafei.simukraft.path.CitizenNavigationService;
@@ -27,6 +42,7 @@ import net.minecraft.world.entity.ai.control.JumpControl;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.Level;
@@ -118,6 +134,7 @@ public class CitizenEntity extends PathfinderMob {
                     return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
                 }
                 CitizenInfoMenuProvider.open(serverLevel, serverPlayer, this, data);
+                CitizenVoiceService.play(serverLevel, this, data, CitizenVoiceService.Cue.PANEL);
             }
         }
         return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
@@ -133,6 +150,10 @@ public class CitizenEntity extends PathfinderMob {
         boolean wasSleeping = isSleeping();
         boolean result = super.hurtServer(level, source, amount);
         if (result) {
+            if (level() instanceof ServerLevel hurtLevel) {
+                CitizenData hurtData = CitizenManager.get(hurtLevel).getCitizen(getUUID()).orElse(null);
+                CitizenVoiceService.play(hurtLevel, this, hurtData, CitizenVoiceService.Cue.HURT);
+            }
             addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0, false, false));
             if (isAlive()) {
                 if (wasSleeping) {
@@ -245,6 +266,28 @@ public class CitizenEntity extends PathfinderMob {
             if (!ateBackpackFood) {
                 CitizenDroppedFoodService.tryEatNearbyFood(serverLevel, this, data);
             }
+            tickVoice(serverLevel, data);
+        }
+    }
+
+    private void tickVoice(ServerLevel level, CitizenData data) {
+        if (isSleeping()) {
+            return;
+        }
+        int stagger = Math.floorMod(getUUID().hashCode(), 80);
+        if ((tickCount + stagger) % 20 != 0) {
+            return;
+        }
+        AABB around = getBoundingBox().inflate(8.0D, 3.0D, 8.0D);
+        if (!level.getEntitiesOfClass(Zombie.class, around, zombie -> zombie.isAlive() && !zombie.isBaby()).isEmpty()) {
+            CitizenVoiceService.play(level, this, data, CitizenVoiceService.Cue.FLEE);
+            return;
+        }
+        if ((tickCount + stagger) % 80 != 0) {
+            return;
+        }
+        if (!level.getEntitiesOfClass(Player.class, around, player -> player.isAlive() && !player.isSpectator()).isEmpty()) {
+            CitizenVoiceService.play(level, this, data, CitizenVoiceService.nearbyTalkCue(getUUID(), level.getGameTime()));
         }
     }
 

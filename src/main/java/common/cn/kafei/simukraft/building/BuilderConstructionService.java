@@ -4,9 +4,21 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.citizen.*;
+import common.cn.kafei.simukraft.citizen.CitizenData;
+import common.cn.kafei.simukraft.citizen.CitizenHomeRestService;
+import common.cn.kafei.simukraft.citizen.CitizenTeleportService;
+import common.cn.kafei.simukraft.citizen.CitizenVoiceService;
+import common.cn.kafei.simukraft.entity.CitizenEntity;
+import common.cn.kafei.simukraft.citizen.CitizenLevelService;
+import common.cn.kafei.simukraft.citizen.CitizenService;
+import common.cn.kafei.simukraft.citizen.CitizenSelfFeedingService;
+import common.cn.kafei.simukraft.citizen.CitizenWorkplaceMoveService;
+import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
 import common.cn.kafei.simukraft.city.poi.CityPoiManager;
 import common.cn.kafei.simukraft.city.poi.CityPoiType;
 import common.cn.kafei.simukraft.config.ServerConfig;
+import common.cn.kafei.simukraft.economy.EconomyService;
+import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import common.cn.kafei.simukraft.event.BuildingConstructionEvent;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.job.CityJobAssignmentService;
@@ -228,6 +240,12 @@ public final class BuilderConstructionService {
             return;
         }
         ensureWorkAreaTickets(level, taskRuntime, cached);
+        int builderLevel = CitizenLevelService.snapshot(citizen, CityJobType.BUILDER).level();
+        boolean chargePerBlock = ConstructionBilling.chargePerPlacedBlock(builderLevel);
+        if (!chargePerBlock && !settleDueConstructionBill(level, citizen, taskRuntime, task.currentBlockIndex(), false)) {
+            return;
+        }
+        task = taskRuntime.task;
         syncCitizenTaskState(level, citizen, taskRuntime, task, cached);
         int placed = 0;
         int index = Math.max(0, task.currentBlockIndex());
@@ -240,12 +258,21 @@ public final class BuilderConstructionService {
             BlockPos worldPos = block.relativePos();
             BlockState targetState = block.state();
             BlockState currentState = level.getBlockState(worldPos);
+            if (!level.isAreaLoaded(worldPos, 4)) {
+                break;
+            }
             if (currentState.equals(targetState)) {
+                if (!payPlacedBlock(level, citizen, taskRuntime, chargePerBlock, index + 1)) {
+                    return;
+                }
                 BuildingBlockPlacementService.applyBlockEntityData(level, worldPos, block.copyBlockEntityData());
                 index++;
                 continue;
             }
             if (NpcBlockProtectionPolicy.isProtected(currentState)) {
+                if (!payPlacedBlock(level, citizen, taskRuntime, chargePerBlock, index + 1)) {
+                    return;
+                }
                 NpcBlockProtectionPolicy.logSkipped("builder", level, worldPos, currentState);
                 index++;
                 placed++;
@@ -253,13 +280,15 @@ public final class BuilderConstructionService {
             }
             // 不替换空气：跳过结构中的空气方块，保留原有方块
             if (targetState.isAir() && !task.replaceWithAir()) {
+                if (!payPlacedBlock(level, citizen, taskRuntime, chargePerBlock, index + 1)) {
+                    return;
+                }
                 index++;
                 placed++;
                 continue;
             }
-            // 先检查目标区块是否加载，未加载则跳过（不消耗材料），等待下一 tick 重试
-            if (!level.isAreaLoaded(worldPos, 4)) {
-                break;
+            if (!payPlacedBlock(level, citizen, taskRuntime, chargePerBlock, index + 1)) {
+                return;
             }
             WorkMaterialResult materialResult = BuilderMaterialService.tryConsumeForBlock(level, taskRuntime.materialCache, targetState);
             if (!materialResult.available()) {
@@ -281,6 +310,8 @@ public final class BuilderConstructionService {
             level.setBlock(worldPos, BuildingBlockPlacementService.refreshedPlacementState(level, worldPos, targetState), 3);
             BuildingBlockPlacementService.applyBlockEntityData(level, worldPos, block.copyBlockEntityData());
             spawnBuildParticles(level, worldPos);
+            CitizenEntity builder = CitizenTeleportService.findCitizenEntity(level, citizen.uuid());
+            CitizenVoiceService.play(level, builder, citizen, CitizenVoiceService.Cue.BUILD);
             addPendingBuilderXp(taskRuntime, 1);
             index++;
             placed++;
@@ -288,7 +319,7 @@ public final class BuilderConstructionService {
         if (index == task.currentBlockIndex()) {
             return;
         }
-        BuildingTaskData updated = task.withProgress(index, index >= cached.blocks().size() ? BuildingTaskStatus.COMPLETED : BuildingTaskStatus.BUILDING);
+        BuildingTaskData updated = task.withProgress(index, BuildingTaskStatus.BUILDING);
         taskRuntime.task = updated;
         taskRuntime.dirty = true;
         taskRuntime.missingMaterialName = "";
@@ -298,7 +329,12 @@ public final class BuilderConstructionService {
             persistTask(level, taskRuntime, updated);
         }
         if (index >= cached.blocks().size()) {
-            completeTask(level, citizen, runtime, taskRuntime, updated, cached);
+            if (!settleDueConstructionBill(level, citizen, taskRuntime, index, true)) {
+                return;
+            }
+            BuildingTaskData finished = taskRuntime.task.withStatus(BuildingTaskStatus.COMPLETED);
+            taskRuntime.task = finished;
+            completeTask(level, citizen, runtime, taskRuntime, finished, cached);
         }
     }
 
@@ -367,7 +403,8 @@ public final class BuilderConstructionService {
                 }
             }
         }
-        PlacedBuildingRecord placedBuilding = new PlacedBuildingRecord(UUID.randomUUID(), cityId, task.dimensionId(), task.category(), task.buildingFileName(), task.displayName(), task.amount(), task.structureFileName(), BuildingTransform.directionFromRotation(task.rotationDegrees()).getSerializedName(), task.origin(), BlockPos.ZERO, minPos, maxPos, System.currentTimeMillis(), cached.blocks(), task.poiDefinitions(), poiInstances, unitDefs, unitInsts);
+        PlacedBuildingRecord placedBuilding = new PlacedBuildingRecord(UUID.randomUUID(), cityId, task.dimensionId(), task.category(), task.buildingFileName(), task.displayName(), task.amount(), task.structureFileName(), BuildingTransform.directionFromRotation(task.rotationDegrees()).getSerializedName(), task.origin(), BlockPos.ZERO, minPos, maxPos, System.currentTimeMillis(), cached.blocks(), task.poiDefinitions(), poiInstances, unitDefs, unitInsts)
+                .withDistrictId(common.cn.kafei.simukraft.city.DistrictOwnershipSync.districtAt(level, task.origin(), cityId));
         PlacedBuildingService.register(level, placedBuilding);
         NeoForge.EVENT_BUS.post(new BuildingConstructionEvent.Complete(level, task, citizen, placedBuilding));
         RtsBuildingBoundsRequestPacket.refreshNearbyPlayers(level, placedBuilding);
@@ -645,7 +682,11 @@ public final class BuilderConstructionService {
         String workNeedDetail;
         BuildingTaskStatus status = BuildingTaskStatus.from(task.status());
         // 状态文本同时写入持久化数据，客户端实体重载后也能恢复显示。
-        if (status == BuildingTaskStatus.WAITING_MATERIALS) {
+        if (status == BuildingTaskStatus.WAITING_FUNDS) {
+            phaseKey = "funds";
+            statusLabel = translatedStatusLabel(level, "status.simukraft.builder.waiting_funds", task.displayName());
+            workNeedDetail = "build:" + task.taskId() + ":funds";
+        } else if (status == BuildingTaskStatus.WAITING_MATERIALS) {
             String materialId = taskRuntime.missingMaterialName == null || taskRuntime.missingMaterialName.isBlank()
                     ? "unknown"
                     : taskRuntime.missingMaterialName;
@@ -702,6 +743,83 @@ public final class BuilderConstructionService {
                 .result()
                 .map(JsonElement::toString)
                 .orElse("");
+    }
+
+    /** 5 级以下在推进这一块之前扣这一块的钱。5 级及以上不在这里扣。 */
+    private static boolean payPlacedBlock(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, boolean chargePerBlock, int processedBlocks) {
+        if (!chargePerBlock) {
+            return true;
+        }
+        return settleDueConstructionBill(level, citizen, taskRuntime, processedBlocks, false);
+    }
+
+    /**
+     * 5 级及以上到点后把本段已经处理的 NBT 方块一次扣掉。5 级以下每处理一块扣一次。
+     * 钱不够就暂停，不在放下方块时继续盖。
+     * finishing 为 true 时立刻结清剩余部分，避免建筑已经盖完却一直挂着未扣费用。
+     */
+    private static boolean settleDueConstructionBill(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, int processedBlocks, boolean finishing) {
+        BuildingTaskData task = taskRuntime.task;
+        int blockCount = Math.max(Math.max(task.totalBlocks(), processedBlocks), 1);
+        double totalPrice = EconomyService.parseAmount(task.amount(), "construction");
+        long now = level.getGameTime();
+        int builderLevel = CitizenLevelService.snapshot(citizen, CityJobType.BUILDER).level();
+        boolean perBlock = ConstructionBilling.chargePerPlacedBlock(builderLevel);
+        int interval = ConstructionBilling.chargeIntervalTicks(builderLevel);
+        if (!perBlock && taskRuntime.nextBillTick < 0L) {
+            taskRuntime.nextBillTick = now + interval;
+        }
+        boolean due = finishing || perBlock || now >= taskRuntime.nextBillTick;
+        if (!due) {
+            return BuildingTaskStatus.from(task.status()) != BuildingTaskStatus.WAITING_FUNDS;
+        }
+        long dueCents = ConstructionBilling.centsThrough(totalPrice, blockCount, processedBlocks)
+                - ConstructionBilling.centsThrough(totalPrice, blockCount, taskRuntime.billedBlocks);
+        if (dueCents <= 0L) {
+            taskRuntime.billedBlocks = Math.max(taskRuntime.billedBlocks, processedBlocks);
+            taskRuntime.nextBillTick = now + interval;
+            resumeFromFundsWait(level, taskRuntime, task);
+            return true;
+        }
+        double dueAmount = EconomyService.normalizeAmount(dueCents / 100.0D);
+        if (task.cityId() == null || !EconomyService.withdrawCityFunds(level, task.cityId(), null, dueAmount, "construction")) {
+            markWaitingForFunds(level, citizen, taskRuntime, task);
+            taskRuntime.nextBillTick = now + ConstructionBilling.TICKS_PER_SECOND;
+            return false;
+        }
+        HudSyncService.syncToCityGroup(level, task.cityId(), true);
+        taskRuntime.billedBlocks = processedBlocks;
+        taskRuntime.nextBillTick = now + interval;
+        resumeFromFundsWait(level, taskRuntime, task);
+        boolean stillRunning = !finishing && processedBlocks < blockCount;
+        if (ConstructionFundsNotificationService.shouldWarnAfterSuccessfulCharge(
+                stillRunning, EconomyService.getCityBalance(level, task.cityId()))) {
+            ConstructionFundsNotificationService.notifyInsufficient(level, citizen, task);
+        }
+        return true;
+    }
+
+    private static void resumeFromFundsWait(ServerLevel level, TaskRuntime taskRuntime, BuildingTaskData task) {
+        if (BuildingTaskStatus.from(task.status()) != BuildingTaskStatus.WAITING_FUNDS) {
+            return;
+        }
+        ConstructionFundsNotificationService.clear(level, task.cityId(), task.taskId());
+        taskRuntime.task = task.withStatus(BuildingTaskStatus.BUILDING);
+        taskRuntime.dirty = true;
+        taskRuntime.lastPhaseKey = "";
+    }
+
+    private static void markWaitingForFunds(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, BuildingTaskData task) {
+        ConstructionFundsNotificationService.notifyInsufficient(level, citizen, task);
+        if (BuildingTaskStatus.from(task.status()) == BuildingTaskStatus.WAITING_FUNDS
+                && "funds".equals(taskRuntime.lastPhaseKey)) {
+            return;
+        }
+        BuildingTaskData waiting = task.withStatus(BuildingTaskStatus.WAITING_FUNDS);
+        taskRuntime.task = waiting;
+        taskRuntime.dirty = true;
+        syncCitizenTaskState(level, citizen, taskRuntime, waiting, null);
+        persistTask(level, taskRuntime, waiting);
     }
 
     private static void markWaitingForMaterials(ServerLevel level, CitizenData citizen, TaskRuntime taskRuntime, BuildingTaskData task, WorkMaterialResult materialResult) {
@@ -958,6 +1076,8 @@ public final class BuilderConstructionService {
         private volatile long nextMaterialRetryTick;
         private volatile long chestCloseAtTick;
         private volatile boolean workAreaTicketsLoaded;
+        private volatile int billedBlocks;
+        private volatile long nextBillTick = -1L;
         private double buildProgressAccumulator;
         private final AtomicInteger pendingBuilderXp = new AtomicInteger();
 

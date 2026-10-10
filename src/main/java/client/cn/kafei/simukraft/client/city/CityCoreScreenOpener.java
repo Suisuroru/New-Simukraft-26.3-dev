@@ -1,5 +1,13 @@
 package client.cn.kafei.simukraft.client.city;
 
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import client.cn.kafei.simukraft.client.ui.SimuKraftUiTheme;
+import client.cn.kafei.simukraft.client.ui.SimuKraftFlexLayout;
+import client.cn.kafei.simukraft.client.ui.SimuKraftWindowFrame;
+import client.cn.kafei.simukraft.client.city.map.SimuBlockColors;
+import client.cn.kafei.simukraft.client.city.map.SimuMap3DMesh;
+import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
 import client.cn.kafei.simukraft.client.citizen.CitizenAvatarFactory;
 import client.cn.kafei.simukraft.client.citizen.CitizenFamilyGraphCanvas;
 import client.cn.kafei.simukraft.client.city.map.SimuMapManager;
@@ -20,6 +28,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.IGUIContext;
+import client.cn.kafei.simukraft.client.city.map.SimuMapRegionData;
 import common.cn.kafei.simukraft.city.CityPermissionLevel;
 import common.cn.kafei.simukraft.city.FinanceTransactionData;
 import common.cn.kafei.simukraft.network.citizen.manage.*;
@@ -39,6 +48,8 @@ import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -46,6 +57,15 @@ import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.joml.Vector2f;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -79,8 +99,15 @@ public final class CityCoreScreenOpener {
                     return;
                 }
             }
+            String restoreTab = null;
+            if (expectation == null) {
+                CityCoreWindow current = activeWindow;
+                if (isActiveScreen(minecraft, current) && current.matches(packet)) {
+                    restoreTab = restorableTab(current.currentTabId, packet);
+                }
+            }
             rememberSummary(packet);
-            show(minecraft, createUi(packet, expectation != null ? "upgrade" : null));
+            show(minecraft, createUi(packet, expectation != null ? "upgrade" : restoreTab));
         });
     }
 
@@ -94,9 +121,21 @@ public final class CityCoreScreenOpener {
         }
     }
 
-    /**
-     * takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。
-     */
+    /** 分区列表和编辑页刷新后留在原标签，地图操作仍回到地图。 */
+    private static String restorableTab(String tab, CityCoreOpenResponsePacket packet) {
+        if (packet == null || !packet.hasCity() || tab == null || "info".equals(tab)) {
+            return null;
+        }
+        if ("districts".equals(tab) && !packet.districtContext() && packet.permissionLevel() == CityPermissionLevel.MAYOR) {
+            return "districts";
+        }
+        if (("edit".equals(tab) || "finance".equals(tab) || "upgrade".equals(tab)) && packet.canManageCity()) {
+            return tab;
+        }
+        return null;
+    }
+
+    /** takeUpgradeRefresh: 消费匹配的升级响应；不按时间降级为普通开窗响应。 */
     private static UpgradeRefreshExpectation takeUpgradeRefresh(CityCoreOpenResponsePacket packet) {
         UpgradeRefreshExpectation expectation = pendingUpgradeRefresh;
         if (expectation != null && expectation.matches(packet)) {
@@ -265,7 +304,7 @@ public final class CityCoreScreenOpener {
             menu.addChild(menuButton("screen.simukraft.city_core.menu.info", () -> window.openTab("info", "screen.simukraft.city_core.menu.info", scrollable(contentPanel(packet)))));
             menu.addChild(menuButton("screen.simukraft.city_core.map_title", () -> requestMap(packet)));
             if (!packet.districtContext() && packet.permissionLevel() == CityPermissionLevel.MAYOR) {
-                menu.addChild(menuButton("screen.simukraft.city_core.menu.districts", () -> window.openTab("districts", "screen.simukraft.city_core.districts.title", districtsPanel(packet))));
+                menu.addChild(menuButton("screen.simukraft.city_core.menu.districts", () -> window.openOrReplaceTab("districts", "screen.simukraft.city_core.districts.title", districtsPanel(districtManagementPacket(packet)))));
             }
             if (!packet.districtContext() || packet.permissionLevel() == CityPermissionLevel.MAYOR) {
                 menu.addChild(menuButton(editMenuKey, () -> window.openTab("edit", editMenuKey, editPanel(packet))));
@@ -350,24 +389,91 @@ public final class CityCoreScreenOpener {
                 layout.gapAll(3);
             });
             row.addChild(line(Component.translatable("screen.simukraft.city_core.districts.row", district.name(), district.chunkCount(), district.coreCount(), district.mayorName().isBlank() ? "-" : district.mayorName())));
-            TextField rename = textField(district.name(), 200);
+            if (district.members().isEmpty()) {
+                row.addChild(line(Component.translatable("screen.simukraft.city_core.districts.no_members")));
+            } else {
+                for (CityCoreOpenResponsePacket.DistrictMemberView member : district.members()) {
+                    row.addChild(line(Component.translatable("screen.simukraft.city_core.districts.member_row", member.playerName(), districtRoleText(member.rolePower()))));
+                }
+            }
+            TextField rename = textField(districtBaseName(district.name()), 200);
+            rename.getTextFieldStyle().placeholder(Component.translatable("screen.simukraft.city_core.districts.name_placeholder"));
             row.addChild(rename);
             row.addChild(contentButton("screen.simukraft.city_core.districts.rename", () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
                     common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.RENAME, packet.pos(), district.districtId(), rename.getValue(), List.of()))));
-            if (Minecraft.getInstance().level != null) {
-                for (var player : Minecraft.getInstance().level.players()) {
-                    UUID playerId = player.getUUID();
-                    String playerName = player.getName().getString();
-                    row.addChild(contentButton(Component.literal("-> " + playerName + " / " + Component.translatable("screen.simukraft.city_core.districts.set_mayor").getString()), () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
-                            common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.SET_MAYOR, packet.pos(), district.districtId(), playerId, "", List.of()))));
-                    row.addChild(contentButton(Component.literal("-> " + playerName + " / " + Component.translatable("screen.simukraft.city_core.districts.set_official").getString()), () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
-                            common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.SET_OFFICIAL, packet.pos(), district.districtId(), playerId, "", List.of()))));
+            row.addChild(line(Component.translatable("screen.simukraft.city_core.edit.district.delete_tip", district.name())));
+            TextField deleteConfirm = textField("", 200);
+            deleteConfirm.getTextFieldStyle().placeholder(Component.translatable("screen.simukraft.city_core.edit.district.delete_placeholder"));
+            row.addChild(deleteConfirm);
+            row.addChild(contentButton("screen.simukraft.city_core.districts.delete", () -> PacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+                    common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.DELETE, packet.pos(), district.districtId(), deleteConfirm.getValue(), List.of()))));
+            row.addChild(line(Component.translatable("screen.simukraft.city_core.districts.assign")));
+            for (CityCoreOpenResponsePacket.CityMemberRef player : districtCandidates(packet, district)) {
+                boolean official = district.members().stream().anyMatch(member -> member.playerId().equals(player.playerId()) && member.rolePower() == 1);
+                String playerName = player.playerName().isBlank() ? player.playerId().toString() : player.playerName();
+                UIElement actions = new UIElement().layout(layout -> {
+                    layout.widthPercent(100);
+                    layout.flexDirection(FlexDirection.ROW);
+                    layout.alignItems(AlignItems.CENTER);
+                    layout.gapAll(4);
+                });
+                Label name = line(Component.literal(playerName));
+                name.layout(layout -> layout.flex(1).height(13));
+                actions.addChild(name);
+                actions.addChild(memberActionButton("screen.simukraft.city_core.districts.set_mayor", 72, () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+                        common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.SET_MAYOR, packet.pos(), district.districtId(), player.playerId(), "", List.of()))));
+                if (official) {
+                    actions.addChild(memberActionButton("screen.simukraft.city_core.districts.remove_official", 72, () -> PacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+                            common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.REMOVE_OFFICIAL, packet.pos(), district.districtId(), player.playerId(), "", List.of()))));
+                } else {
+                    actions.addChild(memberActionButton("screen.simukraft.city_core.districts.set_official", 72, () -> ClientPacketDistributor.sendToServer(new common.cn.kafei.simukraft.network.city.DistrictActionPacket(
+                            common.cn.kafei.simukraft.network.city.DistrictActionPacket.Action.SET_OFFICIAL, packet.pos(), district.districtId(), player.playerId(), "", List.of()))));
                 }
+                row.addChild(actions);
             }
             panel.addChild(row);
             panel.addChild(contentSpacer());
         }
         return scrollable(panel);
+    }
+
+    /** 地图快照可能不带城市成员。分区页优先用完整快照，再补上分区里已有的人，保证区长和官员按钮有人可点。 */
+    private static CityCoreOpenResponsePacket districtManagementPacket(CityCoreOpenResponsePacket packet) {
+        if (packet == null || !packet.cityMembers().isEmpty()) {
+            return packet;
+        }
+        CityCoreOpenResponsePacket cached = lastSummaryPacket;
+        if (cached != null && cached.hasCity() && cached.cityId().equals(packet.cityId()) && !cached.cityMembers().isEmpty()) {
+            return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.memberCount(), packet.cityPopulation(), packet.housingCapacity(), packet.cityChunkCount(), packet.cityEnclaveCount(), packet.permissionLevel(), packet.canCreateCity(), packet.canManageCity(), packet.financeEntries(), packet.poiStats(), packet.jobStats(), packet.upgradeTargets(), packet.upgradeProgress(), packet.districts().isEmpty() ? cached.districts() : packet.districts(), packet.districtContext(), packet.districtName(), cached.cityMembers());
+        }
+        return packet;
+    }
+
+    private static List<CityCoreOpenResponsePacket.CityMemberRef> districtCandidates(CityCoreOpenResponsePacket packet, CityCoreOpenResponsePacket.DistrictSummary district) {
+        java.util.LinkedHashMap<UUID, CityCoreOpenResponsePacket.CityMemberRef> candidates = new java.util.LinkedHashMap<>();
+        for (CityCoreOpenResponsePacket.CityMemberRef member : packet.cityMembers()) {
+            candidates.putIfAbsent(member.playerId(), member);
+        }
+        for (CityCoreOpenResponsePacket.DistrictMemberView member : district.members()) {
+            candidates.putIfAbsent(member.playerId(), new CityCoreOpenResponsePacket.CityMemberRef(member.playerId(), member.playerName()));
+        }
+        return List.copyOf(candidates.values());
+    }
+
+    private static String districtBaseName(String name) {
+        if (name != null && name.endsWith("\u533a")) {
+            return name.substring(0, name.length() - 1);
+        }
+        return name == null ? "" : name;
+    }
+
+    private static Component districtRoleText(int rolePower) {
+        String key = switch (rolePower) {
+            case 2 -> "screen.simukraft.city_core.districts.role.mayor";
+            case 1 -> "screen.simukraft.city_core.districts.role.official";
+            default -> "screen.simukraft.city_core.districts.role.resident";
+        };
+        return Component.translatable(key);
     }
 
     private static String financeTypeText(CityCoreOpenResponsePacket.FinanceEntry entry) {
@@ -945,6 +1051,7 @@ public final class CityCoreScreenOpener {
         private final CityCoreMembersResponsePacket membersPacket;
         private final CityCoreMapResponsePacket mapPacket;
         private final String initialTabId;
+        private String currentTabId;
         private final ViewContainer rightTabs = new ViewContainer();
         private final Map<String, View> openedTabs = new ConcurrentHashMap<>();
         private final UIElement sidebarContainer = new UIElement();
@@ -998,12 +1105,14 @@ public final class CityCoreScreenOpener {
             List<CityCoreOpenResponsePacket.JobStat> jobStats = cached != null ? cached.jobStats() : List.of();
             List<CityCoreOpenResponsePacket.UpgradeTarget> upgradeTargets = cached != null ? cached.upgradeTargets() : List.of();
             CityCoreOpenResponsePacket.UpgradeProgress upgradeProgress = cached != null ? cached.upgradeProgress() : CityCoreOpenResponsePacket.UpgradeProgress.NONE;
-            return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.members().size(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.viewerPermission(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress);
+            List<CityCoreOpenResponsePacket.DistrictSummary> districts = cached != null ? cached.districts() : List.of();
+            List<CityCoreOpenResponsePacket.CityMemberRef> cityMembers = cached != null ? cached.cityMembers() : List.of();
+            return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.members().size(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.viewerPermission(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress, districts, cityMembers);
         }
 
         /**
          * summaryPacket：地图响应不带统计字段时，复用最近一次城市核心统计。
-         */
+        分区列表必须留下，否则管理页会显示暂无分区。 */
         private static CityCoreOpenResponsePacket summaryPacket(CityCoreMapResponsePacket packet) {
             CityCoreOpenResponsePacket cached = cachedSummary(packet.cityId(), packet.pos());
             int population = cached != null ? cached.cityPopulation() : 0;
@@ -1015,7 +1124,30 @@ public final class CityCoreScreenOpener {
             List<CityCoreOpenResponsePacket.JobStat> jobStats = cached != null ? cached.jobStats() : List.of();
             List<CityCoreOpenResponsePacket.UpgradeTarget> upgradeTargets = cached != null ? cached.upgradeTargets() : List.of();
             CityCoreOpenResponsePacket.UpgradeProgress upgradeProgress = cached != null ? cached.upgradeProgress() : CityCoreOpenResponsePacket.UpgradeProgress.NONE;
-            return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.memberCount(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.permissionLevel(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress);
+            List<CityCoreOpenResponsePacket.CityMemberRef> cityMembers = cached != null ? cached.cityMembers() : List.of();
+            return new CityCoreOpenResponsePacket(packet.pos(), true, packet.cityId(), packet.cityName(), packet.funds(), packet.cityLevel(), packet.memberCount(), population, housingCapacity, cityChunkCount, cityEnclaveCount, packet.permissionLevel(), false, packet.canManageCity(), finances, poiStats, jobStats, upgradeTargets, upgradeProgress, mergeDistricts(cached, packet), cityMembers);
+        }
+
+        /** 地图包里的分区是刚从服务端拿到的，不能被缺少分区字段的统计快照覆盖成空列表。 */
+        private static List<CityCoreOpenResponsePacket.DistrictSummary> mergeDistricts(CityCoreOpenResponsePacket cached, CityCoreMapResponsePacket map) {
+            Map<UUID, CityCoreOpenResponsePacket.DistrictSummary> merged = new LinkedHashMap<>();
+            if (cached != null) {
+                for (CityCoreOpenResponsePacket.DistrictSummary district : cached.districts()) {
+                    merged.put(district.districtId(), district);
+                }
+            }
+            if (map != null) {
+                for (CityCoreMapResponsePacket.DistrictEntry entry : map.districts()) {
+                    CityCoreOpenResponsePacket.DistrictSummary existing = merged.get(entry.districtId());
+                    int chunks = entry.chunks().size();
+                    if (existing == null) {
+                        merged.put(entry.districtId(), new CityCoreOpenResponsePacket.DistrictSummary(entry.districtId(), entry.name(), entry.color(), chunks, 0, "", List.of()));
+                    } else if (existing.chunkCount() != chunks || !existing.name().equals(entry.name())) {
+                        merged.put(entry.districtId(), new CityCoreOpenResponsePacket.DistrictSummary(existing.districtId(), entry.name(), entry.color(), chunks, existing.coreCount(), existing.mayorName(), existing.members()));
+                    }
+                }
+            }
+            return List.copyOf(merged.values());
         }
 
         private void rebuildSidebar() {
@@ -1052,6 +1184,15 @@ public final class CityCoreScreenOpener {
             if ("upgrade".equals(initialTabId) && packet.hasCity() && packet.canManageCity()) {
                 openTab("info", "screen.simukraft.city_core.menu.info", scrollable(contentPanel(packet)));
                 openTab("upgrade", "screen.simukraft.city_core.menu.upgrade", upgradePanel(packet));
+            } else if ("districts".equals(initialTabId) && packet.hasCity() && !packet.districtContext() && packet.permissionLevel() == CityPermissionLevel.MAYOR) {
+                openTab("districts", "screen.simukraft.city_core.districts.title", districtsPanel(packet));
+            } else if ("edit".equals(initialTabId) && packet.hasCity() && packet.canManageCity()) {
+                String editMenuKey = packet.districtContext()
+                        ? "screen.simukraft.city_core.menu.edit_district"
+                        : "screen.simukraft.city_core.menu.edit";
+                openTab("edit", editMenuKey, editPanel(packet));
+            } else if ("finance".equals(initialTabId) && packet.hasCity() && packet.canManageCity()) {
+                openTab("finance", "screen.simukraft.city_core.menu.finance", financePanel(packet));
             } else if (mapPacket != null) {
                 openTab("info", "screen.simukraft.city_core.menu.info", scrollable(contentPanel(packet)));
                 openTab("map", "screen.simukraft.city_core.map_title", cityMapPanel(mapPacket));
@@ -1077,6 +1218,7 @@ public final class CityCoreScreenOpener {
         }
 
         private void openTab(String id, String titleKey, UIElement content) {
+            currentTabId = id;
             View existing = openedTabs.get(id);
             if (existing != null && rightTabs.hasView(existing)) {
                 rightTabs.selectView(existing);
@@ -1123,6 +1265,8 @@ public final class CityCoreScreenOpener {
         private static final int BATCH_CLAIM_BOX_BORDER_COLOR = 0xEEFFFF00;
         private static final int GRID_COLOR = 0x40000000;
         private static final int CORE_MARKER_COLOR = 0xFF4080FF;
+        private static final int THREE_D_CURRENT_BORDER = 0x882E6B32;
+        private static final int THREE_D_OTHER_BORDER = 0x88B35A1A;
         private static final int MAX_BATCH_CLAIM_CHUNKS = 256;
         private static final String BATCH_CLAIM_DRAG_MARKER = "city_chunk_batch_claim";
         private volatile CityCoreMapResponsePacket packet;
@@ -1151,6 +1295,19 @@ public final class CityCoreScreenOpener {
         private int contextMenuHeight;
         private boolean contextMenuVisible;
         private boolean mapConsumerReleased;
+        private boolean threeDView;
+        private float threeYaw = 0.8F;
+        private float threeYawDragStart;
+        private double threeZoom = 2.2D;
+        private final SimuMap3DMesh threeMesh = new SimuMap3DMesh();
+        private int modeButtonX;
+        private int modeButtonY;
+        private int modeButtonW;
+        private int modeButtonH;
+        private static final String THREE_D_DRAG = "city_map_3d_orbit";
+        private static final String THREE_D_PAN = "city_map_3d_pan";
+        private double threePanOffsetX;
+        private double threePanOffsetY;
 
         private CityChunkMapElement(CityCoreMapResponsePacket packet) {
             this.packet = packet;
@@ -1211,6 +1368,7 @@ public final class CityCoreScreenOpener {
             renderMap(guiContext, mapStartX, mapStartY, mapWidth, mapHeight);
             guiContext.graphics.nextStratum();
             guiContext.disableScissor();
+            renderModeButton(guiContext, mapStartX, mapStartY, mapWidth);
         }
 
         private void renderMap(GUIContext guiContext, int startX, int startY, int width, int height) {
@@ -1224,6 +1382,10 @@ public final class CityCoreScreenOpener {
             int startChunkZ = (int) Math.floor((-offsetY - height / 2.0D) / chunkSize);
             int endChunkX = startChunkX + visibleChunksX;
             int endChunkZ = startChunkZ + visibleChunksY;
+            if (threeDView) {
+                render3DMap(guiContext, startX, startY, width, height, centerX, centerY);
+                return;
+            }
             renderWorldMapTerrain(guiContext, startX, startY, width, height, centerX, centerY);
             renderGridOverlay(guiContext, startX, startY, width, height, centerX, centerY, chunkSize, startChunkX, startChunkZ);
             renderHoveredChunk(guiContext, startX, startY, width, height, centerX, centerY, chunkSize);
@@ -1687,7 +1849,167 @@ public final class CityCoreScreenOpener {
             return mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height;
         }
 
+        private void renderModeButton(GUIContext guiContext, int mapStartX, int mapStartY, int mapWidth) {
+            Minecraft minecraft = Minecraft.getInstance();
+            Component label = Component.translatable(threeDView
+                    ? "screen.simukraft.city_core.map.mode_2d"
+                    : "screen.simukraft.city_core.map.mode_3d");
+            modeButtonW = minecraft.font.width(label) + 12;
+            modeButtonH = 14;
+            modeButtonX = mapStartX + mapWidth - modeButtonW - 4;
+            modeButtonY = mapStartY + 4;
+            guiContext.graphics.fill(modeButtonX, modeButtonY, modeButtonX + modeButtonW, modeButtonY + modeButtonH, threeDView ? 0xEE1E6B3A : 0xEE202020);
+            guiContext.graphics.fill(modeButtonX, modeButtonY, modeButtonX + modeButtonW, modeButtonY + 1, 0xFFFFFFFF);
+            guiContext.graphics.drawString(minecraft.font, label, modeButtonX + 6, modeButtonY + 3, 0xFFFFFFFF, false);
+        }
+
+        private boolean isInsideModeButton(double mouseX, double mouseY) {
+            return modeButtonW > 0 && !isOutside(mouseX, mouseY, modeButtonX, modeButtonY, modeButtonW, modeButtonH);
+        }
+
+        /** 用已扫描的高度和颜色画成可旋转的立体地形。格子四角按同一投影相连。 */
+        /** 鐢ㄥ钩椤舵煴浣撶敾绔嬩綋娌欑洏銆傜缉鏀惧彧鏀规姇褰憋紝寤虹瓚闈犵珛闈㈠垎鑹层€?*/
+        private void render3DMap(GUIContext guiContext, int startX, int startY, int width, int height, double centerX, double centerY) {
+            guiContext.graphics.fill(startX, startY, startX + width, startY + height, 0xFF101418);
+            int step = threeMesh.resolveStep(threeZoom);
+            int liveCenterX = (int) Math.floor(-offsetX / zoomLevel);
+            int liveCenterZ = (int) Math.floor(-offsetY / zoomLevel);
+            float scale = (float) threeZoom;
+            Minecraft minecraft = Minecraft.getInstance();
+            long gameTime = minecraft.level == null ? 0L : minecraft.level.getGameTime();
+            if (threeMesh.needsRebuild(liveCenterX, liveCenterZ, step, gameTime)) {
+                threeMesh.rebuild(
+                        threeDSource(step),
+                        SimuMap3DMesh.snapCoord(liveCenterX, step),
+                        SimuMap3DMesh.snapCoord(liveCenterZ, step),
+                        step,
+                        gameTime);
+            }
+            if (!threeMesh.isEmpty()) {
+                guiContext.graphics.flush();
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.disableCull();
+                RenderSystem.disableDepthTest();
+                RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                Matrix4f matrix = guiContext.graphics.pose().last().pose();
+                BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+                threeMesh.emit(buffer, matrix, threeYaw, scale, centerX, centerY, liveCenterX, liveCenterZ);
+                BufferUploader.drawWithShader(buffer.buildOrThrow());
+                RenderSystem.enableDepthTest();
+                RenderSystem.enableCull();
+                RenderSystem.disableBlend();
+            }
+            guiContext.graphics.drawString(minecraft.font, Component.translatable("screen.simukraft.city_core.map.mode_3d_hint"), startX + 6, startY + height - 12, 0xFFDDDDDD, false);
+        }
+
+        private SimuMap3DMesh.Source threeDSource(int step) {
+            return new SimuMap3DMesh.Source() {
+                @Override
+                public int height(int worldX, int worldZ) {
+                    return sampleMapHeight(worldX, worldZ);
+                }
+
+                @Override
+                public int terrainColor(int worldX, int worldZ) {
+                    return sampleMapColor(worldX, worldZ);
+                }
+
+                @Override
+                public int overlay(int worldX, int worldZ) {
+                    return threeDOwnershipOverlay(worldX, worldZ, step);
+                }
+
+                @Override
+                public boolean core(int worldX, int worldZ) {
+                    return columnContainsCore(worldX, worldZ, step);
+                }
+            };
+        }
+
+        private int threeDOwnershipOverlay(int worldX, int worldZ, int step) {
+            int key = ownershipKey(worldX, worldZ);
+            if (key == 0) {
+                return 0;
+            }
+            if (ownershipKey(worldX, worldZ - step) == key
+                    && ownershipKey(worldX, worldZ + step) == key
+                    && ownershipKey(worldX - step, worldZ) == key
+                    && ownershipKey(worldX + step, worldZ) == key) {
+                return 0;
+            }
+            return key == 1 ? THREE_D_CURRENT_BORDER : THREE_D_OTHER_BORDER;
+        }
+
+        private int ownershipKey(int worldX, int worldZ) {
+            long chunkLong = ChunkPos.asLong(worldX >> 4, worldZ >> 4);
+            if (!cache.isChunkOwned(chunkLong)) {
+                return 0;
+            }
+            return cache.isChunkInCurrentCity(chunkLong) ? 1 : 2;
+        }
+
+        private boolean columnContainsCore(int worldX, int worldZ, int step) {
+            int coreX = packet.pos().getX();
+            int coreZ = packet.pos().getZ();
+            return coreX >= worldX && coreX < worldX + step && coreZ >= worldZ && coreZ < worldZ + step;
+        }
+        private int sampleMapHeight(int worldX, int worldZ) {
+            SimuMapRegionData data = mapColumnData(worldX, worldZ);
+            if (data == null) {
+                return Integer.MIN_VALUE;
+            }
+            int regionX = Math.floorDiv(worldX, SimuMapRegionData.SIZE);
+            int regionZ = Math.floorDiv(worldZ, SimuMapRegionData.SIZE);
+            short height = data.getHeight(worldX - regionX * SimuMapRegionData.SIZE, worldZ - regionZ * SimuMapRegionData.SIZE);
+            return height == SimuMapRegionData.HEIGHT_UNKNOWN ? Integer.MIN_VALUE : height;
+        }
+
+        private int sampleMapColor(int worldX, int worldZ) {
+            SimuMapRegionData data = mapColumnData(worldX, worldZ);
+            if (data == null) {
+                return 0xFF6E8B5A;
+            }
+            int regionX = Math.floorDiv(worldX, SimuMapRegionData.SIZE);
+            int regionZ = Math.floorDiv(worldZ, SimuMapRegionData.SIZE);
+            int color = data.getColor(worldX - regionX * SimuMapRegionData.SIZE, worldZ - regionZ * SimuMapRegionData.SIZE);
+            return color == 0 ? 0xFF6E8B5A : color;
+        }
+
+        private SimuMapRegionData mapColumnData(int worldX, int worldZ) {
+            SimuMapRegion region = mapManager.getRegion(Math.floorDiv(worldX, SimuMapRegionData.SIZE), Math.floorDiv(worldZ, SimuMapRegionData.SIZE));
+            return region == null ? null : region.getData();
+        }
+
         private void onMouseDown(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent event) {
+            if (event.button == 0 && isInsideModeButton(event.x, event.y)) {
+                threeDView = !threeDView;
+                threeMesh.invalidate();
+                contextMenuVisible = false;
+                batchClaimChunks.clear();
+                event.stopPropagation();
+                return;
+            }
+            if (threeDView && !isMouseOutsideMap(event.x, event.y)) {
+                if (event.button == 0) {
+                    threeYawDragStart = threeYaw;
+                    event.target.startDrag(THREE_D_DRAG, null);
+                    event.stopPropagation();
+                    return;
+                }
+                if (event.button == 1) {
+                    threePanOffsetX = offsetX;
+                    threePanOffsetY = offsetY;
+                    event.target.startDrag(THREE_D_PAN, null);
+                    event.stopPropagation();
+                    return;
+                }
+                if (event.button == 2) {
+                    event.stopPropagation();
+                    return;
+                }
+            }
             if (contextMenuVisible && event.button == 0 && handleContextMenuClick(event.x, event.y)) {
                 event.stopPropagation();
                 return;
@@ -1737,6 +2059,26 @@ public final class CityCoreScreenOpener {
 
         private void onDragUpdate(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent event) {
             contextMenuVisible = false;
+            if (THREE_D_DRAG.equals(event.dragHandler.getDraggingObject())) {
+                threeYaw = threeYawDragStart + (float) (event.x - event.dragStartX) * 0.012F;
+                event.stopPropagation();
+                return;
+            }
+            if (THREE_D_PAN.equals(event.dragHandler.getDraggingObject())) {
+                double mouseX = event.x - event.dragStartX;
+                double mouseY = event.y - event.dragStartY;
+                float scale = (float) Math.max(threeZoom, 0.6D);
+                float cos = Mth.cos(threeYaw);
+                float sin = Mth.sin(threeYaw);
+                double ax = -mouseX / scale;
+                double ay = -mouseY / (scale * 0.5D);
+                double panDx = ax * cos + ay * sin;
+                double panDz = -ax * sin + ay * cos;
+                offsetX = threePanOffsetX - panDx * zoomLevel;
+                offsetY = threePanOffsetY - panDz * zoomLevel;
+                event.stopPropagation();
+                return;
+            }
             if (BATCH_CLAIM_DRAG_MARKER.equals(event.dragHandler.getDraggingObject())) {
                 updateBatchClaimBox(event.x, event.y);
                 event.stopPropagation();
@@ -1751,6 +2093,15 @@ public final class CityCoreScreenOpener {
 
         private void onMouseWheel(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent event) {
             contextMenuVisible = false;
+            if (threeDView) {
+                if (event.deltaY > 0) {
+                    threeZoom = Math.min(threeZoom * 1.12D, 10.0D);
+                } else {
+                    threeZoom = Math.max(threeZoom / 1.12D, 0.55D);
+                }
+                event.stopPropagation();
+                return;
+            }
             double oldZoom = zoomLevel;
             if (event.deltaY > 0) {
                 zoomLevel = Math.min(zoomLevel + ZOOM_STEP, MAX_ZOOM);

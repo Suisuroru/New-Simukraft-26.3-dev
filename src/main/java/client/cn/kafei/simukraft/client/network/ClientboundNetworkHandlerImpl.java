@@ -250,6 +250,10 @@ public final class ClientboundNetworkHandlerImpl implements ClientboundNetworkHa
      */
     @Override
     public void handleGeologicalSurveyHint(GeologicalSurveyHintPacket packet) {
-        GeologicalSurveyHintOverlay.show(packet.message());
+        if (packet.typewriter()) {
+            GeologicalSurveyHintOverlay.showTypewriter(packet.message(), packet.lingerMillis());
+        } else {
+            GeologicalSurveyHintOverlay.show(packet.message());
+        }
     }
 }

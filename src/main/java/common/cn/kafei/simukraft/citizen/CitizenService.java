@@ -1,5 +1,6 @@
 package common.cn.kafei.simukraft.citizen;
 
+import common.cn.kafei.simukraft.city.DistrictOwnershipSync;
 import common.cn.kafei.simukraft.entity.CitizenEntity;
 import common.cn.kafei.simukraft.job.CityJobType;
 import common.cn.kafei.simukraft.registry.ModEntities;
@@ -58,6 +59,7 @@ public final class CitizenService {
                 return;
             }
             data.setCityId(cityId);
+            DistrictOwnershipSync.applyCitizen(level, data);
             manager.saveCitizenNow(citizenId);
         });
     }
@@ -72,6 +74,7 @@ public final class CitizenService {
                 return;
             }
             data.setHomeId(homeId);
+            DistrictOwnershipSync.applyCitizen(level, data);
             manager.saveCitizenNow(citizenId);
             if (homeId != null) {
                 common.cn.kafei.simukraft.building.PlacedBuildingRecord building =
@@ -99,6 +102,7 @@ public final class CitizenService {
             }
             data.setWorkplaceId(workplaceId);
             data.setWorkplacePos(workplacePos);
+            DistrictOwnershipSync.applyCitizen(level, data);
             manager.saveCitizenNow(citizenId);
         });
     }
@@ -129,6 +133,7 @@ public final class CitizenService {
             data.setWorkplaceId(workplaceId);
             data.setWorkplacePos(workplacePos);
             data.setStatusLabel(statusLabel != null ? statusLabel : "");
+            DistrictOwnershipSync.applyCitizen(level, data);
             manager.saveCitizenNow(citizenId);
         });
     }
@@ -145,6 +150,7 @@ public final class CitizenService {
             data.setJobType(CityJobType.UNEMPLOYED);
             data.setWorkplaceId(null);
             data.setWorkplacePos(null);
+            DistrictOwnershipSync.applyCitizen(level, data);
             boolean nightRest = CitizenHomeRestService.isRestTime(level)
                     && data.workStatusType() == CitizenWorkStatus.RESTING
                     && CitizenHomeRestService.HOME_REST_MARKER.equals(data.workNeedDetail());

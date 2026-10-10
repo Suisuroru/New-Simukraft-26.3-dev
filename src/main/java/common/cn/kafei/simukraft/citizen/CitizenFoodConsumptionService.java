@@ -114,6 +114,9 @@ public final class CitizenFoodConsumptionService {
         }
         CitizenManager.get(level).syncEntity(entity);
         level.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EAT.value(), SoundSource.NEUTRAL, 0.8F, 1.0F);
+        if (nextHunger >= FULL_HUNGER) {
+            CitizenVoiceService.play(level, entity, data, CitizenVoiceService.Cue.FULL);
+        }
         entity.triggerWorkSwing(InteractionHand.MAIN_HAND);
         return true;
     }

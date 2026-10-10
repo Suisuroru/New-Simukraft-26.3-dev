@@ -87,6 +87,7 @@ public final class NpcChildbirthService {
         child.setAge(1);
         child.setLastAgeGrowthDay(currentDay);
         child.setHomeId(vacantBedPoiId);
+        common.cn.kafei.simukraft.city.DistrictOwnershipSync.applyCitizen(level, child);
         child.setFamilyId(family.familyId());
         child.setOriginFamilyId(family.familyId());
         child.setCityId(wife.cityId());
@@ -95,6 +96,8 @@ public final class NpcChildbirthService {
 
         familyManager.addChild(level, family.familyId(), child.uuid());
         manager.saveCitizenNow(child.uuid());
+        CitizenEntity mother = CitizenTeleportService.findCitizenEntity(level, wife.uuid());
+        CitizenVoiceService.play(level, mother != null ? mother : childEntity, wife, CitizenVoiceService.Cue.BIRTH);
 
         wife.setPregnant(false);
         wife.setPregnantSince(0L);

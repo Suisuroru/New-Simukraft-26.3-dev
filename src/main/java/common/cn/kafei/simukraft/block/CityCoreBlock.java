@@ -48,7 +48,8 @@ public final class CityCoreBlock extends Block {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             level.playSound(null, pos, ModSoundEvents.CITY_CORE_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
             DistrictData district = DistrictManager.get(serverLevel).byChunk(ChunkPos.containing(pos)).orElse(null);
-            if (district != null && district.cores().stream().noneMatch(v -> v == pos.asLong())) {
+            if (district != null && district.cores().stream().noneMatch(v -> v == pos.asLong())
+                    && !CityService.hasCityAtCorePos(serverLevel, pos)) {
                 boolean allowed = CityService.hasPermission(serverLevel, district.parentCityId(), serverPlayer.getUUID(), common.cn.kafei.simukraft.city.CityPermissionLevel.MAYOR)
                         || district.hasPermission(serverPlayer.getUUID(), DistrictRole.OFFICIAL);
                 if (allowed && PlacedBuildingService.findByContainedPos(serverLevel, pos) == null
@@ -63,6 +64,12 @@ public final class CityCoreBlock extends Block {
             CityCoreOpenRequestPacket.openFor(serverLevel, serverPlayer, pos);
         }
         return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
+    }
+
+    /** 属性上的 BLOCK 之外再覆盖一次。活塞若仍把核心搬走，onRemove 会在原位补一块，搬走的那块就能挖成物品。 */
+    @Override
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return PushReaction.BLOCK;
     }
 
     @Override

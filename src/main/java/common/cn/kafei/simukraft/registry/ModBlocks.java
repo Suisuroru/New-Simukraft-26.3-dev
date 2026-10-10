@@ -3,6 +3,26 @@ package common.cn.kafei.simukraft.registry;
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.block.*;
 import net.minecraft.core.BlockPos;
+import common.cn.kafei.simukraft.block.BankControlBoxBlock;
+import common.cn.kafei.simukraft.block.CommercialControlBoxBlock;
+import common.cn.kafei.simukraft.block.CityCoreBlock;
+import common.cn.kafei.simukraft.block.ExchangeControlBoxBlock;
+import common.cn.kafei.simukraft.block.FarmlandBoxBlock;
+import common.cn.kafei.simukraft.block.IndustrialControlBoxBlock;
+import common.cn.kafei.simukraft.block.LogisticsClientBoxBlock;
+import common.cn.kafei.simukraft.block.LogisticsServerBoxBlock;
+import common.cn.kafei.simukraft.block.MedicalControlBoxBlock;
+import common.cn.kafei.simukraft.block.MineralDrillingControlBoxBlock;
+import common.cn.kafei.simukraft.block.MilkLiquidBlock;
+import common.cn.kafei.simukraft.block.IndustrialHousingTrapdoorBlock;
+import common.cn.kafei.simukraft.block.LightBlock;
+import common.cn.kafei.simukraft.block.ResidentialControlBoxBlock;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
@@ -116,6 +136,35 @@ public final class ModBlocks {
     @SuppressWarnings("deprecation")
     private static BlockBehaviour.Properties industrialHousingProperties() {
         return BlockBehaviour.Properties.ofLegacyCopy(Blocks.IRON_BLOCK);
+    }
+
+    // 工业外壳：完全继承铁块参数
+    private static Block industrialHousing() {
+        return new Block(industrialHousingProperties());
+    }
+
+    /** industrialHousingSlab: 创建与工业外壳属性一致的台阶。 */
+    private static Block industrialHousingSlab() {
+        return new SlabBlock(industrialHousingProperties());
+    }
+
+    /** industrialHousingStairs: 创建与工业外壳属性一致的楼梯。 */
+    private static Block industrialHousingStairs() {
+        return new StairBlock(Blocks.IRON_BLOCK.defaultBlockState(), industrialHousingProperties());
+    }
+
+    /** industrialHousingTrapdoor: 黄色铁质栈道，noOcclusion 允许透明孔洞渲染。 */
+    private static Block industrialHousingTrapdoor() {
+        return new IndustrialHousingTrapdoorBlock(
+            industrialHousingProperties()
+                .noOcclusion()
+                .isViewBlocking((s, b, p) -> false)
+                .isSuffocating((s, b, p) -> false)
+        );
+    }
+
+    private static Block lightBlock() {
+        return new LightBlock();
     }
 
     @SuppressWarnings("deprecation")

@@ -8,7 +8,7 @@ import common.cn.kafei.simukraft.citizen.CitizenData;
 import common.cn.kafei.simukraft.citizen.CitizenService;
 import common.cn.kafei.simukraft.citizen.CitizenWorkStatus;
 import common.cn.kafei.simukraft.city.CityService;
-import common.cn.kafei.simukraft.city.FinanceTransactionData;
+import common.cn.kafei.simukraft.city.DistrictService;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.config.ServerConfig;
 import common.cn.kafei.simukraft.economy.EconomyService;
@@ -16,7 +16,6 @@ import common.cn.kafei.simukraft.economy.FinanceLedgerService;
 import common.cn.kafei.simukraft.event.BuildingConstructionEvent;
 import common.cn.kafei.simukraft.job.CitizenEmploymentService;
 import common.cn.kafei.simukraft.job.CityJobType;
-import common.cn.kafei.simukraft.network.hud.HudSyncService;
 import common.cn.kafei.simukraft.network.rts.RtsRemoteMenuAccess;
 import common.cn.kafei.simukraft.network.toast.InfoToastService;
 import net.minecraft.core.BlockPos;
@@ -27,6 +26,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -88,10 +88,6 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
             return;
         }
         UUID cityId = citizen.cityId();
-        if (!CityService.canManageCity(level, cityId, player.getUUID())) {
-            InfoToastService.warning(player, Component.translatable("message.simukraft.build_box.no_permission"));
-            return;
-        }
         Optional<BuildingCatalog.BuildingDefinition> definitionOptional = BuildingCatalog.findBuilding(packet.category(), packet.buildingFileName());
         if (definitionOptional.isEmpty()) {
             InfoToastService.error(player, Component.translatable("message.simukraft.build_box.structure_not_found"));
@@ -110,18 +106,13 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
         }
         BuildingStructure structure = structureOptional.get();
         List<BuildingBlockData> placedBlocks = BuildingStructureService.resolvePlacedBlocks(structure, packet.origin(), packet.rotationDegrees());
+        if (!canConstruct(level, cityId, player.getUUID(), placedBlocks)) {
+            InfoToastService.warning(player, Component.translatable("message.simukraft.build_box.no_permission"));
+            return;
+        }
         if (ServerConfig.claimProtectionEnabled() && !BuildingTerritoryValidator.blockBoundsInCity(level, cityId, placedBlocks)) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.construction.outside_city"));
             return;
-        }
-        double constructionCost = EconomyService.parseAmount(structure.amount(), "construction");
-        if (constructionCost > 0.0D) {
-            if (!EconomyService.canAfford(level, cityId, constructionCost) || !CityService.withdrawFunds(level, cityId, constructionCost)) {
-                InfoToastService.warning(player, Component.translatable("message.simukraft.build_box.not_enough_funds", constructionCost));
-                return;
-            }
-            FinanceLedgerService.record(level, cityId, player, -constructionCost, EconomyService.getCityBalance(level, cityId), FinanceTransactionData.Type.EXPENSE, "construction");
-            HudSyncService.syncToCityGroup(level, cityId, true);
         }
         BuilderConstructionService.cancelTask(level, citizen.uuid());
         long now = System.currentTimeMillis();
@@ -160,6 +151,24 @@ public record BuildBoxStartConstructionPacket(BlockPos buildBoxPos,
         citizen.setStatusLabel(statusLabel);
         CitizenService.save(level, citizen.uuid());
         CityGroupMessageService.successToCity(level, cityId, Component.translatable("message.simukraft.build_box.construction_started", structure.displayName()));
+    }
+
+    /** 城市官员覆盖全市；分区官员必须让建筑的每个区块都落在自己已启用的分区里。 */
+    private static boolean canConstruct(ServerLevel level, UUID cityId, UUID playerId, List<BuildingBlockData> placedBlocks) {
+        if (placedBlocks == null || placedBlocks.isEmpty()) {
+            return false;
+        }
+        for (BuildingBlockData block : placedBlocks) {
+            BlockPos pos = block == null ? null : block.relativePos();
+            if (pos == null) {
+                return false;
+            }
+            long chunkLong = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+            if (!DistrictService.canBuild(level, cityId, playerId, chunkLong)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

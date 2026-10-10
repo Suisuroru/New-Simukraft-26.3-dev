@@ -55,7 +55,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 
 public final class ModNetwork {
-    private static final String NETWORK_VERSION = "31";
+    private static final String NETWORK_VERSION = "33";
 
     private ModNetwork() {
     }

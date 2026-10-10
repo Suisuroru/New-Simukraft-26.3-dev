@@ -2,6 +2,7 @@ package common.cn.kafei.simukraft.network.city.core;
 
 import common.cn.kafei.simukraft.SimuKraft;
 import common.cn.kafei.simukraft.city.*;
+import common.cn.kafei.simukraft.city.DistrictOwnershipSync;
 import common.cn.kafei.simukraft.city.group.CityGroupMessageService;
 import common.cn.kafei.simukraft.city.group.CityUserGroup;
 import common.cn.kafei.simukraft.city.group.CityUserGroupService;
@@ -121,14 +122,19 @@ public record CityCoreManageCityPacket(BlockPos pos, Action action, String value
             return;
         }
         List<Long> cores = List.copyOf(district.cores());
-        boolean deleted = DistrictManager.get(level).delete(district.districtId(), district.parentCityId());
+        UUID parentCityId = district.parentCityId();
+        boolean deleted = DistrictManager.get(level).delete(district.districtId(), parentCityId);
         if (!deleted) {
             InfoToastService.warning(player, Component.translatable("message.simukraft.district.delete_failed"));
             CityCoreOpenRequestPacket.openFor(level, player, pos);
             return;
         }
+        DistrictOwnershipSync.retagCity(level, parentCityId);
         for (long core : cores) {
             BlockPos corePos = BlockPos.of(core);
+            if (CityService.hasCityAtCorePos(level, corePos)) {
+                continue;
+            }
             if (level.getBlockState(corePos).is(common.cn.kafei.simukraft.registry.ModBlocks.CITY_CORE.get())) {
                 level.setBlock(corePos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
                 net.minecraft.world.level.block.Block.popResource(level, corePos,
