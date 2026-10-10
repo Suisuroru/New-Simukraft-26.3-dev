@@ -2,8 +2,6 @@ package client.cn.kafei.simukraft.client.city.map;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.util.Mth;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix3x2fc;
 
 import java.util.Arrays;

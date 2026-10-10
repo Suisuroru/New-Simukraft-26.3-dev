@@ -143,10 +143,10 @@ public final class ModBlocks {
      */
     private static Block industrialHousingTrapdoor() {
         return new IndustrialHousingTrapdoorBlock(
-            industrialHousingProperties()
-                .noOcclusion()
-                .isViewBlocking((s, b, p, aabb) -> false)
-                .isSuffocating((s, b, p) -> false)
+                industrialHousingProperties()
+                        .noOcclusion()
+                        .isViewBlocking((s, b, p, aabb) -> false)
+                        .isSuffocating((s, b, p) -> false)
         );
     }
 
